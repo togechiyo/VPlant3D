@@ -1,39 +1,46 @@
 # Third-Party Libraries
 
-This document lists the planned third-party libraries and platform APIs for VPlant3D for OBS.
+This document lists the third-party libraries and platform APIs for VPlant3D for OBS.
 
-The project is still in the planning stage, so this is a candidate list. Exact versions and licenses should be verified when `package.json` is created and dependencies are installed.
+Last updated: 2026-05-20
+
+Versions and licenses below were verified from installed package metadata in `node_modules`.
 
 ## Runtime / Build
 
-| Library / API | Role |
-| --- | --- |
-| TypeScript | Main implementation language. Used to keep rendering, VRM integration, and UI logic typed and maintainable. |
-| Vite | Development server and frontend build tool. Used for fast local iteration and browser-based delivery. |
-| Vitest | Unit test runner for TypeScript modules. |
+| Package | Version | License | Role |
+| --- | ---: | --- | --- |
+| `typescript` | `6.0.3` | Apache-2.0 | Main implementation language. Used to keep rendering, VRM integration, and UI logic typed and maintainable. |
+| `vite` | `8.0.13` | MIT | Development server and frontend build tool. Used for fast local iteration and browser-based delivery. |
+| `vitest` | `4.1.7` | MIT | Unit test runner for TypeScript modules. |
+| `eslint` | `10.4.0` | MIT | Linting. |
+| `typescript-eslint` | `8.59.4` | MIT | TypeScript-aware ESLint rules. |
+| `@eslint/js` | `10.0.1` | MIT | ESLint JavaScript recommended config. |
+| `@types/node` | `25.9.1` | MIT | Node.js type declarations for tooling config. |
 
 ## 3D Rendering
 
-| Library / API | Role |
-| --- | --- |
-| Three.js | Core 3D rendering library. Used for scene, camera, lights, meshes, materials, and animation loop. |
-| Three.js WebGPU Renderer | Planned renderer for modern browser rendering. Needs compatibility checks inside OBS Browser Source. |
-| WebGL Renderer | Possible fallback if WebGPU is not stable in OBS Browser Source. |
+| Package / API | Version | License | Role |
+| --- | ---: | --- | --- |
+| `three` | `0.184.0` | MIT | Core 3D rendering library. Used for scene, camera, lights, meshes, materials, and animation loop. |
+| `@types/three` | `0.184.1` | MIT | Type declarations for Three.js. |
+| Three.js WebGPU Renderer | n/a | n/a | Planned renderer for modern browser rendering. Needs compatibility checks inside OBS Browser Source. |
+| WebGL Renderer | n/a | n/a | Current foundation renderer and possible fallback if WebGPU is not stable in OBS Browser Source. |
 
 ## VRM / VRMA
 
-| Library / API | Role |
-| --- | --- |
-| `@pixiv/three-vrm` | VRM model loading and runtime control for Three.js. Used for avatar display, expressions, humanoid bones, and VRM-specific behavior. |
-| `@pixiv/three-vrm-animation` | VRMA loading and playback support for Three.js / VRM avatars. Used for idle motions, short reactions, and demo animations. |
+| Package | Version | License | Role |
+| --- | ---: | --- | --- |
+| `@pixiv/three-vrm` | `3.5.3` | MIT | VRM model loading and runtime control for Three.js. Used for avatar display, expressions, humanoid bones, and VRM-specific behavior. |
+| `@pixiv/three-vrm-animation` | `3.5.3` | MIT | VRMA loading and playback support for Three.js / VRM avatars. Used for idle motions, short reactions, and demo animations. |
 
 ## Input / Tracking
 
-| Library / API | Role |
-| --- | --- |
-| MediaPipe Tasks Vision | Planned camera-based upper-body tracking. MVP can start with debug display or limited neck / chest / shoulder retargeting. |
-| Web Audio API | Microphone input and RMS volume analysis for simple mouth movement. |
-| MediaDevices API | Browser access to microphone and camera devices. |
+| Package / API | Version | License | Role |
+| --- | ---: | --- | --- |
+| `@mediapipe/tasks-vision` | `0.10.35` | Apache-2.0 | Planned camera-based upper-body tracking. MVP can start with debug display or limited neck / chest / shoulder retargeting. |
+| Web Audio API | n/a | n/a | Browser API for microphone input and RMS volume analysis for simple mouth movement. |
+| MediaDevices API | n/a | n/a | Browser API for microphone and camera devices. |
 
 ## OBS Integration
 
@@ -65,9 +72,6 @@ The following libraries or capabilities are intentionally out of scope for the M
 
 ## Follow-Up Tasks
 
-- Create `package.json`.
-- Install initial dependencies.
-- Confirm licenses for all runtime dependencies.
+- Keep this file updated when dependencies are added, removed, or upgraded.
 - Test WebGPU support in OBS Browser Source.
 - Decide whether WebGL fallback is required for the first public demo.
-

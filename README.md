@@ -58,6 +58,34 @@ Out of scope for the MVP:
 - Web Audio API
 - OBS Browser Source
 
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+Local development server:
+
+```text
+http://127.0.0.1:5173/
+```
+
+Useful checks:
+
+```bash
+npm run test
+npm run build
+npm run lint
+```
+
+OBS-style URL examples:
+
+```text
+http://127.0.0.1:5173/?obs=1
+http://127.0.0.1:5173/?obs=1&transparent=1
+```
+
 ## Documentation
 
 - [VRM Awards / #MadeWithVRM notes](./docs/vrm-award.md)

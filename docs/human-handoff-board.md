@@ -28,6 +28,26 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
+### Todo: ChromeでVite foundationの表示確認
+
+- Owner: Human or Codex with Chrome extension
+- Needed by: foundation merge前または次作業前
+- Why: このターンではCodex Chrome拡張の直接操作ツールが露出しておらず、実Chromeでの視認確認が未実施のため
+- What to check:
+  - `http://127.0.0.1:5173/`
+  - `http://127.0.0.1:5173/?obs=1`
+  - `http://127.0.0.1:5173/?obs=1&transparent=1`
+  - Three.jsのキューブとグリッドが表示される
+  - Setup ModeのダークUIが表示される
+  - OBS ModeではSetup UIが消える
+  - transparent modeで背景が透明になるか、少なくとも通常背景が消える
+  - console errorがない
+
+Notes:
+
+- `npm run dev` でVite dev serverを起動する
+- curlでHTTP 200は確認済み
+
 ### Todo: OBS Browser Sourceでの実機確認
 
 - Owner: Human

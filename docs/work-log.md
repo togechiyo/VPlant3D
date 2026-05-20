@@ -107,3 +107,52 @@
 - Three.jsの最小描画を追加する
 - `npm run test` / `npm run build` / 可能なら `npm run lint` を整える
 - 最初の純ロジックとしてOBS query parsingをTDDで作る候補がある
+
+## 2026-05-20 Vite Foundation
+
+### Goal
+
+- `codex/vite-foundation` ブランチで開発環境を整える
+- Vite + TypeScript + Vitest + ESLintの最小構成を作る
+- Three.js / VRM / VRMA / MediaPipe関連ライブラリを導入する
+- 最初の純ロジックとしてOBS query parsingをTDDで追加する
+
+### Did
+
+- 作業開始前の `main` は `db3d1c3 Document project operating plan`
+- `codex/vite-foundation` ブランチを作成
+- Node.js `v24.14.1`、npm `11.11.0` を確認
+- npm registryで主要パッケージの現行バージョンを確認
+- `package.json` / `package-lock.json` を作成
+- Vite / TypeScript / Vitest / ESLint設定を追加
+- `three`、`@pixiv/three-vrm`、`@pixiv/three-vrm-animation`、`@mediapipe/tasks-vision` を導入
+- OBS query parsingをTDDで追加
+- Three.js WebGLの最小シーンとダークグレー + ネオングリーン / ネオンブルーのSetup UIを追加
+- READMEに開発コマンドとOBS風URL例を追加
+- `docs/third-party-libraries.md` にインストール済み依存のバージョン・ライセンスを反映
+
+### Worked
+
+- `npm run test` は成功
+- `npm run build` は成功
+- `npm run lint` は成功
+- Vite dev server は `http://127.0.0.1:5173/` で起動
+- `curl` でdev serverのHTTP 200とHTMLを確認
+
+### Failed / Blocked
+
+- 最初のbuildでは `@types/three`、CSS import型、Vitest configの型で失敗したが修正済み
+- 最初のlintでは `package.json` が `type: commonjs` になっていたためESLint flat configのESM読み込みに失敗したが、`type: module` に修正済み
+- このターンではCodex Chrome拡張の直接操作ツールが露出していないため、Chrome視認確認は未実施
+
+### Decisions
+
+- 依存追加と構成変更を含むため、mainではなく `codex/vite-foundation` で作業する
+- 初期レンダラーは安定優先でThree.js WebGLRendererにする。WebGPUは後続タスクで調査・切替検討する
+- 最初のTDD対象はOBS query parsingにした
+
+### Next
+
+- 可能ならChromeで `http://127.0.0.1:5173/` と `?obs=1&transparent=1` の視認確認を行う
+- Foundationの差分をコミットする
+- 次の実装候補はOBS Mode / transparent modeのUI挙動強化、またはVRM loader調査
