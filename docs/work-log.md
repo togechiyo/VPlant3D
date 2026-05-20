@@ -336,3 +336,48 @@
 - 人間のGoogle ChromeでVRMA_02の動きがデモとして自然か確認する
 - OBS Browser SourceでVRM + VRMA + transparent modeを確認する
 - 次の実装候補はLoop off終了時のUI同期、再生速度/Restart、またはマイク音量連動くちパク
+
+## 2026-05-20 Mic Reactive Mouth
+
+### Goal
+
+- マイク音量ベースの簡易口パクを、VRMの `aa` Expressionへ接続する
+- マイク権限や実声確認が必要な部分はHuman Handoff Boardへ残す
+- 純ロジックはTDDで検証する
+
+### Did
+
+- MDN `MediaDevices.getUserMedia()` と `AnalyserNode`、`@pixiv/three-vrm-core` の `VRMExpressionManager.setValue` 型を確認
+- `src/audio/mic-mouth.ts` を追加し、RMS計算、threshold/sensitivity正規化、attack/release smoothingを実装
+- `src/audio/mic-reactive-mouth.ts` を追加し、Web Audio APIでマイク波形を取得する薄いランタイムクラスを実装
+- Zustand storeへ `micStatus`、`micError`、`micLevel`、`mouthOpen` と状態更新アクションを追加
+- Setup Modeへ `Mic Reactive Mouth` パネル、Start / Stop、Level / Mouthメーターを追加
+- animation loop内でマイクフレームをsampleし、VRMの `aa` Expressionへ反映するようにした
+- Playwright E2EへMic UI表示とOBS Mode非表示確認を追加
+- `docs/mic-reactive-mouth-notes.md` を追加
+- README、third-party libraries、Human Handoff Boardを更新
+
+### Worked
+
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 実マイク入力はユーザー許可と人間の発話が必要なため、PlaywrightではUI表示確認までにした
+- OBS Browser Sourceでのマイク権限と口パク確認は未実施
+
+### Decisions
+
+- MVPでは音素解析ではなくRMS音量ベースの簡易口パクにする
+- 初期パラメータは `threshold: 0.025`、`sensitivity: 8`、`attack: 0.55`、`release: 0.16` とする
+- まずはVRMの `aa` Expressionだけを駆動する
+- マイク権限確認と見た目調整は人間確認タスクとして進める
+
+### Next
+
+- 人間のGoogle ChromeでMic Reactive Mouthの許可、メーター、口の動きを確認する
+- OBS Browser Sourceでマイク権限と透明背景表示を確認する
+- 次の実装候補はMediaPipe debug view、またはMic感度調整UI

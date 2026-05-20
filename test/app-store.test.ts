@@ -22,6 +22,10 @@ describe('createAppStore', () => {
       vrmaDuration: null,
       vrmaPlaybackStatus: 'stopped',
       vrmaLoop: true,
+      micStatus: 'idle',
+      micError: null,
+      micLevel: 0,
+      mouthOpen: 0,
     });
   });
 
@@ -92,6 +96,47 @@ describe('createAppStore', () => {
       vrmaFileName: 'VRMA_02.vrma',
       vrmaError: 'Failed to load motion',
       vrmaPlaybackStatus: 'stopped',
+    });
+  });
+
+  it('tracks microphone reactive mouth state', () => {
+    const store = createAppStore({
+      obsMode: false,
+      transparent: false,
+    });
+
+    store.getState().setMicRequesting();
+
+    expect(store.getState()).toMatchObject({
+      micStatus: 'requesting',
+      micError: null,
+    });
+
+    store.getState().setMicActive();
+    store.getState().setMicFrame(0.25, 0.75);
+
+    expect(store.getState()).toMatchObject({
+      micStatus: 'active',
+      micLevel: 0.25,
+      mouthOpen: 0.75,
+    });
+
+    store.getState().setMicError('Permission denied');
+
+    expect(store.getState()).toMatchObject({
+      micStatus: 'error',
+      micError: 'Permission denied',
+      micLevel: 0,
+      mouthOpen: 0,
+    });
+
+    store.getState().setMicStopped();
+
+    expect(store.getState()).toMatchObject({
+      micStatus: 'idle',
+      micError: null,
+      micLevel: 0,
+      mouthOpen: 0,
     });
   });
 });

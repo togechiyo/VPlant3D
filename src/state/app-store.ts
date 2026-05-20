@@ -6,6 +6,7 @@ import { createInitialVrmaPlaybackState } from '../vrma/playback-state';
 
 export type VrmLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 export type VrmaLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
+export type MicStatus = 'idle' | 'requesting' | 'active' | 'error';
 
 export interface AppState {
   obsMode: boolean;
@@ -20,6 +21,10 @@ export interface AppState {
   vrmaDuration: number | null;
   vrmaPlaybackStatus: VrmaPlaybackStatus;
   vrmaLoop: boolean;
+  micStatus: MicStatus;
+  micError: string | null;
+  micLevel: number;
+  mouthOpen: number;
   setVrmLoading: (fileName: string) => void;
   setVrmReady: (fileName: string) => void;
   setVrmError: (message: string) => void;
@@ -28,6 +33,11 @@ export interface AppState {
   setVrmaError: (message: string) => void;
   setVrmaPlaybackStatus: (status: VrmaPlaybackStatus) => void;
   setVrmaLoop: (loop: boolean) => void;
+  setMicRequesting: () => void;
+  setMicActive: () => void;
+  setMicError: (message: string) => void;
+  setMicStopped: () => void;
+  setMicFrame: (level: number, mouthOpen: number) => void;
 }
 
 export type AppStore = ReturnType<typeof createAppStore>;
@@ -48,6 +58,10 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     vrmaDuration: null,
     vrmaPlaybackStatus: initialVrmaPlayback.status,
     vrmaLoop: initialVrmaPlayback.loop,
+    micStatus: 'idle',
+    micError: null,
+    micLevel: 0,
+    mouthOpen: 0,
     setVrmLoading: (fileName) =>
       set({
         vrmStatus: 'loading',
@@ -94,6 +108,35 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     setVrmaLoop: (loop) =>
       set({
         vrmaLoop: loop,
+      }),
+    setMicRequesting: () =>
+      set({
+        micStatus: 'requesting',
+        micError: null,
+      }),
+    setMicActive: () =>
+      set({
+        micStatus: 'active',
+        micError: null,
+      }),
+    setMicError: (message) =>
+      set({
+        micStatus: 'error',
+        micError: message,
+        micLevel: 0,
+        mouthOpen: 0,
+      }),
+    setMicStopped: () =>
+      set({
+        micStatus: 'idle',
+        micError: null,
+        micLevel: 0,
+        mouthOpen: 0,
+      }),
+    setMicFrame: (level, mouthOpen) =>
+      set({
+        micLevel: level,
+        mouthOpen,
       }),
   }));
 }

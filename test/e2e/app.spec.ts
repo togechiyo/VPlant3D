@@ -21,6 +21,10 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#vrma-file-input')).toHaveAttribute('accept', '.vrma');
   await expect(page.getByText('Load a VRM before playing VRMA.')).toBeVisible();
   await expect(page.locator('#vrma-play-button')).toBeDisabled();
+  await expect(page.getByText('Mic Reactive Mouth')).toBeVisible();
+  await expect(page.getByText('Microphone idle.')).toBeVisible();
+  await expect(page.locator('#mic-start-button')).toBeEnabled();
+  await expect(page.locator('#mic-stop-button')).toBeDisabled();
   expect(errors()).toEqual([]);
 });
 
@@ -32,6 +36,7 @@ test('OBS transparent mode hides Setup UI but keeps the scene canvas', async ({ 
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
   await expect(page.getByText('Load local VRM', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Load local VRMA', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Mic Reactive Mouth')).toHaveCount(0);
   await expect(page.getByText('Setup Mode')).toHaveCount(0);
   expect(errors()).toEqual([]);
 });

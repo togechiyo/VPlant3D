@@ -43,7 +43,7 @@ Versions and licenses below were verified from installed package metadata in `no
 | Package / API | Version | License | Role |
 | --- | ---: | --- | --- |
 | `@mediapipe/tasks-vision` | `0.10.35` | Apache-2.0 | Planned camera-based upper-body tracking. MVP can start with debug display or limited neck / chest / shoulder retargeting. |
-| Web Audio API | n/a | n/a | Browser API for microphone input and RMS volume analysis for simple mouth movement. |
+| Web Audio API | n/a | n/a | Browser API for microphone input and RMS volume analysis for Mic Reactive Mouth. Uses `AudioContext`, `MediaStreamAudioSourceNode`, and `AnalyserNode.getFloatTimeDomainData`. |
 | MediaDevices API | n/a | n/a | Browser API for microphone and camera devices. |
 
 ## OBS Integration

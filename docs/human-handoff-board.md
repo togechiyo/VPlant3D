@@ -28,6 +28,39 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
+### Todo: 人間のGoogle ChromeでMic Reactive Mouthを確認
+
+- Owner: Human or Codex with Chrome extension
+- Needed by: 口パクデモ調整前
+- Why: マイク権限と実声入力はブラウザのユーザー操作と人間の発話が必要なため
+- What to check:
+  - `npm run dev` で `http://127.0.0.1:5173/` を開く
+  - Alicia VRMなどのVRMを読み込む
+  - `Start mic` を押してマイク権限を許可する
+  - 声を出すとLevel / Mouthメーターが動く
+  - VRMの口が `aa` Expressionで開閉する
+  - `Stop mic` でマイク使用が止まる
+  - console errorがない
+
+Notes:
+
+- 現在はRMS音量ベースであり、音素解析ではない
+- Chromeの権限表示とmacOS/OS側のマイク許可も確認する
+
+### Todo: OBS Browser SourceでMic Reactive Mouthを確認
+
+- Owner: Human
+- Needed by: MVP提出前
+- Why: OBS Browser Source内Chromiumでマイク権限、音声デバイス、透明背景、VRM表示が同時に動くか確認する必要があるため
+- What to check:
+  - `http://127.0.0.1:5173/` でVRMを読み込み、Start micできるか
+  - `http://127.0.0.1:5173/?obs=1&transparent=1` で最終表示が崩れないか
+  - OBS側の音声設定やBrowser Source権限で詰まらないか
+
+Notes:
+
+- OBSでSetup Modeから権限許可しづらい場合、Chromeで事前設定してOBS Modeへ移る運用を検討する
+
 ### Done: Playwright ChromiumでVRMAファイル選択とPlay/Stopを確認
 
 - Owner: Codex

@@ -7,6 +7,7 @@ import type { VRMAnimation } from '@pixiv/three-vrm-animation';
 import { parseObsQuery } from './obs/query';
 import type { AppState } from './state/app-store';
 import { createAppStore } from './state/app-store';
+import { MicReactiveMouth } from './audio/mic-reactive-mouth';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
 import {
   getUnknownVrmLoadErrorMessage,
@@ -94,6 +95,13 @@ let vrmaRequirementText: HTMLElement | null = null;
 let vrmaPlayButton: HTMLButtonElement | null = null;
 let vrmaStopButton: HTMLButtonElement | null = null;
 let vrmaLoopInput: HTMLInputElement | null = null;
+let micController: MicReactiveMouth | null = null;
+let micStatusText: HTMLElement | null = null;
+let micRequirementText: HTMLElement | null = null;
+let micLevelBar: HTMLElement | null = null;
+let micMouthBar: HTMLElement | null = null;
+let micStartButton: HTMLButtonElement | null = null;
+let micStopButton: HTMLButtonElement | null = null;
 
 if (!state.obsMode) {
   const panel = document.createElement('aside');
@@ -133,6 +141,27 @@ if (!state.obsMode) {
         </label>
       </div>
     </div>
+    <div class="mb-4 grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Mic Reactive Mouth</span>
+        <strong id="mic-status-text" class="text-sm font-bold text-[#eef4f2]">Microphone idle.</strong>
+        <span id="mic-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before testing mouth movement.</span>
+      </div>
+      <div class="grid gap-2">
+        <div class="grid gap-1">
+          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>Level</span><span>RMS</span></div>
+          <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-level-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
+        </div>
+        <div class="grid gap-1">
+          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>Mouth</span><span>aa</span></div>
+          <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-mouth-bar" class="h-full w-0 rounded-full bg-[#6dff9a] transition-[width] duration-75"></div></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/55 bg-[#6dff9a]/10 px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-[#38d5ff]/10 disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
+        <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
+      </div>
+    </div>
     <ul class="m-0 grid list-none gap-2 p-0">
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Setup Mode</span><strong class="font-bold text-[#6dff9a]">Active</strong></li>
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>OBS Mode</span><strong class="font-bold text-[#6dff9a]">${state.obsMode ? 'On' : 'Off'}</strong></li>
@@ -151,6 +180,12 @@ if (!state.obsMode) {
   vrmaPlayButton = panel.querySelector<HTMLButtonElement>('#vrma-play-button');
   vrmaStopButton = panel.querySelector<HTMLButtonElement>('#vrma-stop-button');
   vrmaLoopInput = panel.querySelector<HTMLInputElement>('#vrma-loop-input');
+  micStatusText = panel.querySelector<HTMLElement>('#mic-status-text');
+  micRequirementText = panel.querySelector<HTMLElement>('#mic-requirement-text');
+  micLevelBar = panel.querySelector<HTMLElement>('#mic-level-bar');
+  micMouthBar = panel.querySelector<HTMLElement>('#mic-mouth-bar');
+  micStartButton = panel.querySelector<HTMLButtonElement>('#mic-start-button');
+  micStopButton = panel.querySelector<HTMLButtonElement>('#mic-stop-button');
 
   vrmFileInput?.addEventListener('change', () => {
     const file = vrmFileInput.files?.[0] ?? null;
@@ -168,6 +203,10 @@ if (!state.obsMode) {
     appStore.getState().setVrmaLoop(loop);
     syncVrmaLoopMode(loop);
   });
+  micStartButton?.addEventListener('click', () => {
+    void startMicReactiveMouth();
+  });
+  micStopButton?.addEventListener('click', stopMicReactiveMouth);
 
   viewport.append(panel);
 } else {
@@ -197,6 +236,7 @@ function animate(frameTime = performance.now()): void {
   cube.rotation.x = elapsed * 0.32;
   cube.rotation.y = elapsed * 0.52;
   currentVrmaMixer?.update(delta);
+  sampleMicReactiveMouth();
   currentVrm?.update(delta);
   renderer.render(scene, camera);
   window.requestAnimationFrame(animate);
@@ -279,6 +319,7 @@ function replaceCurrentVrm(nextVrm: VRM): void {
   fitObjectToDefaultView(nextVrm.scene);
   scene.add(nextVrm.scene);
   resetVrmaMixer();
+  applyMouthOpen(appStore.getState().mouthOpen);
 }
 
 function fitObjectToDefaultView(object: THREE.Object3D): void {
@@ -317,6 +358,7 @@ function updateVrmStatusUi(nextState: AppState): void {
   }
 
   updateVrmaStatusUi(nextState);
+  updateMicStatusUi(nextState);
 }
 
 function getVrmStatusText(nextState: AppState): string {
@@ -463,4 +505,105 @@ function getVrmaRequirementText(nextState: AppState): string {
   }
 
   return nextState.vrmaLoop ? 'Ready to play in loop mode.' : 'Ready to play once.';
+}
+
+async function startMicReactiveMouth(): Promise<void> {
+  stopMicReactiveMouth();
+  appStore.getState().setMicRequesting();
+
+  try {
+    micController = new MicReactiveMouth({
+      fftSize: 1024,
+      threshold: 0.025,
+      sensitivity: 8,
+      attack: 0.55,
+      release: 0.16,
+    });
+    await micController.start();
+    appStore.getState().setMicActive();
+  } catch (error) {
+    micController?.stop();
+    micController = null;
+    appStore.getState().setMicError(getMicErrorMessage(error));
+  }
+}
+
+function stopMicReactiveMouth(): void {
+  micController?.stop();
+  micController = null;
+  applyMouthOpen(0);
+  appStore.getState().setMicStopped();
+}
+
+function sampleMicReactiveMouth(): void {
+  if (!micController || appStore.getState().micStatus !== 'active') {
+    return;
+  }
+
+  const frame = micController.sample();
+  applyMouthOpen(frame.mouthOpen);
+  appStore.getState().setMicFrame(frame.rms, frame.mouthOpen);
+}
+
+function applyMouthOpen(value: number): void {
+  currentVrm?.expressionManager?.setValue('aa', value);
+}
+
+function getMicErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return 'Failed to start microphone capture.';
+}
+
+function updateMicStatusUi(nextState: AppState): void {
+  if (micStatusText) {
+    micStatusText.textContent = getMicStatusText(nextState);
+  }
+
+  if (micRequirementText) {
+    micRequirementText.textContent = getMicRequirementText(nextState);
+  }
+
+  if (micLevelBar) {
+    micLevelBar.style.width = `${Math.min(nextState.micLevel * 320, 100).toFixed(1)}%`;
+  }
+
+  if (micMouthBar) {
+    micMouthBar.style.width = `${(nextState.mouthOpen * 100).toFixed(1)}%`;
+  }
+
+  if (micStartButton) {
+    micStartButton.disabled = nextState.micStatus === 'requesting' || nextState.micStatus === 'active';
+  }
+
+  if (micStopButton) {
+    micStopButton.disabled = nextState.micStatus !== 'active';
+  }
+}
+
+function getMicStatusText(nextState: AppState): string {
+  switch (nextState.micStatus) {
+    case 'idle':
+      return 'Microphone idle.';
+    case 'requesting':
+      return 'Requesting microphone permission...';
+    case 'active':
+      return 'Microphone active.';
+    case 'error':
+      return nextState.micError ?? 'Failed to start microphone capture.';
+  }
+}
+
+function getMicRequirementText(nextState: AppState): string {
+  if (nextState.vrmStatus !== 'ready') {
+    return 'Load a VRM before testing mouth movement.';
+  }
+
+  if (nextState.micStatus === 'active') {
+    return 'Voice volume is driving the VRM aa expression.';
+  }
+
+  return 'Start mic to drive the VRM aa expression.';
 }
