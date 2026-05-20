@@ -8,8 +8,8 @@ import { parseObsQuery } from './obs/query';
 import type { AppState } from './state/app-store';
 import { createAppStore } from './state/app-store';
 import { MicReactiveMouth } from './audio/mic-reactive-mouth';
-import { MediaPipePoseDebug } from './mocap/mediapipe-pose-debug';
 import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
+import type { MediaPipePoseDebug } from './mocap/mediapipe-pose-debug';
 import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
 import {
@@ -687,6 +687,7 @@ async function startPoseDebug(): Promise<void> {
     await poseVideoElement.play();
 
     appStore.getState().setPoseLoading();
+    const { MediaPipePoseDebug } = await import('./mocap/mediapipe-pose-debug');
     poseController = await MediaPipePoseDebug.create();
     appStore.getState().setPoseActive();
     lastPoseVideoTime = -1;

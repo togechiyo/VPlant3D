@@ -458,3 +458,33 @@
 
 - 今後のUI追加時も1920x1080で収まりを確認する
 - 必要になったらモバイルではなくOBS向けの小さめBrowser Sourceサイズを別projectとして追加する
+
+## 2026-05-20 MediaPipe Lazy Load
+
+### Goal
+
+- MediaPipe Pose Debugを使わない通常起動時のbundle負荷を下げる
+
+### Did
+
+- `src/main.ts` のMediaPipe runtime importをtype-only + dynamic importへ変更
+- `Start camera` を押してから `src/mocap/mediapipe-pose-debug.ts` を読み込むようにした
+
+### Worked
+
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。MediaPipe pose debug chunkが分離され、main JS chunkは約938KBから約802KBへ下がった
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- main JS chunkはまだ500KBを超えており、Viteのchunk size warningは継続
+
+### Decisions
+
+- カメラ系の重い依存は、ユーザーが明示的に使うまで遅延読み込みする
+
+### Next
+
+- さらに軽量化するなら、VRMA loaderやPlaywright対象外の重い機能もdynamic import候補にする
