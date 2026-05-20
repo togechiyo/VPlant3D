@@ -429,3 +429,32 @@
 - 人間のGoogle ChromeでMediaPipe Pose Debugのカメラ許可、ランドマーク追従、肩/胴体summaryの妥当性を確認する
 - 確認結果が良ければ、胸/首/肩のごく控えめなVRM retargetingをsmoothing付きで試す
 - カメラ/Mic感度調整UI、またはlocalStorageによる設定保存を検討する
+
+## 2026-05-20 OBS Viewport E2E Alignment
+
+### Goal
+
+- Playwright Chromiumの自動確認を、OBS想定の1920x1080 viewportに固定する
+
+### Did
+
+- `playwright.config.ts` のChromium projectで `Desktop Chrome` device設定を展開した後に1920x1080 viewportを指定するよう修正
+- Setup Mode E2Eで `page.viewportSize()` が1920x1080であることを確認するassertionを追加
+
+### Worked
+
+- `npm run test:e2e` は成功
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- なし
+
+### Decisions
+
+- OBS Browser Sourceの想定解像度に合わせ、E2Eの基本viewportは1920x1080で固定する
+
+### Next
+
+- 今後のUI追加時も1920x1080で収まりを確認する
+- 必要になったらモバイルではなくOBS向けの小さめBrowser Sourceサイズを別projectとして追加する

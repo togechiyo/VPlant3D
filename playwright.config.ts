@@ -7,10 +7,6 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:5173',
     trace: 'retain-on-failure',
-    viewport: {
-      width: 1920,
-      height: 1080,
-    },
   },
   webServer: {
     command: 'npm run dev',
@@ -21,7 +17,13 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: {
+          width: 1920,
+          height: 1080,
+        },
+      },
     },
   ],
 });

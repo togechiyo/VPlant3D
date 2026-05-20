@@ -13,6 +13,7 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
 
   await page.goto('/');
 
+  expect(page.viewportSize()).toEqual({ width: 1920, height: 1080 });
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
   await expect(page.getByText('Setup Mode')).toBeVisible();
   await expect(page.getByText('Load local VRM', { exact: true })).toBeVisible();
