@@ -33,13 +33,16 @@
     "@mediapipe/tasks-vision": "^0.10.35",
     "@pixiv/three-vrm": "^3.5.3",
     "@pixiv/three-vrm-animation": "^3.5.3",
-    "three": "^0.184.0"
+    "three": "^0.184.0",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.0",
     "@types/node": "^25.9.1",
     "@types/three": "^0.184.1",
     "eslint": "^10.4.0",
+    "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.4",
     "vite": "^8.0.13",

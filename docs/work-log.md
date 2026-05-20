@@ -156,3 +156,42 @@
 - 可能ならChromeで `http://127.0.0.1:5173/` と `?obs=1&transparent=1` の視認確認を行う
 - Foundationの差分をコミットする
 - 次の実装候補はOBS Mode / transparent modeのUI挙動強化、またはVRM loader調査
+
+## 2026-05-20 Tailwind and Zustand Setup
+
+### Goal
+
+- Tailwind CSS v4をViteへ導入し、素のCSSが膨らむ前にUIの土台を整える
+- Zustand vanilla storeを導入し、Setup Mode / OBS Mode / transparent modeなどの状態を集約する
+
+### Did
+
+- Tailwind公式Vite導入手順とZustand公式vanilla store APIを確認
+- npm registryで `tailwindcss` / `@tailwindcss/vite` / `zustand` の現行バージョンを確認
+- `tailwindcss` `4.3.0` と `@tailwindcss/vite` `4.3.0` を追加
+- `zustand` `5.0.13` を追加
+- Vite設定にTailwind pluginを追加
+- Setup Mode UIをTailwind class中心に変更
+- `src/state/app-store.ts` を追加し、OBS/transparent/rendererNameをZustand vanilla storeで管理
+- `test/app-store.test.ts` を追加
+
+### Worked
+
+- `npm run test` は成功
+- `npm run build` は成功
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- なし
+
+### Decisions
+
+- Tailwindはv4のVite plugin方式で入れる
+- ZustandはReactなしの `zustand/vanilla` を使う
+- Setup Mode UIはTailwind中心、全体背景やcanvasなどの基礎CSSは `src/style.css` に残す
+
+### Next
+
+- Tailwind/Zustand追加差分をコミットする
+- 次はVRM loaderまたはOBS Mode / transparent modeのブラウザ確認に進む

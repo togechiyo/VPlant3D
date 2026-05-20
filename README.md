@@ -50,6 +50,8 @@ Out of scope for the MVP:
 
 - TypeScript
 - Vite
+- Tailwind CSS
+- Zustand
 - Three.js
 - Three.js WebGPU Renderer
 - `@pixiv/three-vrm`

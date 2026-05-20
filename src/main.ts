@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 import { parseObsQuery } from './obs/query';
+import { createAppStore } from './state/app-store';
 import './style.css';
 
 const app = document.querySelector<HTMLDivElement>('#app');
@@ -10,19 +11,21 @@ if (!app) {
 }
 
 const options = parseObsQuery(window.location.search);
+const appStore = createAppStore(options);
+const state = appStore.getState();
 
 const viewport = document.createElement('section');
-viewport.className = options.transparent
+viewport.className = state.transparent
   ? 'viewport viewport--transparent'
   : 'viewport';
 
 const renderer = new THREE.WebGLRenderer({
-  alpha: options.transparent,
+  alpha: state.transparent,
   antialias: true,
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x101314, options.transparent ? 0 : 1);
+renderer.setClearColor(0x101314, state.transparent ? 0 : 1);
 renderer.domElement.className = 'scene-canvas';
 viewport.append(renderer.domElement);
 
@@ -61,17 +64,18 @@ const grid = new THREE.GridHelper(8, 16, 0x38d5ff, 0x263436);
 grid.position.y = -0.2;
 scene.add(grid);
 
-if (!options.obsMode) {
+if (!state.obsMode) {
   const panel = document.createElement('aside');
-  panel.className = 'setup-panel';
+  panel.className =
+    'absolute left-6 top-6 w-[min(420px,calc(100vw-48px))] rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.86)] p-5 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
   panel.innerHTML = `
-    <h1>VPlant3D <span class="accent">for OBS</span></h1>
-    <p>Lightweight VRM / VRMA 3D avatar layer for OBS Browser Source.</p>
-    <ul class="status-list">
-      <li><span>Setup Mode</span><strong>Active</strong></li>
-      <li><span>OBS Mode</span><strong>${options.obsMode ? 'On' : 'Off'}</strong></li>
-      <li><span>Transparent</span><strong>${options.transparent ? 'On' : 'Off'}</strong></li>
-      <li><span>Render</span><strong>Three.js WebGL</strong></li>
+    <h1 class="m-0 mb-2 text-2xl leading-tight tracking-normal">VPlant3D <span class="text-[#38d5ff]">for OBS</span></h1>
+    <p class="m-0 mb-4 leading-relaxed text-[#9fa9aa]">Lightweight VRM / VRMA 3D avatar layer for OBS Browser Source.</p>
+    <ul class="m-0 grid list-none gap-2 p-0">
+      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Setup Mode</span><strong class="font-bold text-[#6dff9a]">Active</strong></li>
+      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>OBS Mode</span><strong class="font-bold text-[#6dff9a]">${state.obsMode ? 'On' : 'Off'}</strong></li>
+      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Transparent</span><strong class="font-bold text-[#6dff9a]">${state.transparent ? 'On' : 'Off'}</strong></li>
+      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Render</span><strong class="font-bold text-[#6dff9a]">${state.rendererName}</strong></li>
     </ul>
   `;
   viewport.append(panel);

@@ -17,6 +17,9 @@ Versions and licenses below were verified from installed package metadata in `no
 | `typescript-eslint` | `8.59.4` | MIT | TypeScript-aware ESLint rules. |
 | `@eslint/js` | `10.0.1` | MIT | ESLint JavaScript recommended config. |
 | `@types/node` | `25.9.1` | MIT | Node.js type declarations for tooling config. |
+| `tailwindcss` | `4.3.0` | MIT | Utility-first CSS framework for Setup Mode UI. |
+| `@tailwindcss/vite` | `4.3.0` | MIT | Tailwind CSS v4 Vite plugin. |
+| `zustand` | `5.0.13` | MIT | Lightweight state store. Used through `zustand/vanilla` so the app can stay framework-free. |
 
 ## 3D Rendering
 
