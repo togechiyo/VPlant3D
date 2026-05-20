@@ -88,6 +88,8 @@ http://127.0.0.1:5173/?obs=1
 http://127.0.0.1:5173/?obs=1&transparent=1
 ```
 
+Setup Mode includes a local `.vrm` file input. Local VRM files are loaded from the user's machine and are not committed to this repository.
+
 ## Documentation
 
 - [VRM Awards / #MadeWithVRM notes](./docs/vrm-award.md)

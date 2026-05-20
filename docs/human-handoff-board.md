@@ -28,6 +28,38 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
+### Todo: ChromeでVRMファイル選択と表示を確認
+
+- Owner: Human or Codex with Chrome extension
+- Needed by: VRM loader merge前または次のVRMA実装前
+- Why: この環境ではPlaywrightがなく、Codex Chrome拡張の直接操作ツールも露出していないため、実Chromeのファイル選択ダイアログとWebGL表示を最後まで自動確認できなかった
+- What to check:
+  - `npm run dev` で `http://127.0.0.1:5173/` を開く
+  - Setup Modeの `Load local VRM` から `local-assets/vrm/Alicia_VRM/Alicia/VRM/AliciaSolid.vrm` を選ぶ
+  - placeholder cubeが消え、VRMモデルが表示される
+  - `VRM loaded.` とファイル名が表示される
+  - `http://127.0.0.1:5173/?obs=1&transparent=1` でSetup UIが出ず、透明背景モードが維持される
+  - console errorがない
+
+Notes:
+
+- Node上ではAlicia VRMが `@pixiv/three-vrm` の `VRMLoaderPlugin` でパースできることを確認済み
+- ローカル確認用であり、Aliciaモデルの公開デモ利用は別途権利確認する
+
+### Todo: VRM loader後のOBS Browser Source確認
+
+- Owner: Human
+- Needed by: MVP実装後
+- Why: OBS Browser Source内Chromiumでローカルファイル入力、WebGL、透明背景、VRM描画がChromeと一致するか確認が必要なため
+- What to check:
+  - `http://127.0.0.1:5173/` でSetup ModeからVRMを選べるか
+  - `http://127.0.0.1:5173/?obs=1&transparent=1` でUI非表示・背景透過が維持されるか
+  - 1920x1080 Browser Source上でモデルの大きさと位置が破綻しないか
+
+Notes:
+
+- OBSでファイル入力を直接使いにくい場合は、localStorage設定またはURL指定ではなくSetup Modeで設定を保存してOBS Modeへ移る設計を検討する
+
 ### Todo: ChromeでVite foundationの表示確認
 
 - Owner: Human or Codex with Chrome extension

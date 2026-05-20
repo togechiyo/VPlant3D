@@ -195,3 +195,49 @@
 
 - Tailwind/Zustand追加差分をコミットする
 - 次はVRM loaderまたはOBS Mode / transparent modeのブラウザ確認に進む
+
+## 2026-05-20 Minimal VRM Loader
+
+### Goal
+
+- Setup Modeでローカル `.vrm` ファイルを選択し、Three.js sceneへ表示する
+- `@pixiv/three-vrm` を使った小さなVRM loader moduleを追加する
+- 純ロジックはVitestで確認し、描画/ファイル選択の人力確認事項は伝言板へ残す
+
+### Did
+
+- `src/vrm/vrm-file.ts` を追加し、`.vrm` 拡張子、空ファイル、サイズ上限、エラーメッセージ生成を分離
+- `src/vrm/load-vrm.ts` を追加し、Three.js `GLTFLoader` と `@pixiv/three-vrm` `VRMLoaderPlugin` でVRMを読み込む処理を実装
+- VRM読み込み後に `VRMUtils.removeUnnecessaryVertices`、`combineSkeletons`、`rotateVRM0` を適用するようにした
+- Zustand storeへ `vrmStatus`、`vrmFileName`、`vrmError` と状態遷移アクションを追加
+- Setup Mode UIへ `Load local VRM` ファイル入力とロード状態表示を追加
+- VRMロード成功時にplaceholder cubeを外し、VRMをsceneへ配置し、animation loopで `vrm.update(delta)` を呼ぶようにした
+- READMEにSetup ModeのローカルVRM入力を追記
+- `docs/human-handoff-board.md` にChrome/OBSでのVRMファイル選択と表示確認を追加
+
+### Worked
+
+- `npm run test` は成功
+- `npm run build` は成功
+- `npm run lint` は成功
+- Vite dev serverは `http://127.0.0.1:5173/` でHTTP 200を返した
+- Node上の確認スクリプトで `local-assets/vrm/Alicia_VRM/Alicia/VRM/AliciaSolid.vrm` が `VRMLoaderPlugin` によりVRMとしてパースできた
+
+### Failed / Blocked
+
+- Node上の素朴な `GLTFLoader.parseAsync` は `self is not defined` で失敗した。Node検証では `globalThis.self = globalThis` とダミー `createImageBitmap` を補ってパース確認した
+- Playwrightはこの環境に入っておらず、Codex Chrome拡張の直接操作ツールも露出していなかったため、Chrome上のファイル選択と実描画確認は未実施
+- OBS Browser SourceでのVRM表示確認は未実施
+
+### Decisions
+
+- 初回VRMロードはローカルfile inputのみ対応する。モデルファイルはGitHubへ載せない
+- OBS Mode / transparent modeのquery挙動は既存のまま維持する
+- VRMの表示位置は、読み込んだモデルのbounding boxを使ってデフォルトカメラ向けに正規化する
+- Chrome/OBS/ファイル選択の確認は人力確認項目として扱い、実装は進める
+
+### Next
+
+- ChromeでAlicia VRMを選択し、Setup Modeでモデルが表示されることを確認する
+- OBS Browser Sourceで `?obs=1&transparent=1` の透明背景とVRM表示を確認する
+- 次の実装候補はVRMロード設定のlocalStorage保存、またはVRMA読み込み・再生の最小実装
