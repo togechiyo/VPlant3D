@@ -241,3 +241,48 @@
 - ChromeでAlicia VRMを選択し、Setup Modeでモデルが表示されることを確認する
 - OBS Browser Sourceで `?obs=1&transparent=1` の透明背景とVRM表示を確認する
 - 次の実装候補はVRMロード設定のlocalStorage保存、またはVRMA読み込み・再生の最小実装
+
+## 2026-05-20 Playwright Setup
+
+### Goal
+
+- Codexがブラウザ上のSetup Mode / OBS Mode / VRM file inputを自動確認できるようにする
+- GitHubへ載せない `local-assets/` を使ったローカルE2Eは、素材がある場合だけ実行できるようにする
+
+### Did
+
+- `@playwright/test` をdev dependencyに追加
+- `playwright.config.ts` を追加し、Vite dev serverを自動起動してChromiumでE2Eを走らせる設定を作成
+- `npm run test:e2e` scriptを追加
+- `test/e2e/app.spec.ts` を追加し、Setup Mode、OBS transparent mode、Alicia VRM file inputのE2E確認を実装
+- `local-assets/vrm/Alicia_VRM/Alicia/VRM/AliciaSolid.vrm` がない環境ではVRMロードE2Eをskipするようにした
+- VitestがPlaywright testを拾わないよう `vite.config.ts` で `test/e2e/**` を除外
+- Playwright生成物 `playwright-report/` と `test-results/` を `.gitignore` / ESLint ignoreへ追加
+- READMEとthird-party librariesへPlaywrightを追記
+- Human Handoff BoardのVRMファイル選択確認を、Playwright ChromiumではDone、人間Chrome目視確認はTodoとして整理
+
+### Worked
+
+- `npx playwright install chromium` は成功
+- `npm run test:e2e` は成功。Alicia VRMをfile inputへ渡し、`VRM loaded.` とファイル名表示まで確認できた
+- `npm run test` は成功
+- `npm run build` は成功
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 最初はVitestが `test/e2e/app.spec.ts` を拾って失敗したため、Vitestの対象からE2Eを除外した
+- Playwright実行中にESLintを並列実行すると生成中の `test-results` と衝突することがあったため、生成物をignore対象にした
+- Playwright Chromiumでは自動確認できたが、人間のGoogle Chromeでの見た目確認とOBS Browser Source確認は未実施
+
+### Decisions
+
+- ローカルPlaywrightを主なブラウザ自動確認手段にする
+- GitHub ActionsへのPlaywright導入は、CIで使える合法・軽量なテストVRMを決めてから検討する
+- 当面のCI候補は `npm run test` / `npm run build` / `npm run lint` を優先する
+
+### Next
+
+- 人間のGoogle Chromeでモデルの見え方を目視確認する
+- OBS Browser Sourceで透明背景とVRM表示を確認する
+- 次の実装候補はVRMA読み込み・再生、またはVRM設定のlocalStorage保存

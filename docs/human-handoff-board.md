@@ -28,23 +28,33 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
-### Todo: ChromeでVRMファイル選択と表示を確認
+### Done: Playwright ChromiumでVRMファイル選択と表示を確認
 
-- Owner: Human or Codex with Chrome extension
-- Needed by: VRM loader merge前または次のVRMA実装前
-- Why: この環境ではPlaywrightがなく、Codex Chrome拡張の直接操作ツールも露出していないため、実Chromeのファイル選択ダイアログとWebGL表示を最後まで自動確認できなかった
+- Owner: Codex
+- Completed: 2026-05-20
+- Why: `@playwright/test` を導入し、Chromiumで実際にfile inputへローカルVRMを渡せるようになったため
 - What to check:
-  - `npm run dev` で `http://127.0.0.1:5173/` を開く
-  - Setup Modeの `Load local VRM` から `local-assets/vrm/Alicia_VRM/Alicia/VRM/AliciaSolid.vrm` を選ぶ
-  - placeholder cubeが消え、VRMモデルが表示される
-  - `VRM loaded.` とファイル名が表示される
-  - `http://127.0.0.1:5173/?obs=1&transparent=1` でSetup UIが出ず、透明背景モードが維持される
-  - console errorがない
+  - `npm run test:e2e`
+  - Setup Modeにcanvasと `Load local VRM` が出る
+  - `?obs=1&transparent=1` ではSetup UIが出ずcanvasが残る
+  - `local-assets/vrm/Alicia_VRM/Alicia/VRM/AliciaSolid.vrm` をfile inputに渡すと `VRM loaded.` になる
 
 Notes:
 
-- Node上ではAlicia VRMが `@pixiv/three-vrm` の `VRMLoaderPlugin` でパースできることを確認済み
+- Node上でもAlicia VRMが `@pixiv/three-vrm` の `VRMLoaderPlugin` でパースできることを確認済み
+- Playwright ChromiumでE2E確認済み
 - ローカル確認用であり、Aliciaモデルの公開デモ利用は別途権利確認する
+
+### Todo: 人間のGoogle ChromeでVRM表示を目視確認
+
+- Owner: Human or Codex with Chrome extension
+- Needed by: デモ調整前
+- Why: Playwright Chromiumでは機械的な成功確認はできたが、人間が見る画角・ライティング・モデルサイズの印象確認は別途必要なため
+- What to check:
+  - `npm run dev` で `http://127.0.0.1:5173/` を開く
+  - Setup Modeの `Load local VRM` から `local-assets/vrm/Alicia_VRM/Alicia/VRM/AliciaSolid.vrm` を選ぶ
+  - モデルの大きさ、位置、向き、ライティングが1920x1080想定で破綻していない
+  - console errorがない
 
 ### Todo: VRM loader後のOBS Browser Source確認
 

@@ -13,6 +13,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    exclude: ['test/e2e/**', 'node_modules/**', 'dist/**'],
     globals: true,
   },
 });

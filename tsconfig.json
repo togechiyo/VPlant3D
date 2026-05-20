@@ -17,5 +17,5 @@
     "noImplicitOverride": true,
     "types": ["vitest/globals"]
   },
-  "include": ["src", "test", "vite.config.ts", "eslint.config.js"]
+  "include": ["src", "test", "vite.config.ts", "playwright.config.ts", "eslint.config.js"]
 }

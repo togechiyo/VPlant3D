@@ -13,6 +13,7 @@ Versions and licenses below were verified from installed package metadata in `no
 | `typescript` | `6.0.3` | Apache-2.0 | Main implementation language. Used to keep rendering, VRM integration, and UI logic typed and maintainable. |
 | `vite` | `8.0.13` | MIT | Development server and frontend build tool. Used for fast local iteration and browser-based delivery. |
 | `vitest` | `4.1.7` | MIT | Unit test runner for TypeScript modules. |
+| `@playwright/test` | `1.60.0` | Apache-2.0 | End-to-end browser test runner. Used for local Chromium checks of Setup Mode, OBS Mode, and local VRM file input. |
 | `eslint` | `10.4.0` | MIT | Linting. |
 | `typescript-eslint` | `8.59.4` | MIT | TypeScript-aware ESLint rules. |
 | `@eslint/js` | `10.0.1` | MIT | ESLint JavaScript recommended config. |
