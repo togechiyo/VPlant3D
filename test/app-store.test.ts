@@ -16,6 +16,12 @@ describe('createAppStore', () => {
       vrmStatus: 'idle',
       vrmFileName: null,
       vrmError: null,
+      vrmaStatus: 'idle',
+      vrmaFileName: null,
+      vrmaError: null,
+      vrmaDuration: null,
+      vrmaPlaybackStatus: 'stopped',
+      vrmaLoop: true,
     });
   });
 
@@ -47,6 +53,45 @@ describe('createAppStore', () => {
       vrmStatus: 'error',
       vrmFileName: 'AliciaSolid.vrm',
       vrmError: 'Failed to load',
+    });
+  });
+
+  it('tracks VRMA loading, ready, playback, loop, and error states', () => {
+    const store = createAppStore({
+      obsMode: false,
+      transparent: false,
+    });
+
+    store.getState().setVrmaLoading('VRMA_02.vrma');
+
+    expect(store.getState()).toMatchObject({
+      vrmaStatus: 'loading',
+      vrmaFileName: 'VRMA_02.vrma',
+      vrmaError: null,
+      vrmaDuration: null,
+      vrmaPlaybackStatus: 'stopped',
+    });
+
+    store.getState().setVrmaReady('VRMA_02.vrma', 2.5);
+    store.getState().setVrmaPlaybackStatus('playing');
+    store.getState().setVrmaLoop(false);
+
+    expect(store.getState()).toMatchObject({
+      vrmaStatus: 'ready',
+      vrmaFileName: 'VRMA_02.vrma',
+      vrmaError: null,
+      vrmaDuration: 2.5,
+      vrmaPlaybackStatus: 'playing',
+      vrmaLoop: false,
+    });
+
+    store.getState().setVrmaError('Failed to load motion');
+
+    expect(store.getState()).toMatchObject({
+      vrmaStatus: 'error',
+      vrmaFileName: 'VRMA_02.vrma',
+      vrmaError: 'Failed to load motion',
+      vrmaPlaybackStatus: 'stopped',
     });
   });
 });

@@ -13,7 +13,7 @@ Versions and licenses below were verified from installed package metadata in `no
 | `typescript` | `6.0.3` | Apache-2.0 | Main implementation language. Used to keep rendering, VRM integration, and UI logic typed and maintainable. |
 | `vite` | `8.0.13` | MIT | Development server and frontend build tool. Used for fast local iteration and browser-based delivery. |
 | `vitest` | `4.1.7` | MIT | Unit test runner for TypeScript modules. |
-| `@playwright/test` | `1.60.0` | Apache-2.0 | End-to-end browser test runner. Used for local Chromium checks of Setup Mode, OBS Mode, and local VRM file input. |
+| `@playwright/test` | `1.60.0` | Apache-2.0 | End-to-end browser test runner. Used for local Chromium checks of Setup Mode, OBS Mode, local VRM file input, and local VRMA playback controls. |
 | `eslint` | `10.4.0` | MIT | Linting. |
 | `typescript-eslint` | `8.59.4` | MIT | TypeScript-aware ESLint rules. |
 | `@eslint/js` | `10.0.1` | MIT | ESLint JavaScript recommended config. |
@@ -36,7 +36,7 @@ Versions and licenses below were verified from installed package metadata in `no
 | Package | Version | License | Role |
 | --- | ---: | --- | --- |
 | `@pixiv/three-vrm` | `3.5.3` | MIT | VRM model loading and runtime control for Three.js. Used for avatar display, expressions, humanoid bones, and VRM-specific behavior. |
-| `@pixiv/three-vrm-animation` | `3.5.3` | MIT | VRMA loading and playback support for Three.js / VRM avatars. Used for idle motions, short reactions, and demo animations. |
+| `@pixiv/three-vrm-animation` | `3.5.3` | MIT | VRMA loading and playback support for Three.js / VRM avatars. Used through `VRMAnimationLoaderPlugin` and `createVRMAnimationClip` for idle motions, short reactions, and demo animations. |
 
 ## Input / Tracking
 

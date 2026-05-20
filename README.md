@@ -89,13 +89,14 @@ http://127.0.0.1:5173/?obs=1
 http://127.0.0.1:5173/?obs=1&transparent=1
 ```
 
-Setup Mode includes a local `.vrm` file input. Local VRM files are loaded from the user's machine and are not committed to this repository.
+Setup Mode includes local `.vrm` and `.vrma` file inputs. Local model and motion files are loaded from the user's machine and are not committed to this repository.
 
 ## Documentation
 
 - [VRM Awards / #MadeWithVRM notes](./docs/vrm-award.md)
 - [VPlant3D for OBS concept](./docs/vplant3d-for-obs.md)
 - [Third-party libraries](./docs/third-party-libraries.md)
+- [VRMA implementation notes](./docs/vrma-implementation-notes.md)
 - [MMD_modoki reference notes](./docs/mmd-modoki-reference.md)
 - [Codex usage notes](./docs/codex-usage-2026-05-20.md)
 - [Human handoff board](./docs/human-handoff-board.md)

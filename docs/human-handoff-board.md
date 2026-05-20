@@ -28,6 +28,40 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
+### Done: Playwright ChromiumでVRMAファイル選択とPlay/Stopを確認
+
+- Owner: Codex
+- Completed: 2026-05-20
+- Why: `@pixiv/three-vrm-animation` とPlaywright Chromiumで、ローカルVRM + ローカルVRMAの最小再生操作が自動確認できるようになったため
+- What was checked:
+  - `local-assets/vrm/Alicia_VRM/Alicia/VRM/AliciaSolid.vrm` を読み込む
+  - `local-assets/vrma/VRMA_MotionPack/vrma/VRMA_02.vrma` を読み込む
+  - VRMAが `VRMA loaded.` になる
+  - Playボタンで `VRMA playing.` になる
+  - Stopボタンで `VRMA loaded.` に戻る
+  - `?obs=1&transparent=1` ではSetup UIが非表示のまま
+
+Notes:
+
+- 自動確認は状態表示とブラウザエラー有無の確認であり、モーション品質の目視確認は別途必要
+
+### Todo: 人間のGoogle ChromeでVRMA再生品質を目視確認
+
+- Owner: Human or Codex with Chrome extension
+- Needed by: VRMAデモ調整前
+- Why: Playwright ChromiumではVRMAのロードと再生状態は確認できるが、動きの自然さ、手足の破綻、モデルサイズとの相性は人間の目で確認する必要があるため
+- What to check:
+  - `npm run dev` で `http://127.0.0.1:5173/` を開く
+  - Alicia VRMを読み込む
+  - VRMA_02を読み込んでPlayする
+  - 挨拶モーションとして見せられる品質か
+  - Loop on/off時の見え方がデモとして違和感ないか
+  - console errorがない
+
+Notes:
+
+- 公開デモに使う場合はVRMA MotionPackのクレジット表記確認も行う
+
 ### Done: Playwright ChromiumでVRMファイル選択と表示を確認
 
 - Owner: Codex

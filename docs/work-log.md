@@ -286,3 +286,53 @@
 - 人間のGoogle Chromeでモデルの見え方を目視確認する
 - OBS Browser Sourceで透明背景とVRM表示を確認する
 - 次の実装候補はVRMA読み込み・再生、またはVRM設定のlocalStorage保存
+
+## 2026-05-20 Minimal VRMA Playback
+
+### Goal
+
+- Setup Modeでローカル `.vrma` を読み込み、現在のVRMへ適用してPlay/Stop/Loop操作できるようにする
+- `@pixiv/three-vrm-animation` の採用APIと制限をdocsへ残す
+- Playwright Chromiumで、Alicia VRM + VRMA_02の最小再生フローを自動確認する
+
+### Did
+
+- `@pixiv/three-vrm-animation` 公式TypeDocとinstalled package typesを確認
+- `src/vrma/vrma-file.ts` を追加し、`.vrma` 拡張子、空ファイル、サイズ上限、エラー文言を分離
+- `src/vrma/playback-state.ts` を追加し、Play/Stop/Loopの純状態遷移をテスト可能にした
+- `src/vrma/load-vrma.ts` を追加し、`GLTFLoader` + `VRMAnimationLoaderPlugin` で `gltf.userData.vrmAnimations[0]` を読み込むようにした
+- Zustand storeへVRMA load status、file name、duration、playback status、loop stateを追加
+- Setup Mode UIへVRMA file input、Play、Stop、Loop checkbox、VRM必須表示を追加
+- VRMA読み込み後、現在のVRMに対して `createVRMAnimationClip` と `THREE.AnimationMixer` で再生するようにした
+- `VRMLookAtQuaternionProxy` を明示的に追加し、`createVRMAnimationClip` の自動生成警告を避けた
+- `THREE.Clock` の非推奨警告を避けるため、animation loopのdelta計算を `requestAnimationFrame` timestampベースへ変更
+- Playwright E2Eを更新し、Setup Mode / OBS transparent mode / Alicia VRM / VRMA_02 Play/Stopを確認するようにした
+- `docs/vrma-implementation-notes.md` を追加
+- README、third-party libraries、Human Handoff Boardを更新
+
+### Worked
+
+- `npm run test` は成功
+- `npm run test:e2e` は成功。Alicia VRM + VRMA_02を読み込み、Play/Stop状態まで確認できた
+- `npm run build` は成功
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 最初のE2Eでは `Load local VRM` が `Load local VRMA` に部分一致して落ちたため、exact matchへ修正した
+- 最初のE2EではVRMAファイル名の正規表現が過剰escapeで落ちたため修正した
+- Playwrightはモーションの再生状態を確認できるが、動きの品質や見栄えは判定できない
+- OBS Browser SourceでのVRMA再生確認は未実施
+
+### Decisions
+
+- 初回は1つ目の `VRMAnimation` だけを採用する
+- VRMを差し替えた場合は同じVRMAからclip/mixerを作り直す
+- VRMがない状態ではVRMA Playを無効化し、UIに必要条件を出す
+- GitHubへ載せないVRMA MotionPackはローカルPlaywright確認だけに使う
+
+### Next
+
+- 人間のGoogle ChromeでVRMA_02の動きがデモとして自然か確認する
+- OBS Browser SourceでVRM + VRMA + transparent modeを確認する
+- 次の実装候補はLoop off終了時のUI同期、再生速度/Restart、またはマイク音量連動くちパク

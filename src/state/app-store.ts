@@ -1,8 +1,11 @@
 import { createStore } from 'zustand/vanilla';
 
 import type { ObsQueryOptions } from '../obs/query';
+import type { VrmaPlaybackStatus } from '../vrma/playback-state';
+import { createInitialVrmaPlaybackState } from '../vrma/playback-state';
 
 export type VrmLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
+export type VrmaLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 export interface AppState {
   obsMode: boolean;
@@ -11,14 +14,27 @@ export interface AppState {
   vrmStatus: VrmLoadStatus;
   vrmFileName: string | null;
   vrmError: string | null;
+  vrmaStatus: VrmaLoadStatus;
+  vrmaFileName: string | null;
+  vrmaError: string | null;
+  vrmaDuration: number | null;
+  vrmaPlaybackStatus: VrmaPlaybackStatus;
+  vrmaLoop: boolean;
   setVrmLoading: (fileName: string) => void;
   setVrmReady: (fileName: string) => void;
   setVrmError: (message: string) => void;
+  setVrmaLoading: (fileName: string) => void;
+  setVrmaReady: (fileName: string, duration: number) => void;
+  setVrmaError: (message: string) => void;
+  setVrmaPlaybackStatus: (status: VrmaPlaybackStatus) => void;
+  setVrmaLoop: (loop: boolean) => void;
 }
 
 export type AppStore = ReturnType<typeof createAppStore>;
 
 export function createAppStore(initialOptions: ObsQueryOptions) {
+  const initialVrmaPlayback = createInitialVrmaPlaybackState();
+
   return createStore<AppState>()((set) => ({
     obsMode: initialOptions.obsMode,
     transparent: initialOptions.transparent,
@@ -26,6 +42,12 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     vrmStatus: 'idle',
     vrmFileName: null,
     vrmError: null,
+    vrmaStatus: 'idle',
+    vrmaFileName: null,
+    vrmaError: null,
+    vrmaDuration: null,
+    vrmaPlaybackStatus: initialVrmaPlayback.status,
+    vrmaLoop: initialVrmaPlayback.loop,
     setVrmLoading: (fileName) =>
       set({
         vrmStatus: 'loading',
@@ -42,6 +64,36 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
       set({
         vrmStatus: 'error',
         vrmError: message,
+      }),
+    setVrmaLoading: (fileName) =>
+      set({
+        vrmaStatus: 'loading',
+        vrmaFileName: fileName,
+        vrmaError: null,
+        vrmaDuration: null,
+        vrmaPlaybackStatus: 'stopped',
+      }),
+    setVrmaReady: (fileName, duration) =>
+      set({
+        vrmaStatus: 'ready',
+        vrmaFileName: fileName,
+        vrmaError: null,
+        vrmaDuration: duration,
+        vrmaPlaybackStatus: 'stopped',
+      }),
+    setVrmaError: (message) =>
+      set({
+        vrmaStatus: 'error',
+        vrmaError: message,
+        vrmaPlaybackStatus: 'stopped',
+      }),
+    setVrmaPlaybackStatus: (status) =>
+      set({
+        vrmaPlaybackStatus: status,
+      }),
+    setVrmaLoop: (loop) =>
+      set({
+        vrmaLoop: loop,
       }),
   }));
 }
