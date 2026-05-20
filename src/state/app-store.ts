@@ -7,6 +7,7 @@ import { createInitialVrmaPlaybackState } from '../vrma/playback-state';
 export type VrmLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 export type VrmaLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 export type MicStatus = 'idle' | 'requesting' | 'active' | 'error';
+export type PoseStatus = 'idle' | 'requesting' | 'loading' | 'active' | 'error';
 
 export interface AppState {
   obsMode: boolean;
@@ -25,6 +26,12 @@ export interface AppState {
   micError: string | null;
   micLevel: number;
   mouthOpen: number;
+  poseStatus: PoseStatus;
+  poseError: string | null;
+  poseLandmarkCount: number;
+  poseUpperBodyVisibleCount: number;
+  poseAverageVisibility: number;
+  poseSummaryText: string;
   setVrmLoading: (fileName: string) => void;
   setVrmReady: (fileName: string) => void;
   setVrmError: (message: string) => void;
@@ -38,6 +45,17 @@ export interface AppState {
   setMicError: (message: string) => void;
   setMicStopped: () => void;
   setMicFrame: (level: number, mouthOpen: number) => void;
+  setPoseRequesting: () => void;
+  setPoseLoading: () => void;
+  setPoseActive: () => void;
+  setPoseError: (message: string) => void;
+  setPoseStopped: () => void;
+  setPoseFrame: (
+    landmarkCount: number,
+    upperBodyVisibleCount: number,
+    averageVisibility: number,
+    summaryText: string,
+  ) => void;
 }
 
 export type AppStore = ReturnType<typeof createAppStore>;
@@ -62,6 +80,12 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     micError: null,
     micLevel: 0,
     mouthOpen: 0,
+    poseStatus: 'idle',
+    poseError: null,
+    poseLandmarkCount: 0,
+    poseUpperBodyVisibleCount: 0,
+    poseAverageVisibility: 0,
+    poseSummaryText: 'Camera idle.',
     setVrmLoading: (fileName) =>
       set({
         vrmStatus: 'loading',
@@ -137,6 +161,51 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
       set({
         micLevel: level,
         mouthOpen,
+      }),
+    setPoseRequesting: () =>
+      set({
+        poseStatus: 'requesting',
+        poseError: null,
+      }),
+    setPoseLoading: () =>
+      set({
+        poseStatus: 'loading',
+        poseError: null,
+      }),
+    setPoseActive: () =>
+      set({
+        poseStatus: 'active',
+        poseError: null,
+      }),
+    setPoseError: (message) =>
+      set({
+        poseStatus: 'error',
+        poseError: message,
+        poseLandmarkCount: 0,
+        poseUpperBodyVisibleCount: 0,
+        poseAverageVisibility: 0,
+        poseSummaryText: 'Pose debug stopped.',
+      }),
+    setPoseStopped: () =>
+      set({
+        poseStatus: 'idle',
+        poseError: null,
+        poseLandmarkCount: 0,
+        poseUpperBodyVisibleCount: 0,
+        poseAverageVisibility: 0,
+        poseSummaryText: 'Camera idle.',
+      }),
+    setPoseFrame: (
+      landmarkCount,
+      upperBodyVisibleCount,
+      averageVisibility,
+      summaryText,
+    ) =>
+      set({
+        poseLandmarkCount: landmarkCount,
+        poseUpperBodyVisibleCount: upperBodyVisibleCount,
+        poseAverageVisibility: averageVisibility,
+        poseSummaryText: summaryText,
       }),
   }));
 }

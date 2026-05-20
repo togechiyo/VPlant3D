@@ -8,6 +8,9 @@ import { parseObsQuery } from './obs/query';
 import type { AppState } from './state/app-store';
 import { createAppStore } from './state/app-store';
 import { MicReactiveMouth } from './audio/mic-reactive-mouth';
+import { MediaPipePoseDebug } from './mocap/mediapipe-pose-debug';
+import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
+import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
 import {
   getUnknownVrmLoadErrorMessage,
@@ -102,11 +105,23 @@ let micLevelBar: HTMLElement | null = null;
 let micMouthBar: HTMLElement | null = null;
 let micStartButton: HTMLButtonElement | null = null;
 let micStopButton: HTMLButtonElement | null = null;
+let poseController: MediaPipePoseDebug | null = null;
+let poseStream: MediaStream | null = null;
+let poseVideoElement: HTMLVideoElement | null = null;
+let poseCanvasElement: HTMLCanvasElement | null = null;
+let poseStatusText: HTMLElement | null = null;
+let poseRequirementText: HTMLElement | null = null;
+let poseSummaryText: HTMLElement | null = null;
+let poseVisibilityBar: HTMLElement | null = null;
+let poseStartButton: HTMLButtonElement | null = null;
+let poseStopButton: HTMLButtonElement | null = null;
+let poseAnimationFrameId: number | null = null;
+let lastPoseVideoTime = -1;
 
 if (!state.obsMode) {
   const panel = document.createElement('aside');
   panel.className =
-    'absolute left-6 top-6 w-[min(420px,calc(100vw-48px))] rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.86)] p-5 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
+    'absolute left-6 top-6 max-h-[calc(100vh-48px)] w-[min(420px,calc(100vw-48px))] overflow-y-auto rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.86)] p-5 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
   panel.innerHTML = `
     <h1 class="m-0 mb-2 text-2xl leading-tight tracking-normal">VPlant3D <span class="text-[#38d5ff]">for OBS</span></h1>
     <p class="m-0 mb-4 leading-relaxed text-[#9fa9aa]">Lightweight VRM / VRMA 3D avatar layer for OBS Browser Source.</p>
@@ -162,6 +177,28 @@ if (!state.obsMode) {
         <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
       </div>
     </div>
+    <div class="mb-4 grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">MediaPipe Pose Debug</span>
+        <strong id="pose-status-text" class="text-sm font-bold text-[#eef4f2]">Camera idle.</strong>
+        <span id="pose-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Start camera to inspect upper-body landmarks.</span>
+      </div>
+      <div class="relative aspect-video overflow-hidden rounded-md border border-white/10 bg-[#0b0f10]">
+        <video id="pose-video" class="h-full w-full scale-x-[-1] object-cover opacity-80" autoplay muted playsinline></video>
+        <canvas id="pose-canvas" class="pointer-events-none absolute inset-0 h-full w-full scale-x-[-1]"></canvas>
+      </div>
+      <div class="grid gap-2">
+        <div class="flex items-center justify-between gap-3 text-xs font-bold text-[#9fa9aa]">
+          <span>Upper body visibility</span>
+          <span id="pose-summary-text">Camera idle.</span>
+        </div>
+        <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="pose-visibility-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-[#6dff9a]/10 disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
+        <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
+      </div>
+    </div>
     <ul class="m-0 grid list-none gap-2 p-0">
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Setup Mode</span><strong class="font-bold text-[#6dff9a]">Active</strong></li>
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>OBS Mode</span><strong class="font-bold text-[#6dff9a]">${state.obsMode ? 'On' : 'Off'}</strong></li>
@@ -186,6 +223,14 @@ if (!state.obsMode) {
   micMouthBar = panel.querySelector<HTMLElement>('#mic-mouth-bar');
   micStartButton = panel.querySelector<HTMLButtonElement>('#mic-start-button');
   micStopButton = panel.querySelector<HTMLButtonElement>('#mic-stop-button');
+  poseVideoElement = panel.querySelector<HTMLVideoElement>('#pose-video');
+  poseCanvasElement = panel.querySelector<HTMLCanvasElement>('#pose-canvas');
+  poseStatusText = panel.querySelector<HTMLElement>('#pose-status-text');
+  poseRequirementText = panel.querySelector<HTMLElement>('#pose-requirement-text');
+  poseSummaryText = panel.querySelector<HTMLElement>('#pose-summary-text');
+  poseVisibilityBar = panel.querySelector<HTMLElement>('#pose-visibility-bar');
+  poseStartButton = panel.querySelector<HTMLButtonElement>('#pose-start-button');
+  poseStopButton = panel.querySelector<HTMLButtonElement>('#pose-stop-button');
 
   vrmFileInput?.addEventListener('change', () => {
     const file = vrmFileInput.files?.[0] ?? null;
@@ -207,6 +252,10 @@ if (!state.obsMode) {
     void startMicReactiveMouth();
   });
   micStopButton?.addEventListener('click', stopMicReactiveMouth);
+  poseStartButton?.addEventListener('click', () => {
+    void startPoseDebug();
+  });
+  poseStopButton?.addEventListener('click', stopPoseDebug);
 
   viewport.append(panel);
 } else {
@@ -359,6 +408,7 @@ function updateVrmStatusUi(nextState: AppState): void {
 
   updateVrmaStatusUi(nextState);
   updateMicStatusUi(nextState);
+  updatePoseStatusUi(nextState);
 }
 
 function getVrmStatusText(nextState: AppState): string {
@@ -387,6 +437,7 @@ function resetVrmaMixer(): void {
 
   const clip = createVRMAnimationClip(currentVrma, currentVrm);
   currentVrmaMixer = new THREE.AnimationMixer(currentVrm.scene);
+  currentVrmaMixer.addEventListener('finished', handleVrmaPlaybackFinished);
   currentVrmaAction = currentVrmaMixer.clipAction(clip);
   currentVrmaAction.clampWhenFinished = true;
   syncVrmaLoopMode(appStore.getState().vrmaLoop);
@@ -441,8 +492,14 @@ function syncVrmaLoopMode(loop: boolean): void {
     return;
   }
 
-  currentVrmaAction.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
+  currentVrmaAction.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
   currentVrmaAction.clampWhenFinished = true;
+}
+
+function handleVrmaPlaybackFinished(): void {
+  if (!appStore.getState().vrmaLoop) {
+    appStore.getState().setVrmaPlaybackStatus('stopped');
+  }
 }
 
 function updateVrmaStatusUi(nextState: AppState): void {
@@ -606,4 +663,246 @@ function getMicRequirementText(nextState: AppState): string {
   }
 
   return 'Start mic to drive the VRM aa expression.';
+}
+
+async function startPoseDebug(): Promise<void> {
+  stopPoseDebug();
+  appStore.getState().setPoseRequesting();
+
+  if (!poseVideoElement || !poseCanvasElement) {
+    appStore.getState().setPoseError('Pose debug UI is not available.');
+    return;
+  }
+
+  try {
+    poseStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: 640 },
+        height: { ideal: 360 },
+        facingMode: 'user',
+      },
+      audio: false,
+    });
+    poseVideoElement.srcObject = poseStream;
+    await poseVideoElement.play();
+
+    appStore.getState().setPoseLoading();
+    poseController = await MediaPipePoseDebug.create();
+    appStore.getState().setPoseActive();
+    lastPoseVideoTime = -1;
+    poseAnimationFrameId = window.requestAnimationFrame(runPoseDebugFrame);
+  } catch (error) {
+    stopPoseDebug();
+    appStore.getState().setPoseError(getPoseErrorMessage(error));
+  }
+}
+
+function stopPoseDebug(): void {
+  if (poseAnimationFrameId !== null) {
+    window.cancelAnimationFrame(poseAnimationFrameId);
+    poseAnimationFrameId = null;
+  }
+
+  poseController?.close();
+  poseController = null;
+  poseStream?.getTracks().forEach((track) => track.stop());
+  poseStream = null;
+  lastPoseVideoTime = -1;
+
+  if (poseVideoElement) {
+    poseVideoElement.pause();
+    poseVideoElement.srcObject = null;
+  }
+
+  clearPoseCanvas();
+  appStore.getState().setPoseStopped();
+}
+
+function runPoseDebugFrame(frameTime: number): void {
+  if (
+    !poseController ||
+    !poseVideoElement ||
+    !poseCanvasElement ||
+    appStore.getState().poseStatus !== 'active'
+  ) {
+    return;
+  }
+
+  try {
+    if (
+      poseVideoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+      poseVideoElement.currentTime !== lastPoseVideoTime
+    ) {
+      const result = poseController.detect(poseVideoElement, frameTime);
+      const landmarks = result.landmarks[0] ?? [];
+      const summary = summarizeUpperBodyPose(landmarks);
+      drawPoseDebugLandmarks(landmarks);
+      appStore
+        .getState()
+        .setPoseFrame(
+          summary.landmarkCount,
+          summary.upperBodyVisibleCount,
+          summary.averageUpperBodyVisibility,
+          formatPoseSummary(summary),
+        );
+      lastPoseVideoTime = poseVideoElement.currentTime;
+    }
+
+    poseAnimationFrameId = window.requestAnimationFrame(runPoseDebugFrame);
+  } catch (error) {
+    stopPoseDebug();
+    appStore.getState().setPoseError(getPoseErrorMessage(error));
+  }
+}
+
+function drawPoseDebugLandmarks(landmarks: Array<{ x: number; y: number; visibility?: number }>): void {
+  if (!poseCanvasElement) {
+    return;
+  }
+
+  const context = poseCanvasElement.getContext('2d');
+
+  if (!context) {
+    return;
+  }
+
+  const width = poseCanvasElement.clientWidth;
+  const height = poseCanvasElement.clientHeight;
+  const pixelRatio = Math.min(window.devicePixelRatio, 2);
+  poseCanvasElement.width = Math.max(1, Math.round(width * pixelRatio));
+  poseCanvasElement.height = Math.max(1, Math.round(height * pixelRatio));
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  context.clearRect(0, 0, width, height);
+
+  const connections = [
+    [11, 12],
+    [11, 13],
+    [13, 15],
+    [12, 14],
+    [14, 16],
+    [11, 23],
+    [12, 24],
+    [23, 24],
+  ] as const;
+  const points = [0, 11, 12, 13, 14, 15, 16, 23, 24] as const;
+
+  context.lineWidth = 3;
+  context.strokeStyle = '#38d5ff';
+  context.shadowColor = 'rgba(56, 213, 255, 0.8)';
+  context.shadowBlur = 10;
+
+  for (const [fromIndex, toIndex] of connections) {
+    const from = landmarks[fromIndex];
+    const to = landmarks[toIndex];
+
+    if (!from || !to || (from.visibility ?? 0) < 0.35 || (to.visibility ?? 0) < 0.35) {
+      continue;
+    }
+
+    context.beginPath();
+    context.moveTo(from.x * width, from.y * height);
+    context.lineTo(to.x * width, to.y * height);
+    context.stroke();
+  }
+
+  context.fillStyle = '#6dff9a';
+  context.shadowColor = 'rgba(109, 255, 154, 0.8)';
+
+  for (const index of points) {
+    const point = landmarks[index];
+
+    if (!point || (point.visibility ?? 0) < 0.35) {
+      continue;
+    }
+
+    context.beginPath();
+    context.arc(point.x * width, point.y * height, 4, 0, Math.PI * 2);
+    context.fill();
+  }
+}
+
+function clearPoseCanvas(): void {
+  const context = poseCanvasElement?.getContext('2d');
+
+  if (!context || !poseCanvasElement) {
+    return;
+  }
+
+  context.clearRect(0, 0, poseCanvasElement.width, poseCanvasElement.height);
+}
+
+function formatPoseSummary(summary: UpperBodyPoseSummary): string {
+  if (!summary.poseDetected) {
+    return 'No pose detected.';
+  }
+
+  const visibility = Math.round(summary.averageUpperBodyVisibility * 100);
+  const shoulder = summary.shoulderSpan === null ? 'n/a' : summary.shoulderSpan.toFixed(2);
+  const lean = summary.torsoLean === null ? 'n/a' : summary.torsoLean.toFixed(2);
+
+  return `${summary.landmarkCount} landmarks, upper ${summary.upperBodyVisibleCount}/9, vis ${visibility}%, span ${shoulder}, lean ${lean}.`;
+}
+
+function getPoseErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return 'Failed to start MediaPipe pose debug.';
+}
+
+function updatePoseStatusUi(nextState: AppState): void {
+  if (poseStatusText) {
+    poseStatusText.textContent = getPoseStatusText(nextState);
+  }
+
+  if (poseRequirementText) {
+    poseRequirementText.textContent = getPoseRequirementText(nextState);
+  }
+
+  if (poseSummaryText) {
+    poseSummaryText.textContent = nextState.poseSummaryText;
+  }
+
+  if (poseVisibilityBar) {
+    poseVisibilityBar.style.width = `${(nextState.poseAverageVisibility * 100).toFixed(1)}%`;
+  }
+
+  if (poseStartButton) {
+    poseStartButton.disabled =
+      nextState.poseStatus === 'requesting' ||
+      nextState.poseStatus === 'loading' ||
+      nextState.poseStatus === 'active';
+  }
+
+  if (poseStopButton) {
+    poseStopButton.disabled = nextState.poseStatus !== 'active';
+  }
+}
+
+function getPoseStatusText(nextState: AppState): string {
+  switch (nextState.poseStatus) {
+    case 'idle':
+      return 'Camera idle.';
+    case 'requesting':
+      return 'Requesting camera permission...';
+    case 'loading':
+      return 'Loading MediaPipe pose model...';
+    case 'active':
+      return 'MediaPipe pose debug active.';
+    case 'error':
+      return nextState.poseError ?? 'Failed to start MediaPipe pose debug.';
+  }
+}
+
+function getPoseRequirementText(nextState: AppState): string {
+  if (nextState.poseStatus === 'active') {
+    return 'Move shoulders and upper body inside the camera preview.';
+  }
+
+  if (nextState.poseStatus === 'error') {
+    return 'Check camera permission, HTTPS/localhost rules, and model download access.';
+  }
+
+  return 'Start camera to inspect upper-body landmarks.';
 }

@@ -26,6 +26,12 @@ describe('createAppStore', () => {
       micError: null,
       micLevel: 0,
       mouthOpen: 0,
+      poseStatus: 'idle',
+      poseError: null,
+      poseLandmarkCount: 0,
+      poseUpperBodyVisibleCount: 0,
+      poseAverageVisibility: 0,
+      poseSummaryText: 'Camera idle.',
     });
   });
 
@@ -137,6 +143,56 @@ describe('createAppStore', () => {
       micError: null,
       micLevel: 0,
       mouthOpen: 0,
+    });
+  });
+
+  it('tracks MediaPipe pose debug state', () => {
+    const store = createAppStore({
+      obsMode: false,
+      transparent: false,
+    });
+
+    store.getState().setPoseRequesting();
+
+    expect(store.getState()).toMatchObject({
+      poseStatus: 'requesting',
+      poseError: null,
+    });
+
+    store.getState().setPoseLoading();
+
+    expect(store.getState()).toMatchObject({
+      poseStatus: 'loading',
+      poseError: null,
+    });
+
+    store.getState().setPoseActive();
+    store.getState().setPoseFrame(33, 9, 0.82, '33 landmarks, upper body 9/9.');
+
+    expect(store.getState()).toMatchObject({
+      poseStatus: 'active',
+      poseLandmarkCount: 33,
+      poseUpperBodyVisibleCount: 9,
+      poseAverageVisibility: 0.82,
+      poseSummaryText: '33 landmarks, upper body 9/9.',
+    });
+
+    store.getState().setPoseError('Permission denied');
+
+    expect(store.getState()).toMatchObject({
+      poseStatus: 'error',
+      poseError: 'Permission denied',
+      poseLandmarkCount: 0,
+      poseUpperBodyVisibleCount: 0,
+      poseAverageVisibility: 0,
+    });
+
+    store.getState().setPoseStopped();
+
+    expect(store.getState()).toMatchObject({
+      poseStatus: 'idle',
+      poseError: null,
+      poseSummaryText: 'Camera idle.',
     });
   });
 });

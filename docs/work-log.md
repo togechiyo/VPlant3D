@@ -381,3 +381,51 @@
 - 人間のGoogle ChromeでMic Reactive Mouthの許可、メーター、口の動きを確認する
 - OBS Browser Sourceでマイク権限と透明背景表示を確認する
 - 次の実装候補はMediaPipe debug view、またはMic感度調整UI
+
+## 2026-05-20 MediaPipe Pose Debug Spike
+
+### Goal
+
+- MediaPipe上半身モーションキャプチャーの最初の検証UIを作る
+- カメラ許可、ランドマーク検出、肩/胴体トラッキングの見込みを人間が確認できる状態にする
+- 低リスクなVRMA再生状態同期も改善する
+
+### Did
+
+- MediaPipe Pose Landmarker Web公式ガイドとinstalled package typesを確認
+- `src/mocap/mediapipe-pose-debug.ts` を追加し、`FilesetResolver` と `PoseLandmarker` を使う小さなruntime wrapperを実装
+- `src/mocap/pose-landmarks.ts` を追加し、肩、腰、胴体中心、肩幅、肩傾き、胴体lean、上半身visibilityを要約する純ロジックを分離
+- `test/pose-landmarks.test.ts` を追加
+- Zustand storeへ `poseStatus`、error、landmark count、upper-body visibility、summary textを追加
+- Setup Modeへ `MediaPipe Pose Debug` パネル、Start / Stop、camera preview、canvas overlay、visibility meterを追加
+- Playwright E2EへMediaPipe debug UI表示とOBS Mode非表示確認を追加
+- VRMA Loop off再生終了時にUI stateを `stopped` へ戻す同期を追加
+- `docs/mediapipe-pose-debug-notes.md` を追加
+- README、third-party libraries、Human Handoff Boardを更新
+
+### Worked
+
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+- Playwright ChromiumでSetup Mode / OBS transparent / Alicia VRM / VRMA_02 Play-Stopは引き続き成功
+
+### Failed / Blocked
+
+- 実カメラ入力はユーザー許可と人間の動きが必要なため、PlaywrightではUI表示確認までにした
+- MediaPipe WASM/modelは現在ネットワークURLから取得するため、オフラインOBS運用にはまだ弱い
+- MediaPipeの `detectForVideo()` は同期実行なので、品質調整段階で重ければWeb Worker化を検討する
+
+### Decisions
+
+- 初回スパイクではVRM骨へのretargetingは行わず、上半身ランドマークのデバッグ表示に留める
+- 既存Three.js WebGL contextとの衝突を避けるため、MediaPipe delegateはまずCPUにする
+- カメラpreviewはユーザー視点で自然なようにmirror表示する。後続のretargetingでは座標系を改めて明示する
+- MediaPipe model/wasmのローカル配布は次の安定化タスクとして扱う
+
+### Next
+
+- 人間のGoogle ChromeでMediaPipe Pose Debugのカメラ許可、ランドマーク追従、肩/胴体summaryの妥当性を確認する
+- 確認結果が良ければ、胸/首/肩のごく控えめなVRM retargetingをsmoothing付きで試す
+- カメラ/Mic感度調整UI、またはlocalStorageによる設定保存を検討する

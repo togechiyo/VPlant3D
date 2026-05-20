@@ -28,6 +28,25 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
+### Todo: 人間のGoogle ChromeでMediaPipe Pose Debugを確認
+
+- Owner: Human or Codex with Chrome extension
+- Needed by: 上半身モーションキャプチャーの採否判断前
+- Why: カメラ権限、照明、実際の肩・胴体の動き、モデルダウンロード可否は人間の実操作が必要なため
+- What to check:
+  - `npm run dev` で `http://127.0.0.1:5173/` を開く
+  - `MediaPipe Pose Debug` の `Start camera` を押してカメラ権限を許可する
+  - カメラプレビューに上半身が映る
+  - 鼻、肩、肘、手首、腰の点と線が大きく破綻せず追従する
+  - `Upper body visibility` が体の映り方に応じて変わる
+  - 肩を傾ける、左右に少し動く、前後に寄る動きでsummaryが更新される
+  - console errorがない
+
+Notes:
+
+- 現時点ではVRM骨への反映は未実装。あくまでカメラ許可とランドマーク品質確認用
+- 初回はMediaPipeのWASM/modelをネットワークから取得するため、通信できない環境では失敗する可能性がある
+
 ### Todo: 人間のGoogle ChromeでMic Reactive Mouthを確認
 
 - Owner: Human or Codex with Chrome extension
