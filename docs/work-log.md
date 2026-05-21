@@ -1052,3 +1052,34 @@
 
 - Chromeで操作感を確認し、必要ならdock heightやカード幅を調整する
 - よければ将来的にカテゴリタブ化や折りたたみも検討する
+
+## 2026-05-21 Compact Setup Dock Toolbar
+
+### Goal
+
+- 下ドックの縦幅占有を減らす
+- ON/OFFやStart/Stop系の操作をドック上段へ寄せる
+- アプリタイトル表示を一旦なくして、操作と状態確認を優先する
+
+### Did
+
+- Setup Dockを上段toolbar + 下段detail card rowの2段構成へ変更
+- `Load local VRM`、`Load local VRMA`、VRMA Play/Stop/Loop、Mic Start/Stop、Camera Start/Stop、Mirror/Face/Hand toggleを上段toolbarへ移動
+- タイトル/説明カードを削除
+- 詳細カードから重複する操作ボタンを削除し、状態表示・スライダー・メーター中心にした
+- E2Eで参照している表示テキストは維持した
+
+### Worked
+
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run test:e2e` は成功
+- `npm run lint` は成功
+- Playwrightでlocal Alicia VRMを読み込み、コンパクトな下ドック表示をスクリーンショット確認した
+
+### Failed / Blocked
+
+- 実際のChrome操作で、toolbar横スクロール量やボタン密度の確認が必要
+
+### Next
+
+- 必要ならtoolbarボタンをアイコン化、カテゴリごとにグルーピング、または詳細カードの折りたたみを追加する
