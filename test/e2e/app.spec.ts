@@ -30,8 +30,9 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('マイク停止中')).toBeVisible();
   await expect(page.locator('#mic-start-button')).toBeEnabled();
   await expect(page.locator('#mic-stop-button')).toBeDisabled();
-  await expect(page.getByText('自動まばたき')).toBeVisible();
-  await expect(page.locator('#auto-blink-input')).toBeChecked();
+  await expect(page.getByText('まばたき')).toBeVisible();
+  await expect(page.locator('#blink-mode-select')).toHaveValue('mocap');
+  await expect(page.locator('#lip-sync-mode-select')).toHaveValue('mic');
   await expect(page.getByText('揺らぎ')).toBeVisible();
   await expect(page.locator('#idle-sway-input')).toBeChecked();
   await expect(page.getByText('表情')).toBeVisible();
@@ -42,12 +43,10 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
   await expect(page.getByText('ミラー')).toBeVisible();
   await expect(page.locator('#pose-mirror-input')).toBeChecked();
-  await expect(page.getByText('顔/口')).toBeVisible();
   await expect(page.locator('#hand-tracking-input')).toBeChecked();
   await expect(page.getByText('手', { exact: true })).toBeVisible();
-  await expect(page.getByText('腕/手トラック')).toBeVisible();
+  await expect(page.getByText('手の骨格')).toBeVisible();
   await expect(page.getByText('骨格表示')).toBeVisible();
-  await expect(page.locator('#face-tracking-input')).toBeChecked();
   await expect(page.locator('#pose-start-button')).toBeEnabled();
   await expect(page.locator('#pose-stop-button')).toBeDisabled();
   expect(errors()).toEqual([]);
@@ -62,7 +61,7 @@ test('OBS transparent mode hides Setup UI but keeps the scene canvas', async ({ 
   await expect(page.getByText('VRMを読み込む', { exact: true })).toHaveCount(0);
   await expect(page.getByText('VRMAを読み込む', { exact: true })).toHaveCount(0);
   await expect(page.getByText('顔 / 口')).toHaveCount(0);
-  await expect(page.getByText('自動まばたき')).toHaveCount(0);
+  await expect(page.getByText('まばたき')).toHaveCount(0);
   await expect(page.getByText('表情')).toHaveCount(0);
   await expect(page.getByText('体トラック')).toHaveCount(0);
   await expect(page.getByText('設定')).toHaveCount(0);

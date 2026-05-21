@@ -165,9 +165,9 @@ let poseVisibilityBar: HTMLElement | null = null;
 let poseStartButton: HTMLButtonElement | null = null;
 let poseStopButton: HTMLButtonElement | null = null;
 let poseMirrorInput: HTMLInputElement | null = null;
-let faceTrackingInput: HTMLInputElement | null = null;
 let handTrackingInput: HTMLInputElement | null = null;
-let autoBlinkInput: HTMLInputElement | null = null;
+let blinkModeSelect: HTMLSelectElement | null = null;
+let lipSyncModeSelect: HTMLSelectElement | null = null;
 let idleSwayInput: HTMLInputElement | null = null;
 let expressionPresetText: HTMLElement | null = null;
 let faceTrackingText: HTMLElement | null = null;
@@ -179,7 +179,10 @@ let faceExpressionWeights = createNeutralFaceExpressionWeights();
 let headRetargetPose: HeadRetargetPose = createNeutralHeadRetargetPose(false);
 let autoBlinkState: AutoBlinkState = createAutoBlinkState(performance.now() / 1000);
 let selectedExpressionPreset: VrmExpressionPresetId = 'neutral';
-let autoBlinkEnabled = true;
+type BlinkMode = 'mocap' | 'auto' | 'off';
+type LipSyncMode = 'mocap' | 'mic' | 'off';
+let blinkMode: BlinkMode = 'mocap';
+let lipSyncMode: LipSyncMode = 'mic';
 let idleSwayEnabled = true;
 let faceTracker: MediaPipeFaceTracker | null = null;
 let handTracker: MediaPipeHandTracker | null = null;
@@ -224,13 +227,21 @@ if (!state.obsMode) {
         <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <label class="inline-flex items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
-          <input id="face-tracking-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
-          顔/口
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span>まばたき</span>
+          <select id="blink-mode-select" class="rounded-md border border-[#6dff9a]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+            <option value="mocap" selected>モーキャプ</option>
+            <option value="auto">自動</option>
+            <option value="off">オフ</option>
+          </select>
         </label>
-        <label class="inline-flex items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
-          <input id="auto-blink-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
-          自動まばたき
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span>口</span>
+          <select id="lip-sync-mode-select" class="rounded-md border border-[#6dff9a]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+            <option value="mocap">モーキャプ</option>
+            <option value="mic" selected>マイク</option>
+            <option value="off">オフ</option>
+          </select>
         </label>
       </div>
       <span id="face-tracking-text" class="text-xs font-bold text-[#9fa9aa]">顔: 待機</span>
@@ -301,7 +312,7 @@ if (!state.obsMode) {
       </div>
       <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
         <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        腕/手トラック
+        手の骨格
       </label>
     </div>
     <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
@@ -391,9 +402,9 @@ if (!state.obsMode) {
   poseStartButton = panel.querySelector<HTMLButtonElement>('#pose-start-button');
   poseStopButton = panel.querySelector<HTMLButtonElement>('#pose-stop-button');
   poseMirrorInput = panel.querySelector<HTMLInputElement>('#pose-mirror-input');
-  faceTrackingInput = panel.querySelector<HTMLInputElement>('#face-tracking-input');
   handTrackingInput = panel.querySelector<HTMLInputElement>('#hand-tracking-input');
-  autoBlinkInput = panel.querySelector<HTMLInputElement>('#auto-blink-input');
+  blinkModeSelect = panel.querySelector<HTMLSelectElement>('#blink-mode-select');
+  lipSyncModeSelect = panel.querySelector<HTMLSelectElement>('#lip-sync-mode-select');
   idleSwayInput = panel.querySelector<HTMLInputElement>('#idle-sway-input');
   expressionPresetText = panel.querySelector<HTMLElement>('#expression-preset-text');
   faceTrackingText = panel.querySelector<HTMLElement>('#face-tracking-text');
@@ -446,25 +457,31 @@ if (!state.obsMode) {
   poseMirrorInput?.addEventListener('change', () => {
     appStore.getState().setPoseMirrorInput(poseMirrorInput?.checked ?? true);
   });
-  faceTrackingInput?.addEventListener('change', () => {
-    appStore.getState().setFaceTrackingEnabled(faceTrackingInput?.checked ?? true);
-  });
   handTrackingInput?.addEventListener('change', () => {
     const enabled = handTrackingInput?.checked ?? true;
     appStore.getState().setHandTrackingEnabled(enabled);
     if (!enabled) {
-      resetUpperBodyRetarget();
       appStore.getState().setHandTrackingStopped();
     } else if (handTracker && appStore.getState().poseStatus === 'active') {
       appStore.getState().setHandTrackingActive();
     }
   });
-  autoBlinkInput?.addEventListener('change', () => {
-    autoBlinkEnabled = autoBlinkInput?.checked ?? true;
+  blinkModeSelect?.addEventListener('change', () => {
+    blinkMode = getBlinkModeFromSelect();
     autoBlinkState = createAutoBlinkState(performance.now() / 1000);
-    if (!autoBlinkEnabled) {
+    syncFaceTrackingEnabledFromModes();
+    if (blinkMode === 'off') {
       applyBlinkOpen();
     }
+    void syncFaceTrackerForCurrentModes();
+  });
+  lipSyncModeSelect?.addEventListener('change', () => {
+    lipSyncMode = getLipSyncModeFromSelect();
+    syncFaceTrackingEnabledFromModes();
+    if (lipSyncMode !== 'mic') {
+      applyMouthOpen(0);
+    }
+    void syncFaceTrackerForCurrentModes();
   });
   idleSwayInput?.addEventListener('change', () => {
     idleSwayEnabled = idleSwayInput?.checked ?? true;
@@ -492,6 +509,7 @@ if (!state.obsMode) {
 
 app.append(viewport);
 
+syncFaceTrackingEnabledFromModes();
 appStore.subscribe(updateVrmStatusUi);
 updateVrmStatusUi(appStore.getState());
 
@@ -1035,7 +1053,7 @@ function sampleMicReactiveMouth(): void {
   }
 
   const frame = micController.sample();
-  if (appStore.getState().faceTrackingStatus !== 'active') {
+  if (lipSyncMode === 'mic') {
     applyMouthOpen(frame.mouthOpen);
   }
   appStore.getState().setMicFrame(frame.rms, frame.mouthOpen);
@@ -1045,7 +1063,7 @@ function applyMouthOpen(value: number): void {
   currentVrm?.expressionManager?.setValue('aa', value);
 }
 
-function applyFaceExpressions(weights: VrmFaceExpressionWeights): void {
+function applyAllFaceExpressions(weights: VrmFaceExpressionWeights): void {
   currentVrm?.expressionManager?.setValue('blinkLeft', weights.blinkLeft);
   currentVrm?.expressionManager?.setValue('blinkRight', weights.blinkRight);
   currentVrm?.expressionManager?.setValue('aa', weights.aa);
@@ -1057,20 +1075,43 @@ function applyFaceExpressions(weights: VrmFaceExpressionWeights): void {
   currentVrm?.expressionManager?.setValue('surprised', weights.surprised);
 }
 
+function applyMocapFaceExpressions(weights: VrmFaceExpressionWeights): void {
+  if (blinkMode === 'mocap') {
+    currentVrm?.expressionManager?.setValue('blinkLeft', weights.blinkLeft);
+    currentVrm?.expressionManager?.setValue('blinkRight', weights.blinkRight);
+  }
+
+  if (lipSyncMode === 'mocap') {
+    currentVrm?.expressionManager?.setValue('aa', weights.aa);
+    currentVrm?.expressionManager?.setValue('ih', weights.ih);
+    currentVrm?.expressionManager?.setValue('ou', weights.ou);
+    currentVrm?.expressionManager?.setValue('ee', weights.ee);
+    currentVrm?.expressionManager?.setValue('oh', weights.oh);
+  }
+
+  currentVrm?.expressionManager?.setValue('happy', weights.happy);
+  currentVrm?.expressionManager?.setValue('surprised', weights.surprised);
+}
+
 function resetFaceExpressions(): void {
   faceExpressionWeights = createNeutralFaceExpressionWeights();
-  applyFaceExpressions(faceExpressionWeights);
+  applyAllFaceExpressions(faceExpressionWeights);
   resetHeadRetarget();
 }
 
 function sampleCameraLessExpressions(elapsedSeconds: number): void {
-  if (!currentVrm || appStore.getState().faceTrackingStatus === 'active') {
+  if (!currentVrm) {
     return;
   }
 
   applyExpressionPreset();
 
-  if (!autoBlinkEnabled) {
+  if (blinkMode === 'off') {
+    applyBlinkOpen();
+    return;
+  }
+
+  if (blinkMode !== 'auto') {
     return;
   }
 
@@ -1115,6 +1156,52 @@ function isExpressionPresetId(value: unknown): value is VrmExpressionPresetId {
     value === 'surprised' ||
     value === 'relaxed'
   );
+}
+
+function getBlinkModeFromSelect(): BlinkMode {
+  const value = blinkModeSelect?.value;
+  return value === 'auto' || value === 'off' ? value : 'mocap';
+}
+
+function getLipSyncModeFromSelect(): LipSyncMode {
+  const value = lipSyncModeSelect?.value;
+  return value === 'mocap' || value === 'off' ? value : 'mic';
+}
+
+function needsFaceMocap(): boolean {
+  return blinkMode === 'mocap' || lipSyncMode === 'mocap';
+}
+
+function syncFaceTrackingEnabledFromModes(): void {
+  appStore.getState().setFaceTrackingEnabled(needsFaceMocap());
+}
+
+async function syncFaceTrackerForCurrentModes(): Promise<void> {
+  if (appStore.getState().poseStatus !== 'active') {
+    return;
+  }
+
+  if (!needsFaceMocap()) {
+    faceTracker?.close();
+    faceTracker = null;
+    resetFaceExpressions();
+    appStore.getState().setFaceTrackingStopped();
+    return;
+  }
+
+  if (faceTracker) {
+    appStore.getState().setFaceTrackingActive();
+    return;
+  }
+
+  appStore.getState().setFaceTrackingLoading();
+  try {
+    const { MediaPipeFaceTracker } = await import('./mocap/mediapipe-face-hand');
+    faceTracker = await MediaPipeFaceTracker.create();
+    appStore.getState().setFaceTrackingActive();
+  } catch (error) {
+    appStore.getState().setFaceTrackingError(getPoseErrorMessage(error));
+  }
 }
 
 function getMicErrorMessage(error: unknown): string {
@@ -1286,11 +1373,7 @@ function runPoseDebugFrame(frameTime: number): void {
       const result = poseController.detect(poseVideoElement, frameTime);
       const landmarks = result.landmarks[0] ?? [];
       const summary = summarizeUpperBodyPose(landmarks);
-      if (appStore.getState().handTrackingEnabled) {
-        updateUpperBodyRetarget(summary);
-      } else {
-        resetUpperBodyRetarget();
-      }
+      updateUpperBodyRetarget(summary);
       drawPoseDebugLandmarks(landmarks);
       runFaceTrackingFrame(poseVideoElement, frameTime);
       runHandTrackingFrame(poseVideoElement, frameTime);
@@ -1393,7 +1476,7 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
   });
   faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights);
   headRetargetPose = smoothHeadRetargetPose(headRetargetPose, nextHeadPose);
-  applyFaceExpressions(faceExpressionWeights);
+  applyMocapFaceExpressions(faceExpressionWeights);
   applyHeadRetarget();
   appStore
     .getState()
@@ -1537,7 +1620,7 @@ function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
 
 function applyUpperBodyRetarget(): void {
   const nextState = appStore.getState();
-  if (!currentVrm || nextState.poseStatus !== 'active' || !nextState.handTrackingEnabled) {
+  if (!currentVrm || nextState.poseStatus !== 'active') {
     return;
   }
 
@@ -1747,14 +1830,6 @@ function updatePoseStatusUi(nextState: AppState): void {
 
   if (poseMirrorInput) {
     poseMirrorInput.checked = nextState.poseMirrorInput;
-  }
-
-  if (faceTrackingInput) {
-    faceTrackingInput.checked = nextState.faceTrackingEnabled;
-    faceTrackingInput.disabled =
-      nextState.poseStatus === 'requesting' ||
-      nextState.poseStatus === 'loading' ||
-      nextState.poseStatus === 'active';
   }
 
   if (handTrackingInput) {

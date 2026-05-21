@@ -1243,3 +1243,35 @@
 ### Next
 
 - 実際のChrome表示で、日本語ラベルの折り返しやカード内スクロール量が邪魔でないか確認する
+
+## 2026-05-21 Face Source Modes and Hand Toggle Split
+
+### Goal
+
+- 手の骨格表示ON/OFFで上半身トラックまで止まる挙動をやめる
+- まばたきと口の入力元を、モーキャプ/自動またはマイク/オフから選べるようにする
+
+### Did
+
+- Hand cardのcheckboxを `手の骨格` に変更し、MediaPipe hand skeletonの表示/処理だけを切り替えるようにした
+- 上半身/腕retargetはBody Track側のカメラ処理として独立させ、手の骨格OFFでも継続するようにした
+- 顔/口cardに `まばたき` selectorを追加し、`モーキャプ` / `自動` / `オフ` を選べるようにした
+- 顔/口cardに `口` selectorを追加し、`モーキャプ` / `マイク` / `オフ` を選べるようにした
+- Face trackerは、まばたきまたは口がモーキャプを必要とする時だけ有効になるようにした
+- マイク口パクは `口 = マイク` の時だけVRM `aa` に反映するようにした
+
+### Worked
+
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run test:e2e` は成功
+- Browser previewで `まばたき`、`口`、`モーキャプ`、`マイク`、`手の骨格` の表示を確認した
+
+### Failed / Blocked
+
+- まばたき/口の切り替えを実カメラ・実マイクで人間が目視確認する必要がある
+
+### Next
+
+- 実機確認後、デフォルトを `まばたき=モーキャプ / 口=マイク` のままでよいか調整する
