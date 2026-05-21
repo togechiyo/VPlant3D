@@ -1405,3 +1405,34 @@
 - まずOBS実機でControl/Render/Relay構成を確認する
 - Electron化は提出後、配布体験を改善する必要が出たら再検討する
 - MCP化はCodexからの状態確認やデバッグ自動化が本当に必要になったら、読み取り専用toolから検討する
+
+## 2026-05-21 Tauri Controller Consideration
+
+### Goal
+
+- ElectronではなくTauriでControl/Relayを軽量に包む案を検討する
+- 描画はOBS内Chromiumに残し、Tauriはコントローラーに徹する方向を整理する
+
+### Did
+
+- `docs/future-desktop-and-mcp-considerations.md` にTauri化の検討を追記した
+- Tauriは描画アプリではなく、Control UI、Local Relay launcher、ファイル/設定管理、OBS URLコピーを担当する案として整理した
+- WebGPUや最終描画品質はOBS Render Pageに残す方針を明記した
+- Tauri公式Architecture、Process Model、WebDriver Testingを参照した
+
+### Worked
+
+- ElectronのChromium同梱による安定性と、Tauriの軽量配布のトレードオフを整理できた
+- VPlant3DではOBS内Chromiumが最終描画を担当するため、TauriはElectronより先に試す後日候補になりうると判断できた
+
+### Failed / Blocked
+
+- Tauriは導入していない
+- Tauri内WebViewでカメラ/マイク/MediaPipeが安定するかは未検証
+- Tauri化してもOBS Browser Source実機確認は別途必要
+
+### Next
+
+- まずは現在のWeb + Relay構成をOBSで確認する
+- 提出前に余裕がある場合のみ、TauriをRelay launcherとして試すか判断する
+- Tauri検証時はChrome Control Page fallbackを残す
