@@ -75,17 +75,39 @@ describe('createUpperBodyRetargetPose', () => {
       }),
     );
 
-    expect(pose.chestYaw).toBeCloseTo(-0.09);
-    expect(pose.neckYaw).toBeCloseTo(-0.0405);
+    expect(pose.chestYaw).toBeCloseTo(0.09);
+    expect(pose.neckYaw).toBeCloseTo(0.0405);
   });
 
-  it('maps elbow lift to upper arm roll deltas', () => {
+  it('mirrors elbow lift before mapping upper arm roll deltas by default', () => {
     const pose = createUpperBodyRetargetPose(
       createSummary({
         averageUpperBodyVisibility: 0.8,
         leftArmLift: 0.5,
         rightArmLift: 0.25,
       }),
+    );
+
+    expect(pose.leftUpperArmRoll).toBeCloseTo(-0.145);
+    expect(pose.rightUpperArmRoll).toBeCloseTo(0.29);
+  });
+
+  it('can map elbow lift without mirroring', () => {
+    const pose = createUpperBodyRetargetPose(
+      createSummary({
+        averageUpperBodyVisibility: 0.8,
+        leftArmLift: 0.5,
+        rightArmLift: 0.25,
+      }),
+      {
+        minVisibility: 0.32,
+        mirrorInput: false,
+        maxChestYaw: 0.26,
+        maxChestRoll: 0.34,
+        maxNeckYaw: 0.12,
+        maxNeckRoll: 0.15,
+        maxArmRoll: 0.58,
+      },
     );
 
     expect(pose.leftUpperArmRoll).toBeCloseTo(-0.29);

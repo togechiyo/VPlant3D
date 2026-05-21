@@ -39,22 +39,29 @@ export function createUpperBodyRetargetPose(
   }
 
   const inputDirection = options.mirrorInput ? -1 : 1;
+  const torsoTurnDirection = options.mirrorInput ? 1 : -1;
   const torsoLean = (summary.torsoLean ?? 0) * inputDirection;
   const shoulderTilt = (summary.shoulderTilt ?? 0) * inputDirection;
-  const torsoTurn = (summary.torsoTurn ?? 0) * inputDirection;
+  const torsoTurn = (summary.torsoTurn ?? 0) * torsoTurnDirection;
   const chestYaw = clamp(
     -torsoLean * 2.4 + torsoTurn * 0.18,
     -options.maxChestYaw,
     options.maxChestYaw,
   );
   const chestRoll = clamp(-shoulderTilt * 2.8, -options.maxChestRoll, options.maxChestRoll);
+  const leftArmLift = options.mirrorInput
+    ? (summary.rightArmLift ?? 0)
+    : (summary.leftArmLift ?? 0);
+  const rightArmLift = options.mirrorInput
+    ? (summary.leftArmLift ?? 0)
+    : (summary.rightArmLift ?? 0);
   const leftUpperArmRoll = clamp(
-    -(summary.leftArmLift ?? 0) * options.maxArmRoll,
+    -leftArmLift * options.maxArmRoll,
     -options.maxArmRoll,
     0,
   );
   const rightUpperArmRoll = clamp(
-    (summary.rightArmLift ?? 0) * options.maxArmRoll,
+    rightArmLift * options.maxArmRoll,
     0,
     options.maxArmRoll,
   );

@@ -94,6 +94,9 @@ scene.add(rimLight);
 
 const fillLight = new THREE.HemisphereLight(0xf2f7ff, 0x101314, 0.54);
 scene.add(fillLight);
+const lookAtCameraTarget = new THREE.Object3D();
+lookAtCameraTarget.name = 'VPlant3DLookAtCameraTarget';
+scene.add(lookAtCameraTarget);
 
 const geometry = new THREE.BoxGeometry(1.4, 1.4, 1.4);
 const material = new THREE.MeshStandardMaterial({
@@ -423,6 +426,7 @@ function animate(frameTime = performance.now()): void {
   cube.rotation.y = elapsed * 0.52;
   currentVrmaMixer?.update(delta);
   applyUpperBodyRetarget();
+  updateLookAtCameraTarget();
   sampleMicReactiveMouth();
   currentVrm?.update(delta);
   renderer.render(scene, camera);
@@ -506,6 +510,7 @@ function replaceCurrentVrm(nextVrm: VRM): void {
   fitObjectToDefaultView(nextVrm.scene);
   applyIdleArmPose(nextVrm);
   configureUpperBodyCamera();
+  configureLookAtCameraTarget(nextVrm);
   captureAvatarBaseTransform(nextVrm.scene);
   applyAvatarTransform();
   scene.add(nextVrm.scene);
@@ -547,6 +552,20 @@ function configureUpperBodyCamera(): void {
   camera.position.set(0, 1.58, 2.55);
   camera.lookAt(0, 1.38, 0);
   camera.updateProjectionMatrix();
+}
+
+function configureLookAtCameraTarget(vrm: VRM): void {
+  if (!vrm.lookAt) {
+    return;
+  }
+
+  vrm.lookAt.autoUpdate = true;
+  vrm.lookAt.target = lookAtCameraTarget;
+  updateLookAtCameraTarget();
+}
+
+function updateLookAtCameraTarget(): void {
+  lookAtCameraTarget.position.copy(camera.position);
 }
 
 function applyIdleArmPose(vrm: VRM): void {

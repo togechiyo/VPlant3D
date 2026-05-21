@@ -898,3 +898,35 @@
 - Chromeで体を横に回したとき、胸が少しついてくるか確認する
 - 腕を横に上げたとき、肩から肘までが少し反応するか確認する
 - 腕が暴れる場合はmaxArmRollを下げるか、Setup Mode toggleを追加する
+
+## 2026-05-21 Camera LookAt and Mirror Fixes
+
+### Goal
+
+- 人間確認で、目線をカメラ向き固定にしたい要望に対応する
+- 肘trackingと肩奥行き由来の体向きにmirrorが効いていない問題を直す
+
+### Did
+
+- VRM `lookAt.target` 用のscene objectを追加し、毎フレームcamera positionへ同期するようにした
+- VRMロード時に `lookAt.autoUpdate = true` とcamera targetを設定するようにした
+- Upper body retargetで、`torsoTurn` のmirror方向をlean/tiltとは別に修正した
+- mirror ON時は左右のelbow liftをswapしてからUpperArmへ流すようにした
+- `test/upper-body-retarget.test.ts` を更新し、torso turnとarm lift mirrorの符号を固定した
+
+### Worked
+
+- `npm run test -- upper-body-retarget` は成功
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 実カメラでの目線固定とmirror方向は人間確認が必要
+
+### Next
+
+- Chromeで目線が常にカメラ寄りに見えるか確認する
+- 体を横回転したときと肘を上げたとき、mirror ONの直感に合うか確認する
