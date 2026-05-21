@@ -1149,3 +1149,36 @@
 - 表情プリセットをモデル差異に強くするため、VRMが持つexpression名の検出と未対応presetの無効表示を検討する
 - VRMAスロットに短い表示名編集、再生中ハイライト、ショートカットを追加する
 - カメラなしモードのidle sway強度をSetup Dockで調整できるようにする
+
+## 2026-05-21 Integrated Dock Controls
+
+### Goal
+
+- Load VRMを左端の最も目立つ位置へ移動する
+- 独立ツールバーを廃止し、各操作を関連カード内へ統合して横スクロール負荷を下げる
+- Hand TrackがVRM指制御までできるように見える誤解を減らす
+
+### Did
+
+- Setup Dock先頭を `VRM Model` cardにし、`Load local VRM` を大きめのボタンとして配置
+- Head / Face cardへFace/Lips、Auto blink、Mic Start/Stop、Expression presetを統合
+- Body Track cardへIdle sway、Mirror input、Camera Start/Stopを統合
+- Hand cardを `Hand Skeleton` に改名し、`Debug overlay only` と `VRM finger retarget is not implemented yet.` を表示
+- VRMA Motion cardへLoad local VRMA、Play/Stop、Loopを統合
+- 独立した上段toolbarを削除し、dock内は横一列のcard rowだけにした
+
+### Worked
+
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- E2Eで `Hand skeleton` が見出しとcheckbox labelの2箇所に出てstrict modeになったため、見出しのexact matchとinputチェックへ分けて修正した
+
+### Next
+
+- 実際のChrome/OBSで、VRM Modelが左端で迷わず押せるか、カード横スクロール量が許容範囲か確認する
+- Hand trackingをVRM finger retargetまで進める場合は、MediaPipe hand landmarksからVRM finger bonesへの対応表とmirror方針を先に設計する

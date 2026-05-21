@@ -201,54 +201,34 @@ if (!state.obsMode) {
   panel.className =
     'absolute inset-x-6 bottom-6 grid max-h-[34vh] gap-3 overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-3 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
   panel.innerHTML = `
-    <div class="flex min-h-12 items-center gap-2 overflow-x-auto rounded-md border border-white/10 bg-black/25 p-2">
-      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
-        <input id="face-tracking-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
-        Face expressions / lip sync
-      </label>
-      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
-        <input id="auto-blink-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
-        Auto blink
-      </label>
-      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
-        <input id="idle-sway-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        Idle sway
-      </label>
-      <button id="mic-start-button" class="shrink-0 rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
-      <button id="mic-stop-button" class="shrink-0 rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
-      <button id="pose-start-button" class="shrink-0 rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
-      <button id="pose-stop-button" class="shrink-0 rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
-      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
-        <input id="pose-mirror-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        Mirror mocap input
-      </label>
-      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
-        <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        Hand skeleton
-      </label>
-      <span class="h-7 w-px shrink-0 bg-white/10"></span>
-      <label class="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff] hover:bg-white/[0.04]">
+    <div class="grid grid-flow-col auto-cols-[minmax(260px,340px)] items-start gap-3 overflow-x-auto overflow-y-hidden pb-1 [&>*]:max-h-[calc(34vh-32px)] [&>*]:overflow-y-auto">
+    <div class="grid gap-3 rounded-md border border-[#6dff9a]/35 bg-black/20 p-3">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM Model</span>
+        <strong id="vrm-status-text" class="text-sm font-bold text-[#eef4f2]">Choose a local .vrm file.</strong>
+        <span id="vrm-file-text" class="min-h-5 text-sm text-[#9fa9aa]">No file selected.</span>
+      </div>
+      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/10 px-3 py-3 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff] hover:bg-white/[0.04]">
         <input id="vrm-file-input" class="sr-only" type="file" accept=".vrm" />
         Load local VRM
       </label>
-      <label class="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a] hover:bg-white/[0.04]">
-        <input id="vrma-file-input" class="sr-only" type="file" accept=".vrma" multiple />
-        Load local VRMA
-      </label>
-      <button id="vrma-play-button" class="shrink-0 rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Play</button>
-      <button id="vrma-stop-button" class="shrink-0 rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop</button>
-      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
-        <input id="vrma-loop-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
-        Loop
-      </label>
     </div>
-    <div class="grid grid-flow-col auto-cols-[minmax(260px,340px)] items-start gap-3 overflow-x-auto overflow-y-hidden pb-1 [&>*]:max-h-[calc(34vh-88px)] [&>*]:overflow-y-auto">
     <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Head / Face</span>
         <span class="text-[11px] font-bold uppercase tracking-normal text-[#9fa9aa]">Mic Reactive Mouth</span>
         <strong id="mic-status-text" class="text-sm font-bold text-[#eef4f2]">Microphone idle.</strong>
         <span id="mic-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before testing mouth movement.</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="inline-flex items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+          <input id="face-tracking-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
+          Face / lips
+        </label>
+        <label class="inline-flex items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+          <input id="auto-blink-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
+          Auto blink
+        </label>
       </div>
       <span id="face-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Face tracking idle.</span>
       <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
@@ -273,6 +253,10 @@ if (!state.obsMode) {
           <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-mouth-bar" class="h-full w-0 rounded-full bg-[#6dff9a] transition-[width] duration-75"></div></div>
         </div>
       </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
+        <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
+      </div>
     </div>
     <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
@@ -280,6 +264,16 @@ if (!state.obsMode) {
         <span class="text-[11px] font-bold uppercase tracking-normal text-[#9fa9aa]">MediaPipe Pose Debug</span>
         <strong id="pose-status-text" class="text-sm font-bold text-[#eef4f2]">Camera idle.</strong>
         <span id="pose-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Start camera to inspect upper-body landmarks.</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+          <input id="idle-sway-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+          Idle sway
+        </label>
+        <label class="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+          <input id="pose-mirror-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+          Mirror input
+        </label>
       </div>
       <div class="relative aspect-video overflow-hidden rounded-md border border-white/10 bg-[#0b0f10]">
         <video id="pose-video" class="h-full w-full scale-x-[-1] object-cover opacity-0" autoplay muted playsinline></video>
@@ -295,22 +289,24 @@ if (!state.obsMode) {
       </div>
       <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Torso / upper arm retarget</span>
-        <span class="text-xs font-bold text-[#9fa9aa]">Mirror and camera controls are in the toolbar.</span>
+        <span class="text-xs font-bold text-[#9fa9aa]">Body and upper-arm tracking. Hands are skeleton debug only for now.</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
+        <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
       </div>
     </div>
     <div class="grid content-start gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Hand Track</span>
-        <strong class="text-sm font-bold text-[#eef4f2]">Hand tracking status</strong>
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Hand Skeleton</span>
+        <strong class="text-sm font-bold text-[#eef4f2]">Debug overlay only</strong>
         <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Hand tracking idle.</span>
       </div>
-    </div>
-    <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
-      <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM Model</span>
-        <strong id="vrm-status-text" class="text-sm font-bold text-[#eef4f2]">Choose a local .vrm file.</strong>
-        <span id="vrm-file-text" class="min-h-5 text-sm text-[#9fa9aa]">No file selected.</span>
-      </div>
+      <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+        <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+        Hand skeleton
+      </label>
+      <span class="text-xs font-bold text-[#9fa9aa]">VRM finger retarget is not implemented yet.</span>
     </div>
     <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
       <div class="grid gap-1">
@@ -340,6 +336,18 @@ if (!state.obsMode) {
         <strong id="vrma-status-text" class="text-sm font-bold text-[#eef4f2]">Choose a local .vrma file.</strong>
         <span id="vrma-file-text" class="min-h-5 text-sm text-[#9fa9aa]">No motion selected.</span>
         <span id="vrma-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before playing VRMA.</span>
+      </div>
+      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a] hover:bg-white/[0.04]">
+        <input id="vrma-file-input" class="sr-only" type="file" accept=".vrma" multiple />
+        Load local VRMA
+      </label>
+      <div class="grid grid-cols-[1fr_1fr_auto] gap-2">
+        <button id="vrma-play-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Play</button>
+        <button id="vrma-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop</button>
+        <label class="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+          <input id="vrma-loop-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
+          Loop
+        </label>
       </div>
       <div id="vrma-slot-list" class="grid gap-2"></div>
     </div>

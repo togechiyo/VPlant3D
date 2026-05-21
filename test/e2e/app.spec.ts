@@ -40,12 +40,14 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('Start camera to inspect upper-body landmarks.')).toBeVisible();
   await expect(page.getByText('Camera image hidden. Skeleton only.')).toBeVisible();
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
-  await expect(page.getByText('Mirror mocap input')).toBeVisible();
+  await expect(page.getByText('Mirror input')).toBeVisible();
   await expect(page.locator('#pose-mirror-input')).toBeChecked();
-  await expect(page.getByText('Face expressions / lip sync')).toBeVisible();
-  await expect(page.getByText('Hand skeleton')).toBeVisible();
-  await expect(page.locator('#face-tracking-input')).toBeChecked();
+  await expect(page.getByText('Face / lips')).toBeVisible();
   await expect(page.locator('#hand-tracking-input')).toBeChecked();
+  await expect(page.getByText('Hand Skeleton', { exact: true })).toBeVisible();
+  await expect(page.getByText('Debug overlay only')).toBeVisible();
+  await expect(page.getByText('VRM finger retarget is not implemented yet.')).toBeVisible();
+  await expect(page.locator('#face-tracking-input')).toBeChecked();
   await expect(page.locator('#pose-start-button')).toBeEnabled();
   await expect(page.locator('#pose-stop-button')).toBeDisabled();
   expect(errors()).toEqual([]);
