@@ -1114,3 +1114,38 @@
 ### Next
 
 - 操作感を見て、必要ならstatus cardを縮めるか非表示/折りたたみにする
+
+## 2026-05-21 Camera-Free Idle Controls and VRMA Slots
+
+### Goal
+
+- カメラでモーションキャプチャーを使いたくないユーザー向けに、自動瞬き、軽い姿勢揺らぎ、VRM表情プリセットを追加する
+- VRMAを複数読み込み、Setup Dockからワンボタンで選択再生できるようにする
+
+### Did
+
+- `src/idle/auto-blink.ts` を追加し、一定間隔で短く閉じる自動瞬きロジックを実装
+- `src/idle/idle-sway.ts` を追加し、MediaPipe停止中かつVRMA非再生中だけ胸/首へ小さなidle swayを入れるようにした
+- `src/vrm/expression-presets.ts` を追加し、Neutral / Happy / Surprise / Relaxの表情プリセットをSetup Dockから反映できるようにした
+- VRMA file inputを複数選択対応にし、読み込んだVRMAをスロット一覧へ表示して、各スロットのボタンから即再生できるようにした
+- Setup Mode E2EにAuto blink、Idle sway、Expression preset、VRMA slot表示の確認を追加
+- READMEへカメラなしidle機能と複数VRMAスロットを追記
+
+### Worked
+
+- `npm run test` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run lint` は成功
+- `npm run test:e2e` は成功
+- Browser previewでAuto blink、Idle sway、Expression preset、No VRMA slots loaded表示を確認した
+
+### Failed / Blocked
+
+- 初回E2EではVRMAファイル名がファイル表示とスロットボタンの2箇所に出るためstrict modeで落ちた。`#vrma-file-text` と `#vrma-slot-list button` へ検証対象を分けて修正した
+- 自動瞬き、idle sway、表情プリセットの見た目の好みは人間のChrome/OBS確認が必要
+
+### Next
+
+- 表情プリセットをモデル差異に強くするため、VRMが持つexpression名の検出と未対応presetの無効表示を検討する
+- VRMAスロットに短い表示名編集、再生中ハイライト、ショートカットを追加する
+- カメラなしモードのidle sway強度をSetup Dockで調整できるようにする

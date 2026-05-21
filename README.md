@@ -19,6 +19,7 @@ The project is designed for the VRM Awards / `#MadeWithVRM` online hackathon. It
 - Support transparent background mode for overlay use
 - React to microphone volume with simple mouth movement
 - Load and play VRMA motion files
+- Add camera-free idle life with auto blink, subtle sway, and one-button VRM expression presets
 - Offer look / shader presets for quick visual direction
 - Add Style Wall and Image Panel features for a simple streaming-room scene
 
@@ -32,6 +33,7 @@ In scope:
 - VRMA motion playback
 - transparent OBS overlay mode
 - microphone-volume-based mouth movement
+- camera-free auto blink / idle sway / expression preset controls
 - simple camera and visual presets
 - lightweight 3D room styling
 
@@ -89,9 +91,10 @@ http://127.0.0.1:5173/?obs=1
 http://127.0.0.1:5173/?obs=1&transparent=1
 ```
 
-Setup Mode includes local `.vrm` and `.vrma` file inputs. Local model and motion files are loaded from the user's machine and are not committed to this repository.
+Setup Mode includes local `.vrm` and `.vrma` file inputs. Local model and motion files are loaded from the user's machine and are not committed to this repository. Multiple `.vrma` files can be loaded into motion slots, then replayed with one button from the Setup Dock.
 
 Mic Reactive Mouth can request microphone access in Setup Mode and drive the loaded VRM's `aa` expression from microphone volume. It is simple RMS-based mouth movement, not phoneme lip sync.
+For users who do not want camera-based mocap, Setup Mode also provides camera-free Auto Blink, Idle Sway, and one-button VRM expression presets.
 
 MediaPipe Pose Debug can request camera access in Setup Mode and show upper-body pose landmarks as a skeleton-only overlay. The raw camera image is hidden to avoid face leaks. It is a verification spike for future neck/chest/shoulder tracking, not production VRM retargeting yet.
 Mocap input can be mirrored in Setup Mode so the avatar response can match the user's camera intuition.

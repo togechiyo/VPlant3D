@@ -20,6 +20,7 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('Load local VRMA', { exact: true })).toBeVisible();
   await expect(page.locator('#vrm-file-input')).toHaveAttribute('accept', '.vrm');
   await expect(page.locator('#vrma-file-input')).toHaveAttribute('accept', '.vrma');
+  await expect(page.locator('#vrma-file-input')).toHaveAttribute('multiple', '');
   await expect(page.getByText('Load a VRM before playing VRMA.')).toBeVisible();
   await expect(page.locator('#vrma-play-button')).toBeDisabled();
   await expect(page.getByText('Avatar Framing')).toBeVisible();
@@ -29,6 +30,12 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('Microphone idle.')).toBeVisible();
   await expect(page.locator('#mic-start-button')).toBeEnabled();
   await expect(page.locator('#mic-stop-button')).toBeDisabled();
+  await expect(page.getByText('Auto blink')).toBeVisible();
+  await expect(page.locator('#auto-blink-input')).toBeChecked();
+  await expect(page.getByText('Idle sway')).toBeVisible();
+  await expect(page.locator('#idle-sway-input')).toBeChecked();
+  await expect(page.getByText('Expression preset')).toBeVisible();
+  await expect(page.getByText('Happy')).toBeVisible();
   await expect(page.getByText('MediaPipe Pose Debug')).toBeVisible();
   await expect(page.getByText('Start camera to inspect upper-body landmarks.')).toBeVisible();
   await expect(page.getByText('Camera image hidden. Skeleton only.')).toBeVisible();
@@ -53,6 +60,8 @@ test('OBS transparent mode hides Setup UI but keeps the scene canvas', async ({ 
   await expect(page.getByText('Load local VRM', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Load local VRMA', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Mic Reactive Mouth')).toHaveCount(0);
+  await expect(page.getByText('Auto blink')).toHaveCount(0);
+  await expect(page.getByText('Expression preset')).toHaveCount(0);
   await expect(page.getByText('MediaPipe Pose Debug')).toHaveCount(0);
   await expect(page.getByText('Setup Mode')).toHaveCount(0);
   expect(errors()).toEqual([]);
@@ -86,7 +95,8 @@ test('loads the local VRMA candidate and toggles playback when local assets exis
 
   await page.locator('#vrma-file-input').setInputFiles(greetingVrmaPath);
   await expect(page.getByText('VRMA loaded.')).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText(/VRMA_02\.vrma/)).toBeVisible();
+  await expect(page.locator('#vrma-file-text')).toContainText('VRMA_02.vrma');
+  await expect(page.locator('#vrma-slot-list button')).toContainText('VRMA_02.vrma');
   await expect(page.getByText('Ready to play in loop mode.')).toBeVisible();
   await expect(page.locator('#vrma-play-button')).toBeEnabled();
 

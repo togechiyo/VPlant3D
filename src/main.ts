@@ -9,6 +9,12 @@ import type { AppState } from './state/app-store';
 import { createAppStore } from './state/app-store';
 import { MicReactiveMouth } from './audio/mic-reactive-mouth';
 import {
+  createAutoBlinkState,
+  sampleAutoBlink,
+  type AutoBlinkState,
+} from './idle/auto-blink';
+import { sampleIdleSway } from './idle/idle-sway';
+import {
   createNeutralFaceExpressionWeights,
   createVrmFaceExpressionWeights,
   smoothFaceExpressionWeights,
@@ -33,6 +39,10 @@ import type { HeadRetargetPose } from './mocap/head-retarget';
 import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
+import {
+  vrmExpressionPresets,
+  type VrmExpressionPresetId,
+} from './vrm/expression-presets';
 import {
   getUnknownVrmLoadErrorMessage,
   getVrmFileValidationMessage,
@@ -117,6 +127,8 @@ let currentVrm: VRM | null = null;
 let currentVrma: VRMAnimation | null = null;
 let currentVrmaMixer: THREE.AnimationMixer | null = null;
 let currentVrmaAction: THREE.AnimationAction | null = null;
+const vrmaSlots: Array<{ name: string; duration: number; animation: VRMAnimation }> = [];
+let selectedVrmaSlotIndex = -1;
 let placeholderVisible = true;
 let vrmStatusText: HTMLElement | null = null;
 let vrmFileText: HTMLElement | null = null;
@@ -134,6 +146,7 @@ let vrmaRequirementText: HTMLElement | null = null;
 let vrmaPlayButton: HTMLButtonElement | null = null;
 let vrmaStopButton: HTMLButtonElement | null = null;
 let vrmaLoopInput: HTMLInputElement | null = null;
+let vrmaSlotList: HTMLElement | null = null;
 let micController: MicReactiveMouth | null = null;
 let micStatusText: HTMLElement | null = null;
 let micRequirementText: HTMLElement | null = null;
@@ -154,6 +167,9 @@ let poseStopButton: HTMLButtonElement | null = null;
 let poseMirrorInput: HTMLInputElement | null = null;
 let faceTrackingInput: HTMLInputElement | null = null;
 let handTrackingInput: HTMLInputElement | null = null;
+let autoBlinkInput: HTMLInputElement | null = null;
+let idleSwayInput: HTMLInputElement | null = null;
+let expressionPresetText: HTMLElement | null = null;
 let faceTrackingText: HTMLElement | null = null;
 let handTrackingText: HTMLElement | null = null;
 let poseAnimationFrameId: number | null = null;
@@ -161,6 +177,10 @@ let lastPoseVideoTime = -1;
 let upperBodyRetargetPose = createNeutralRetargetPose(false);
 let faceExpressionWeights = createNeutralFaceExpressionWeights();
 let headRetargetPose: HeadRetargetPose = createNeutralHeadRetargetPose(false);
+let autoBlinkState: AutoBlinkState = createAutoBlinkState(performance.now() / 1000);
+let selectedExpressionPreset: VrmExpressionPresetId = 'neutral';
+let autoBlinkEnabled = true;
+let idleSwayEnabled = true;
 let faceTracker: MediaPipeFaceTracker | null = null;
 let handTracker: MediaPipeHandTracker | null = null;
 const restBoneQuaternions = new Map<string, THREE.Quaternion>();
@@ -186,6 +206,14 @@ if (!state.obsMode) {
         <input id="face-tracking-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
         Face expressions / lip sync
       </label>
+      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
+        <input id="auto-blink-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
+        Auto blink
+      </label>
+      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
+        <input id="idle-sway-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+        Idle sway
+      </label>
       <button id="mic-start-button" class="shrink-0 rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
       <button id="mic-stop-button" class="shrink-0 rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
       <button id="pose-start-button" class="shrink-0 rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
@@ -204,7 +232,7 @@ if (!state.obsMode) {
         Load local VRM
       </label>
       <label class="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a] hover:bg-white/[0.04]">
-        <input id="vrma-file-input" class="sr-only" type="file" accept=".vrma" />
+        <input id="vrma-file-input" class="sr-only" type="file" accept=".vrma" multiple />
         Load local VRMA
       </label>
       <button id="vrma-play-button" class="shrink-0 rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Play</button>
@@ -223,6 +251,18 @@ if (!state.obsMode) {
         <span id="mic-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before testing mouth movement.</span>
       </div>
       <span id="face-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Face tracking idle.</span>
+      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Expression preset</span>
+          <span id="expression-preset-text" class="text-xs font-bold text-[#9fa9aa]">Neutral</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2">
+          <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-xs font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button" data-expression-preset="neutral">Neutral</button>
+          <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-1.5 text-xs font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy">Happy</button>
+          <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-1.5 text-xs font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="surprised">Surprise</button>
+          <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="relaxed">Relax</button>
+        </div>
+      </div>
       <div class="grid gap-2">
         <div class="grid gap-1">
           <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>Level</span><span>RMS</span></div>
@@ -301,6 +341,7 @@ if (!state.obsMode) {
         <span id="vrma-file-text" class="min-h-5 text-sm text-[#9fa9aa]">No motion selected.</span>
         <span id="vrma-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before playing VRMA.</span>
       </div>
+      <div id="vrma-slot-list" class="grid gap-2"></div>
     </div>
     <ul class="m-0 grid list-none content-start gap-2 rounded-md border border-white/10 bg-black/20 p-3">
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Setup Mode</span><strong class="font-bold text-[#6dff9a]">Active</strong></li>
@@ -330,6 +371,7 @@ if (!state.obsMode) {
   vrmaPlayButton = panel.querySelector<HTMLButtonElement>('#vrma-play-button');
   vrmaStopButton = panel.querySelector<HTMLButtonElement>('#vrma-stop-button');
   vrmaLoopInput = panel.querySelector<HTMLInputElement>('#vrma-loop-input');
+  vrmaSlotList = panel.querySelector<HTMLElement>('#vrma-slot-list');
   micStatusText = panel.querySelector<HTMLElement>('#mic-status-text');
   micRequirementText = panel.querySelector<HTMLElement>('#mic-requirement-text');
   micLevelBar = panel.querySelector<HTMLElement>('#mic-level-bar');
@@ -347,6 +389,9 @@ if (!state.obsMode) {
   poseMirrorInput = panel.querySelector<HTMLInputElement>('#pose-mirror-input');
   faceTrackingInput = panel.querySelector<HTMLInputElement>('#face-tracking-input');
   handTrackingInput = panel.querySelector<HTMLInputElement>('#hand-tracking-input');
+  autoBlinkInput = panel.querySelector<HTMLInputElement>('#auto-blink-input');
+  idleSwayInput = panel.querySelector<HTMLInputElement>('#idle-sway-input');
+  expressionPresetText = panel.querySelector<HTMLElement>('#expression-preset-text');
   faceTrackingText = panel.querySelector<HTMLElement>('#face-tracking-text');
   handTrackingText = panel.querySelector<HTMLElement>('#hand-tracking-text');
 
@@ -356,8 +401,8 @@ if (!state.obsMode) {
   });
 
   vrmaFileInput?.addEventListener('change', () => {
-    const file = vrmaFileInput.files?.[0] ?? null;
-    void handleVrmaFileSelection(file);
+    const files = Array.from(vrmaFileInput.files ?? []);
+    void handleVrmaFileSelection(files);
   });
   avatarOffsetXInput?.addEventListener('input', () => {
     appStore.getState().setAvatarOffsetX(Number(avatarOffsetXInput?.value ?? 0));
@@ -403,6 +448,31 @@ if (!state.obsMode) {
   handTrackingInput?.addEventListener('change', () => {
     appStore.getState().setHandTrackingEnabled(handTrackingInput?.checked ?? true);
   });
+  autoBlinkInput?.addEventListener('change', () => {
+    autoBlinkEnabled = autoBlinkInput?.checked ?? true;
+    autoBlinkState = createAutoBlinkState(performance.now() / 1000);
+    if (!autoBlinkEnabled) {
+      applyBlinkOpen();
+    }
+  });
+  idleSwayInput?.addEventListener('change', () => {
+    idleSwayEnabled = idleSwayInput?.checked ?? true;
+    if (!idleSwayEnabled) {
+      restoreIdleSwayBones();
+    }
+  });
+  panel.querySelectorAll<HTMLButtonElement>('.expression-preset-button').forEach((button) => {
+    button.addEventListener('click', () => {
+      const preset = button.dataset.expressionPreset;
+      if (isExpressionPresetId(preset)) {
+        selectedExpressionPreset = preset;
+        applyExpressionPreset();
+        updateExpressionPresetUi();
+      }
+    });
+  });
+  renderVrmaSlotList();
+  updateExpressionPresetUi();
 
   viewport.append(panel);
 } else {
@@ -433,7 +503,9 @@ function animate(frameTime = performance.now()): void {
   cube.rotation.y = elapsed * 0.52;
   currentVrmaMixer?.update(delta);
   applyUpperBodyRetarget();
+  applyCameraLessIdle(elapsed);
   updateLookAtCameraTarget();
+  sampleCameraLessExpressions(elapsed);
   sampleMicReactiveMouth();
   currentVrm?.update(delta);
   renderer.render(scene, camera);
@@ -468,35 +540,68 @@ async function handleVrmFileSelection(file: File | null): Promise<void> {
   }
 }
 
-async function handleVrmaFileSelection(file: File | null): Promise<void> {
-  const validation = validateVrmaFile(file);
+async function handleVrmaFileSelection(files: File[] | File | null): Promise<void> {
+  const selectedFiles = Array.isArray(files) ? files : files ? [files] : [];
+  const firstFile = selectedFiles[0] ?? null;
+  const validation = validateVrmaFile(firstFile);
 
   if (!validation.ok) {
     currentVrma = null;
+    selectedVrmaSlotIndex = -1;
     stopVrmaPlayback();
     appStore.getState().setVrmaError(getVrmaFileValidationMessage(validation));
+    renderVrmaSlotList();
     return;
   }
 
-  if (!file) {
+  if (!firstFile) {
     currentVrma = null;
+    selectedVrmaSlotIndex = -1;
     stopVrmaPlayback();
     appStore.getState().setVrmaError('Choose a local .vrma file.');
+    renderVrmaSlotList();
     return;
   }
 
   stopVrmaPlayback();
-  appStore.getState().setVrmaLoading(file.name);
+  vrmaSlots.length = 0;
+  selectedVrmaSlotIndex = -1;
+  renderVrmaSlotList();
+  appStore.getState().setVrmaLoading(
+    selectedFiles.length === 1 ? firstFile.name : `${selectedFiles.length} VRMA files`,
+  );
 
   try {
-    currentVrma = await loadVrmaFromFile(file);
+    for (const file of selectedFiles) {
+      const fileValidation = validateVrmaFile(file);
+      if (!fileValidation.ok) {
+        throw new VrmaLoadError(getVrmaFileValidationMessage(fileValidation));
+      }
+
+      const animation = await loadVrmaFromFile(file);
+      vrmaSlots.push({
+        name: file.name,
+        duration: animation.duration,
+        animation,
+      });
+    }
+
+    selectedVrmaSlotIndex = 0;
+    currentVrma = vrmaSlots[0]?.animation ?? null;
     resetVrmaMixer();
-    appStore.getState().setVrmaReady(file.name, currentVrma.duration);
+    const selectedSlot = vrmaSlots[0];
+    if (!selectedSlot) {
+      throw new VrmaLoadError('No VRMA motion was loaded.');
+    }
+    appStore.getState().setVrmaReady(selectedSlot.name, selectedSlot.duration);
+    renderVrmaSlotList();
   } catch (error) {
     currentVrma = null;
+    selectedVrmaSlotIndex = -1;
     const message =
       error instanceof VrmaLoadError ? error.message : getUnknownVrmaLoadErrorMessage(error);
     appStore.getState().setVrmaError(message);
+    renderVrmaSlotList();
   }
 }
 
@@ -523,6 +628,7 @@ function replaceCurrentVrm(nextVrm: VRM): void {
   scene.add(nextVrm.scene);
   captureRestBoneQuaternions(nextVrm);
   resetVrmaMixer();
+  applyExpressionPreset();
   applyMouthOpen(appStore.getState().mouthOpen);
 }
 
@@ -840,6 +946,50 @@ function getVrmaRequirementText(nextState: AppState): string {
   return nextState.vrmaLoop ? 'Ready to play in loop mode.' : 'Ready to play once.';
 }
 
+function renderVrmaSlotList(): void {
+  if (!vrmaSlotList) {
+    return;
+  }
+
+  if (vrmaSlots.length === 0) {
+    vrmaSlotList.innerHTML =
+      '<span class="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold text-[#9fa9aa]">No VRMA slots loaded.</span>';
+    return;
+  }
+
+  vrmaSlotList.replaceChildren(
+    ...vrmaSlots.map((slot, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className =
+        index === selectedVrmaSlotIndex
+          ? 'rounded-md border border-[#6dff9a]/70 bg-[#6dff9a]/10 px-3 py-2 text-left text-xs font-bold text-[#dfffee] transition hover:border-[#38d5ff]'
+          : 'rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-left text-xs font-bold text-[#eef4f2] transition hover:border-[#38d5ff]';
+      button.textContent = `${index + 1}. ${slot.name} (${slot.duration.toFixed(2)}s)`;
+      button.addEventListener('click', () => {
+        selectVrmaSlot(index);
+        startVrmaPlayback();
+      });
+      return button;
+    }),
+  );
+}
+
+function selectVrmaSlot(index: number): void {
+  const slot = vrmaSlots[index];
+
+  if (!slot) {
+    return;
+  }
+
+  stopVrmaPlayback();
+  selectedVrmaSlotIndex = index;
+  currentVrma = slot.animation;
+  resetVrmaMixer();
+  appStore.getState().setVrmaReady(slot.name, slot.duration);
+  renderVrmaSlotList();
+}
+
 async function startMicReactiveMouth(): Promise<void> {
   stopMicReactiveMouth();
   appStore.getState().setMicRequesting();
@@ -900,6 +1050,60 @@ function resetFaceExpressions(): void {
   faceExpressionWeights = createNeutralFaceExpressionWeights();
   applyFaceExpressions(faceExpressionWeights);
   resetHeadRetarget();
+}
+
+function sampleCameraLessExpressions(elapsedSeconds: number): void {
+  if (!currentVrm || appStore.getState().faceTrackingStatus === 'active') {
+    return;
+  }
+
+  applyExpressionPreset();
+
+  if (!autoBlinkEnabled) {
+    return;
+  }
+
+  const result = sampleAutoBlink(autoBlinkState, elapsedSeconds);
+  autoBlinkState = result.state;
+  currentVrm.expressionManager?.setValue('blinkLeft', result.weight);
+  currentVrm.expressionManager?.setValue('blinkRight', result.weight);
+}
+
+function applyBlinkOpen(): void {
+  currentVrm?.expressionManager?.setValue('blinkLeft', 0);
+  currentVrm?.expressionManager?.setValue('blinkRight', 0);
+}
+
+function applyExpressionPreset(): void {
+  const weights = vrmExpressionPresets[selectedExpressionPreset];
+
+  for (const [name, value] of Object.entries(weights)) {
+    currentVrm?.expressionManager?.setValue(name, value ?? 0);
+  }
+}
+
+function updateExpressionPresetUi(): void {
+  if (!expressionPresetText) {
+    return;
+  }
+
+  expressionPresetText.textContent =
+    selectedExpressionPreset === 'neutral'
+      ? 'Neutral'
+      : selectedExpressionPreset === 'happy'
+        ? 'Happy'
+        : selectedExpressionPreset === 'surprised'
+          ? 'Surprise'
+          : 'Relax';
+}
+
+function isExpressionPresetId(value: unknown): value is VrmExpressionPresetId {
+  return (
+    value === 'neutral' ||
+    value === 'happy' ||
+    value === 'surprised' ||
+    value === 'relaxed'
+  );
 }
 
 function getMicErrorMessage(error: unknown): string {
@@ -1349,6 +1553,62 @@ function applyUpperBodyRetarget(): void {
     VRMHumanBoneName.RightUpperArm,
     upperBodyRetargetPose.rightUpperArmRoll,
   );
+}
+
+function applyCameraLessIdle(elapsedSeconds: number): void {
+  if (
+    !currentVrm ||
+    !idleSwayEnabled ||
+    appStore.getState().poseStatus === 'active' ||
+    appStore.getState().vrmaPlaybackStatus === 'playing'
+  ) {
+    return;
+  }
+
+  const sway = sampleIdleSway(elapsedSeconds);
+  const upperChest = currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.UpperChest);
+  const chest = currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.Chest);
+  const neck = currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.Neck);
+  const torsoBone = upperChest ?? chest;
+  const torsoBoneName = upperChest ? VRMHumanBoneName.UpperChest : VRMHumanBoneName.Chest;
+
+  applyIdleSwayBone(torsoBone, torsoBoneName, 0, sway.chestYaw, sway.chestRoll);
+  applyIdleSwayBone(neck, VRMHumanBoneName.Neck, sway.neckPitch, 0, sway.neckRoll);
+}
+
+function applyIdleSwayBone(
+  bone: THREE.Object3D | null,
+  restBoneName: string,
+  pitch: number,
+  yaw: number,
+  roll: number,
+): void {
+  if (!bone) {
+    return;
+  }
+
+  const restQuaternion = restBoneQuaternions.get(restBoneName) ?? bone.quaternion;
+  const delta = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, yaw, roll, 'XYZ'));
+  bone.quaternion.copy(restQuaternion).multiply(delta);
+}
+
+function restoreIdleSwayBones(): void {
+  if (!currentVrm || appStore.getState().poseStatus === 'active') {
+    return;
+  }
+
+  for (const boneName of [
+    VRMHumanBoneName.Chest,
+    VRMHumanBoneName.UpperChest,
+    VRMHumanBoneName.Neck,
+  ]) {
+    const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
+    const restQuaternion = restBoneQuaternions.get(boneName);
+
+    if (bone && restQuaternion) {
+      bone.quaternion.copy(restQuaternion);
+    }
+  }
 }
 
 function applyBoneRetarget(
