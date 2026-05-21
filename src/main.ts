@@ -179,22 +179,24 @@ const idleArmBoneNames = [
 if (!state.obsMode) {
   const panel = document.createElement('aside');
   panel.className =
-    'absolute left-6 top-6 max-h-[calc(100vh-48px)] w-[min(420px,calc(100vw-48px))] overflow-y-auto rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.86)] p-5 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
+    'absolute inset-x-6 bottom-6 grid max-h-[42vh] grid-flow-col auto-cols-[minmax(280px,360px)] items-start gap-4 overflow-x-auto overflow-y-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-4 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md [&>*]:max-h-[calc(42vh-32px)] [&>*]:overflow-y-auto';
   panel.innerHTML = `
-    <h1 class="m-0 mb-2 text-2xl leading-tight tracking-normal">VPlant3D <span class="text-[#38d5ff]">for OBS</span></h1>
-    <p class="m-0 mb-4 leading-relaxed text-[#9fa9aa]">Lightweight VRM / VRMA 3D avatar layer for OBS Browser Source.</p>
-    <div class="mb-4 grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
+    <div class="grid content-start gap-3 rounded-md border border-white/10 bg-black/20 p-4">
+      <h1 class="m-0 text-2xl leading-tight tracking-normal">VPlant3D <span class="text-[#38d5ff]">for OBS</span></h1>
+      <p class="m-0 leading-relaxed text-[#9fa9aa]">Lightweight VRM / VRMA 3D avatar layer for OBS Browser Source.</p>
+    </div>
+    <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM Model</span>
         <strong id="vrm-status-text" class="text-sm font-bold text-[#eef4f2]">Choose a local .vrm file.</strong>
         <span id="vrm-file-text" class="min-h-5 text-sm text-[#9fa9aa]">No file selected.</span>
       </div>
-      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/55 bg-[#6dff9a]/10 px-3 py-2 text-sm font-bold text-[#dfffee] shadow-[0_0_18px_rgba(109,255,154,0.12)] transition hover:border-[#38d5ff] hover:bg-[#38d5ff]/10">
+      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] shadow-[0_0_18px_rgba(109,255,154,0.12)] transition hover:border-[#38d5ff] hover:bg-white/[0.04]">
         <input id="vrm-file-input" class="sr-only" type="file" accept=".vrm" />
         Load local VRM
       </label>
     </div>
-    <div class="mb-4 grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
+    <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Avatar Framing</span>
       </div>
@@ -216,19 +218,19 @@ if (!state.obsMode) {
       </label>
       <button id="avatar-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">Reset framing</button>
     </div>
-    <div class="mb-4 grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
+    <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">VRMA Motion</span>
         <strong id="vrma-status-text" class="text-sm font-bold text-[#eef4f2]">Choose a local .vrma file.</strong>
         <span id="vrma-file-text" class="min-h-5 text-sm text-[#9fa9aa]">No motion selected.</span>
         <span id="vrma-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before playing VRMA.</span>
       </div>
-      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] shadow-[0_0_18px_rgba(56,213,255,0.12)] transition hover:border-[#6dff9a] hover:bg-[#6dff9a]/10">
+      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] shadow-[0_0_18px_rgba(56,213,255,0.12)] transition hover:border-[#6dff9a] hover:bg-white/[0.04]">
         <input id="vrma-file-input" class="sr-only" type="file" accept=".vrma" />
         Load local VRMA
       </label>
       <div class="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
-        <button id="vrma-play-button" class="rounded-md border border-[#6dff9a]/55 bg-[#6dff9a]/10 px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-[#38d5ff]/10 disabled:cursor-not-allowed disabled:opacity-40" type="button">Play</button>
+        <button id="vrma-play-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Play</button>
         <button id="vrma-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop</button>
         <label class="inline-flex min-w-20 items-center gap-2 text-sm font-bold text-[#9fa9aa]">
           <input id="vrma-loop-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
@@ -236,7 +238,7 @@ if (!state.obsMode) {
         </label>
       </div>
     </div>
-    <div class="mb-4 grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
+    <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Mic Reactive Mouth</span>
         <strong id="mic-status-text" class="text-sm font-bold text-[#eef4f2]">Microphone idle.</strong>
@@ -253,11 +255,11 @@ if (!state.obsMode) {
         </div>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/55 bg-[#6dff9a]/10 px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-[#38d5ff]/10 disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
+        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
         <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
       </div>
     </div>
-    <div class="mb-4 grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
+    <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">MediaPipe Pose Debug</span>
         <strong id="pose-status-text" class="text-sm font-bold text-[#eef4f2]">Camera idle.</strong>
@@ -292,11 +294,11 @@ if (!state.obsMode) {
         <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Hand tracking idle.</span>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-[#6dff9a]/10 disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
+        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
         <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
       </div>
     </div>
-    <ul class="m-0 grid list-none gap-2 p-0">
+    <ul class="m-0 grid list-none content-start gap-2 rounded-md border border-white/10 bg-black/20 p-3">
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Setup Mode</span><strong class="font-bold text-[#6dff9a]">Active</strong></li>
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>OBS Mode</span><strong class="font-bold text-[#6dff9a]">${state.obsMode ? 'On' : 'Off'}</strong></li>
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Transparent</span><strong class="font-bold text-[#6dff9a]">${state.transparent ? 'On' : 'Off'}</strong></li>

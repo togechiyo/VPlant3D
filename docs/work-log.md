@@ -1021,3 +1021,34 @@
 
 - Chromeでわざと顔/上半身を外して、戻りが急すぎないか確認する
 - まだピクつく場合はrelease係数をさらに下げるか、数フレームのholdを追加する
+
+## 2026-05-21 Setup Bottom Dock UI
+
+### Goal
+
+- Setup panelを左固定から下ドックへ変更する
+- 欄ごとの緑背景が文字と干渉して読みにくい問題を、枠線中心の見た目へ直す
+
+### Did
+
+- Setup Mode panelを画面下の横スクロールドックへ変更
+- 各機能欄を横並びカードとして配置
+- 高さのあるMediaPipe欄はカード内で縦スクロールできるようにした
+- 緑アクセントのボタン背景を透明にし、緑は枠線・文字・チェック類へ寄せた
+- hover時の緑背景も白の薄い背景へ変更
+
+### Worked
+
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run test:e2e` は成功
+- `npm run lint` は成功
+- Playwrightでlocal Alicia VRMを読み込み、下ドック表示をスクリーンショット確認した
+
+### Failed / Blocked
+
+- 下ドックの高さ・横スクロール量は人間のChrome確認が必要
+
+### Next
+
+- Chromeで操作感を確認し、必要ならdock heightやカード幅を調整する
+- よければ将来的にカテゴリタブ化や折りたたみも検討する
