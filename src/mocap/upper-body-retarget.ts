@@ -65,6 +65,12 @@ export function createUpperBodyRetargetPose(
   const rightLowerArmLift = options.mirrorInput
     ? (summary.leftLowerArmLift ?? 0)
     : (summary.rightLowerArmLift ?? 0);
+  const leftLowerArmBend = options.mirrorInput
+    ? (summary.rightLowerArmBend ?? 0)
+    : (summary.leftLowerArmBend ?? 0);
+  const rightLowerArmBend = options.mirrorInput
+    ? (summary.leftLowerArmBend ?? 0)
+    : (summary.rightLowerArmBend ?? 0);
   const leftUpperArmRoll = clamp(
     -leftArmLift * options.maxArmRoll,
     -options.maxArmRoll,
@@ -75,13 +81,15 @@ export function createUpperBodyRetargetPose(
     0,
     options.maxArmRoll,
   );
+  const leftLowerArmMotion = Math.max(leftLowerArmBend, leftLowerArmLift * 0.45);
+  const rightLowerArmMotion = Math.max(rightLowerArmBend, rightLowerArmLift * 0.45);
   const leftLowerArmRoll = clamp(
-    -leftLowerArmLift * options.maxLowerArmRoll,
+    -leftLowerArmMotion * options.maxLowerArmRoll,
     -options.maxLowerArmRoll,
     0,
   );
   const rightLowerArmRoll = clamp(
-    rightLowerArmLift * options.maxLowerArmRoll,
+    rightLowerArmMotion * options.maxLowerArmRoll,
     0,
     options.maxLowerArmRoll,
   );

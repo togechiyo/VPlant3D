@@ -23,6 +23,8 @@ export interface UpperBodyPoseSummary {
   rightArmLift: number | null;
   leftLowerArmLift: number | null;
   rightLowerArmLift: number | null;
+  leftLowerArmBend: number | null;
+  rightLowerArmBend: number | null;
 }
 
 const upperBodyIndexes = [0, 11, 12, 13, 14, 15, 16, 23, 24] as const;
@@ -72,6 +74,16 @@ export function summarizeUpperBodyPose(
   const rightArmLift = calculateArmLift(landmarks[rightShoulder], landmarks[rightElbow]);
   const leftLowerArmLift = calculateLowerArmLift(landmarks[leftElbow], landmarks[leftWrist]);
   const rightLowerArmLift = calculateLowerArmLift(landmarks[rightElbow], landmarks[rightWrist]);
+  const leftLowerArmBend = calculateElbowBend(
+    landmarks[leftShoulder],
+    landmarks[leftElbow],
+    landmarks[leftWrist],
+  );
+  const rightLowerArmBend = calculateElbowBend(
+    landmarks[rightShoulder],
+    landmarks[rightElbow],
+    landmarks[rightWrist],
+  );
 
   return {
     poseDetected: landmarks.length > 0,
@@ -89,6 +101,8 @@ export function summarizeUpperBodyPose(
     rightArmLift,
     leftLowerArmLift,
     rightLowerArmLift,
+    leftLowerArmBend,
+    rightLowerArmBend,
   };
 }
 
@@ -109,6 +123,8 @@ function createEmptySummary(): UpperBodyPoseSummary {
     rightArmLift: null,
     leftLowerArmLift: null,
     rightLowerArmLift: null,
+    leftLowerArmBend: null,
+    rightLowerArmBend: null,
   };
 }
 
@@ -169,6 +185,36 @@ function calculateLowerArmLift(
   return clamp01((0.38 - verticalDrop) / 0.38);
 }
 
+function calculateElbowBend(
+  shoulder: NormalizedLandmark | undefined,
+  elbow: NormalizedLandmark | undefined,
+  wrist: NormalizedLandmark | undefined,
+): number | null {
+  if (!shoulder || !elbow || !wrist) {
+    return null;
+  }
+
+  const upperArmX = shoulder.x - elbow.x;
+  const upperArmY = shoulder.y - elbow.y;
+  const lowerArmX = wrist.x - elbow.x;
+  const lowerArmY = wrist.y - elbow.y;
+  const upperArmLength = Math.hypot(upperArmX, upperArmY);
+  const lowerArmLength = Math.hypot(lowerArmX, lowerArmY);
+
+  if (upperArmLength === 0 || lowerArmLength === 0) {
+    return 0;
+  }
+
+  const dot = upperArmX * lowerArmX + upperArmY * lowerArmY;
+  const angle = Math.acos(clamp(dot / (upperArmLength * lowerArmLength), -1, 1));
+
+  return clamp01((Math.PI - angle) / 1.65);
+}
+
 function clamp01(value: number): number {
   return Math.min(Math.max(value, 0), 1);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }

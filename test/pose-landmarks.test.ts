@@ -21,6 +21,8 @@ describe('summarizeUpperBodyPose', () => {
       rightArmLift: null,
       leftLowerArmLift: null,
       rightLowerArmLift: null,
+      leftLowerArmBend: null,
+      rightLowerArmBend: null,
     });
   });
 
@@ -51,6 +53,19 @@ describe('summarizeUpperBodyPose', () => {
     expect(summary.rightArmLift).toBeCloseTo(0.2647, 4);
     expect(summary.leftLowerArmLift).toBeCloseTo(0.9211, 4);
     expect(summary.rightLowerArmLift).toBeCloseTo(0.5526, 4);
+    expect(summary.leftLowerArmBend).toBeCloseTo(0.2651, 4);
+    expect(summary.rightLowerArmBend).toBeCloseTo(0.0476, 4);
+  });
+
+  it('estimates elbow bend from shoulder, elbow, and wrist angle', () => {
+    const landmarks = createLandmarks(33, 0.9);
+    landmarks[11] = createLandmark(0.3, 0.4, 0.9);
+    landmarks[13] = createLandmark(0.2, 0.58, 0.9);
+    landmarks[15] = createLandmark(0.36, 0.58, 0.9);
+
+    const summary = summarizeUpperBodyPose(landmarks);
+
+    expect(summary.leftLowerArmBend).toBeGreaterThan(0.55);
   });
 
   it('counts only upper-body landmarks above the visibility threshold', () => {

@@ -1724,3 +1724,33 @@
 
 - Chromeで腕を上げ、肘から手首までがモデル側で追従するか確認する
 - 下腕が曲がりすぎる/逆向きなら `maxLowerArmRoll` と左右符号を調整する
+
+## 2026-05-21 Elbow Bend IK-Like Retarget
+
+### Goal
+
+- 手首位置を目標にして肘に角度をつける、IKに近い下腕挙動へ寄せる
+
+### Did
+
+- Pose Landmarkerの肩・肘・手首から肘角度を推定する `leftLowerArmBend` / `rightLowerArmBend` を追加した
+- 下腕retargetを、手首の上下移動より肘角度を優先する方式へ変更した
+- 手首の上下情報は補助として残し、肘角度が小さい時だけ弱く効くようにした
+- pose/upper-body retargetのテストを追加・更新した
+
+### Worked
+
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- 本物のIKソルバーではなく、2D肩・肘・手首角度からの近似。実カメラでの見え方確認が必要
+- Hand Landmarkerの手首位置をPose側へ融合する処理はまだ未実装
+
+### Next
+
+- 手を顔の横に持ってきた時、肘が折れて手首目標へ近づくか確認する
+- まだ手首位置が遠い場合、Hand Landmarkerのwrist点をPose wristの補正に使う

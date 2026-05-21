@@ -102,8 +102,21 @@ describe('createUpperBodyRetargetPose', () => {
       }),
     );
 
+    expect(pose.leftLowerArmRoll).toBeCloseTo(-0.1215);
+    expect(pose.rightLowerArmRoll).toBeCloseTo(0.3402);
+  });
+
+  it('uses elbow bend as the main lower-arm target', () => {
+    const pose = createUpperBodyRetargetPose(
+      createSummary({
+        averageUpperBodyVisibility: 0.8,
+        leftLowerArmBend: 0.75,
+        rightLowerArmBend: 0.25,
+      }),
+    );
+
     expect(pose.leftLowerArmRoll).toBeCloseTo(-0.27);
-    expect(pose.rightLowerArmRoll).toBeCloseTo(0.756);
+    expect(pose.rightLowerArmRoll).toBeCloseTo(0.81);
   });
 
   it('can map elbow lift without mirroring', () => {
@@ -217,6 +230,8 @@ function createSummary(overrides: Partial<UpperBodyPoseSummary>): UpperBodyPoseS
     rightArmLift: 0,
     leftLowerArmLift: 0,
     rightLowerArmLift: 0,
+    leftLowerArmBend: 0,
+    rightLowerArmBend: 0,
     ...overrides,
   };
 }
