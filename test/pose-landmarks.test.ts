@@ -19,6 +19,8 @@ describe('summarizeUpperBodyPose', () => {
       torsoTurn: null,
       leftArmLift: null,
       rightArmLift: null,
+      leftLowerArmLift: null,
+      rightLowerArmLift: null,
     });
   });
 
@@ -28,6 +30,8 @@ describe('summarizeUpperBodyPose', () => {
     landmarks[12] = createLandmark(0.7, 0.5, 0.6, 0.05);
     landmarks[13] = createLandmark(0.22, 0.55, 0.9);
     landmarks[14] = createLandmark(0.78, 0.75, 0.9);
+    landmarks[15] = createLandmark(0.18, 0.58, 0.9);
+    landmarks[16] = createLandmark(0.82, 0.92, 0.9);
     landmarks[23] = createLandmark(0.4, 0.8, 0.9);
     landmarks[24] = createLandmark(0.6, 0.8, 0.7);
 
@@ -45,6 +49,8 @@ describe('summarizeUpperBodyPose', () => {
     expect(summary.torsoTurn).toBeCloseTo(0.15);
     expect(summary.leftArmLift).toBeCloseTo(0.5588, 4);
     expect(summary.rightArmLift).toBeCloseTo(0.2647, 4);
+    expect(summary.leftLowerArmLift).toBeCloseTo(0.9211, 4);
+    expect(summary.rightLowerArmLift).toBeCloseTo(0.5526, 4);
   });
 
   it('counts only upper-body landmarks above the visibility threshold', () => {

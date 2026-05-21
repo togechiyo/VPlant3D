@@ -1693,3 +1693,34 @@
 - Chromeで手を開いたまま傾け、モデルの手首/前腕が追従するか確認する
 - 握った時に指のカールが見えるか確認する
 - OBS Render Page側にも同じ手首/指状態が出るか確認する
+
+## 2026-05-21 Lower Arm Pose Retarget Fix
+
+### Goal
+
+- 手ランドマークは取れているが、肘/下腕が動かず手の位置が下がったままになる問題を修正する
+
+### Did
+
+- MediaPipe Poseの肘・手首ランドマークから `leftLowerArmLift` / `rightLowerArmLift` を算出するようにした
+- 上半身retarget poseに `leftLowerArmRoll` / `rightLowerArmRoll` を追加した
+- VRMの `LeftLowerArm` / `RightLowerArm` に下腕ロールを適用するようにした
+- Hand Landmarker側は手首/指の細かい向き、Pose Landmarker側は腕の位置、という分担に整理した
+- relay stateにも下腕ロールを含め、OBS Render Pageへ同期されるようにした
+- pose/upper-body retargetのテストを追加・更新した
+
+### Worked
+
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- 実カメラでの肘・手首方向、左右ミラー、下腕の強さは人間確認が必要
+
+### Next
+
+- Chromeで腕を上げ、肘から手首までがモデル側で追従するか確認する
+- 下腕が曲がりすぎる/逆向きなら `maxLowerArmRoll` と左右符号を調整する

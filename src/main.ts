@@ -1971,6 +1971,16 @@ function applyUpperBodyRetarget(): void {
     VRMHumanBoneName.RightUpperArm,
     upperBodyRetargetPose.rightUpperArmRoll,
   );
+  applyArmRetarget(
+    currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.LeftLowerArm),
+    VRMHumanBoneName.LeftLowerArm,
+    upperBodyRetargetPose.leftLowerArmRoll,
+  );
+  applyArmRetarget(
+    currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.RightLowerArm),
+    VRMHumanBoneName.RightLowerArm,
+    upperBodyRetargetPose.rightLowerArmRoll,
+  );
 }
 
 function applyHandRetarget(): void {
@@ -2004,16 +2014,8 @@ function applyHandTarget(side: 'left' | 'right', target: HandRetargetTarget | nu
   }
 
   const sideSign = side === 'left' ? 1 : -1;
-  const lowerArmBoneName =
-    side === 'left' ? VRMHumanBoneName.LeftLowerArm : VRMHumanBoneName.RightLowerArm;
   const handBoneName = side === 'left' ? VRMHumanBoneName.LeftHand : VRMHumanBoneName.RightHand;
 
-  applyTrackedHandBone(
-    lowerArmBoneName,
-    target.wristPitch * 0.16,
-    sideSign * target.wristYaw * 0.32,
-    target.wristRoll * 0.38,
-  );
   applyTrackedHandBone(
     handBoneName,
     target.wristPitch * 0.58,
@@ -2116,8 +2118,8 @@ function restoreHandSideBones(side: 'left' | 'right'): void {
   const prefix = side === 'left' ? 'left' : 'right';
   const armBoneNames =
     side === 'left'
-      ? [VRMHumanBoneName.LeftLowerArm, VRMHumanBoneName.LeftHand]
-      : [VRMHumanBoneName.RightLowerArm, VRMHumanBoneName.RightHand];
+      ? [VRMHumanBoneName.LeftHand]
+      : [VRMHumanBoneName.RightHand];
 
   for (const boneName of armBoneNames) {
     const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
@@ -2251,6 +2253,8 @@ function restoreUpperBodyBones(): void {
     VRMHumanBoneName.Neck,
     VRMHumanBoneName.LeftUpperArm,
     VRMHumanBoneName.RightUpperArm,
+    VRMHumanBoneName.LeftLowerArm,
+    VRMHumanBoneName.RightLowerArm,
   ]) {
     const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
     const restQuaternion = restBoneQuaternions.get(boneName);

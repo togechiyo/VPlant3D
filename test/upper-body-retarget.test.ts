@@ -59,6 +59,7 @@ describe('createUpperBodyRetargetPose', () => {
         maxNeckYaw: 0.12,
         maxNeckRoll: 0.15,
         maxArmRoll: 0.58,
+        maxLowerArmRoll: 1.08,
       },
     );
 
@@ -92,6 +93,19 @@ describe('createUpperBodyRetargetPose', () => {
     expect(pose.rightUpperArmRoll).toBeCloseTo(0.29);
   });
 
+  it('mirrors wrist lift before mapping lower arm roll deltas by default', () => {
+    const pose = createUpperBodyRetargetPose(
+      createSummary({
+        averageUpperBodyVisibility: 0.8,
+        leftLowerArmLift: 0.7,
+        rightLowerArmLift: 0.25,
+      }),
+    );
+
+    expect(pose.leftLowerArmRoll).toBeCloseTo(-0.27);
+    expect(pose.rightLowerArmRoll).toBeCloseTo(0.756);
+  });
+
   it('can map elbow lift without mirroring', () => {
     const pose = createUpperBodyRetargetPose(
       createSummary({
@@ -107,6 +121,7 @@ describe('createUpperBodyRetargetPose', () => {
         maxNeckYaw: 0.12,
         maxNeckRoll: 0.15,
         maxArmRoll: 0.58,
+        maxLowerArmRoll: 1.08,
       },
     );
 
@@ -142,6 +157,8 @@ describe('smoothUpperBodyRetargetPose', () => {
         neckRoll: -0.08,
         leftUpperArmRoll: -0.2,
         rightUpperArmRoll: 0.1,
+        leftLowerArmRoll: -0.4,
+        rightLowerArmRoll: 0.2,
       },
       0.25,
     );
@@ -154,6 +171,8 @@ describe('smoothUpperBodyRetargetPose', () => {
       neckRoll: -0.02,
       leftUpperArmRoll: -0.05,
       rightUpperArmRoll: 0.025,
+      leftLowerArmRoll: -0.1,
+      rightLowerArmRoll: 0.05,
     });
   });
 
@@ -167,6 +186,8 @@ describe('smoothUpperBodyRetargetPose', () => {
         neckRoll: -0.03,
         leftUpperArmRoll: -0.2,
         rightUpperArmRoll: 0.1,
+        leftLowerArmRoll: -0.4,
+        rightLowerArmRoll: 0.2,
       },
       createNeutralRetargetPose(false),
       0.25,
@@ -175,6 +196,7 @@ describe('smoothUpperBodyRetargetPose', () => {
     expect(smoothed.enabled).toBe(true);
     expect(smoothed.chestYaw).toBeCloseTo(0.075);
     expect(smoothed.leftUpperArmRoll).toBeCloseTo(-0.15);
+    expect(smoothed.leftLowerArmRoll).toBeCloseTo(-0.3);
   });
 });
 
@@ -193,6 +215,8 @@ function createSummary(overrides: Partial<UpperBodyPoseSummary>): UpperBodyPoseS
     torsoTurn: 0,
     leftArmLift: 0,
     rightArmLift: 0,
+    leftLowerArmLift: 0,
+    rightLowerArmLift: 0,
     ...overrides,
   };
 }

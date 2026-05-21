@@ -42,6 +42,8 @@ export interface RelayPoseState {
     neckRoll: number;
     leftUpperArmRoll: number;
     rightUpperArmRoll: number;
+    leftLowerArmRoll: number;
+    rightLowerArmRoll: number;
   };
   hands?: {
     left: RelayHandTarget | null;

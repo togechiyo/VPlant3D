@@ -21,6 +21,8 @@ export interface UpperBodyPoseSummary {
   torsoTurn: number | null;
   leftArmLift: number | null;
   rightArmLift: number | null;
+  leftLowerArmLift: number | null;
+  rightLowerArmLift: number | null;
 }
 
 const upperBodyIndexes = [0, 11, 12, 13, 14, 15, 16, 23, 24] as const;
@@ -29,6 +31,8 @@ const leftShoulder = 11;
 const rightShoulder = 12;
 const leftElbow = 13;
 const rightElbow = 14;
+const leftWrist = 15;
+const rightWrist = 16;
 const leftHip = 23;
 const rightHip = 24;
 
@@ -66,6 +70,8 @@ export function summarizeUpperBodyPose(
       : null;
   const leftArmLift = calculateArmLift(landmarks[leftShoulder], landmarks[leftElbow]);
   const rightArmLift = calculateArmLift(landmarks[rightShoulder], landmarks[rightElbow]);
+  const leftLowerArmLift = calculateLowerArmLift(landmarks[leftElbow], landmarks[leftWrist]);
+  const rightLowerArmLift = calculateLowerArmLift(landmarks[rightElbow], landmarks[rightWrist]);
 
   return {
     poseDetected: landmarks.length > 0,
@@ -81,6 +87,8 @@ export function summarizeUpperBodyPose(
     torsoTurn,
     leftArmLift,
     rightArmLift,
+    leftLowerArmLift,
+    rightLowerArmLift,
   };
 }
 
@@ -99,6 +107,8 @@ function createEmptySummary(): UpperBodyPoseSummary {
     torsoTurn: null,
     leftArmLift: null,
     rightArmLift: null,
+    leftLowerArmLift: null,
+    rightLowerArmLift: null,
   };
 }
 
@@ -145,6 +155,18 @@ function calculateArmLift(
 
   const verticalDrop = elbow.y - shoulder.y;
   return clamp01((0.34 - verticalDrop) / 0.34);
+}
+
+function calculateLowerArmLift(
+  elbow: NormalizedLandmark | undefined,
+  wrist: NormalizedLandmark | undefined,
+): number | null {
+  if (!elbow || !wrist) {
+    return null;
+  }
+
+  const verticalDrop = wrist.y - elbow.y;
+  return clamp01((0.38 - verticalDrop) / 0.38);
 }
 
 function clamp01(value: number): number {
