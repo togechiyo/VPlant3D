@@ -59,6 +59,10 @@ body.is-transparent-render {
   background: transparent !important;
 }
 
+.viewport--control .scene-canvas {
+  width: calc(100% - min(444px, 44vw));
+}
+
 .scene-canvas {
   display: block;
   width: 100%;

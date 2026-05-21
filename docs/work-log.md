@@ -1501,3 +1501,35 @@
 
 - OBS側で背景が透明になるか確認する
 - まだ黒背景が残る場合は、OBS Browser Source設定のCustom CSS、source background、alpha handlingを確認し、`?debug=1` の背景診断表示を追加する
+
+## 2026-05-21 Vertical Control Layout
+
+### Goal
+
+- Control Pageのモデルプレビューを小さくし、操作パネルを縦配置で詰め込む
+- OBS RenderとControlの役割差が見た目にも分かるようにする
+
+### Did
+
+- Control PageのSetup Dockを下ドックから右サイドバーへ変更した
+- 操作カードを横スクロールではなく縦スクロールで並べるようにした
+- Control Pageのcanvas幅を操作パネル分だけ縮め、モデルプレビューがパネルの下に潜りにくい形にした
+- Control Page用カメラをさらに引いて、モデルを小さめに表示するようにした
+- OBS確認用dev serverを縦レイアウト版で再起動した
+
+### Worked
+
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run lint` は成功
+- `npm run test` は成功
+
+### Failed / Blocked
+
+- 実際のChrome操作感は人間確認待ち
+- 右サイドバー幅やモデルプレビューの大きさは、表示画面サイズによって再調整が必要になる可能性がある
+
+### Next
+
+- Chromeで縦操作パネルのスクロール量と見やすさを確認する
+- 必要ならカード順をVRM/顔/体/手/位置/VRMAから、配信中操作頻度順に再配置する

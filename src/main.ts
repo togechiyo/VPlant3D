@@ -232,21 +232,21 @@ relayClient.connect();
 if (isControlPage) {
   const panel = document.createElement('aside');
   panel.className =
-    'absolute inset-x-4 bottom-4 grid max-h-[42vh] gap-2 overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-2 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
+    'absolute right-4 top-4 bottom-4 w-[min(420px,42vw)] overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-2 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
   panel.innerHTML = `
-    <div class="grid grid-flow-col auto-cols-[minmax(240px,310px)] items-start gap-2 overflow-x-auto overflow-y-hidden pb-1 [&>*]:max-h-[calc(42vh-28px)] [&>*]:overflow-y-auto">
-    <div class="grid gap-3 rounded-md border border-[#6dff9a]/35 bg-black/20 p-3">
+    <div class="grid h-full content-start gap-2 overflow-y-auto pr-1">
+    <div class="grid gap-2 rounded-md border border-[#6dff9a]/35 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM</span>
         <strong id="vrm-status-text" class="text-sm font-bold text-[#eef4f2]">VRM未選択</strong>
         <span id="vrm-file-text" class="min-h-5 text-sm text-[#9fa9aa]">未読み込み</span>
       </div>
-      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/10 px-3 py-3 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff] hover:bg-white/[0.04]">
+      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/10 px-3 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff] hover:bg-white/[0.04]">
         <input id="vrm-file-input" class="sr-only" type="file" accept=".vrm" />
         VRMを読み込む
       </label>
     </div>
-    <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
+    <div class="grid gap-2 rounded-md border border-[#6dff9a]/25 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">顔 / 口</span>
         <strong id="mic-status-text" class="text-sm font-bold text-[#eef4f2]">マイク停止中</strong>
@@ -298,7 +298,7 @@ if (isControlPage) {
         </div>
       </div>
     </div>
-    <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
+    <div class="grid gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">体トラック</span>
         <strong id="pose-status-text" class="text-sm font-bold text-[#eef4f2]">カメラ停止中</strong>
@@ -334,7 +334,7 @@ if (isControlPage) {
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">体 / 腕</span>
       </div>
     </div>
-    <div class="grid content-start gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
+    <div class="grid content-start gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">手</span>
         <strong class="text-sm font-bold text-[#eef4f2]">骨格表示</strong>
@@ -345,7 +345,7 @@ if (isControlPage) {
         手の骨格
       </label>
     </div>
-    <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
+    <div class="grid gap-2 rounded-md border border-[#6dff9a]/25 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">位置調整</span>
       </div>
@@ -367,7 +367,7 @@ if (isControlPage) {
       </label>
       <button id="avatar-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">リセット</button>
     </div>
-    <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
+    <div class="grid gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">VRMA</span>
         <strong id="vrma-status-text" class="text-sm font-bold text-[#eef4f2]">VRMA未選択</strong>
@@ -388,7 +388,7 @@ if (isControlPage) {
       </div>
       <div id="vrma-slot-list" class="grid gap-2"></div>
     </div>
-    <ul class="m-0 grid list-none content-start gap-2 rounded-md border border-white/10 bg-black/20 p-3">
+    <ul class="m-0 grid list-none content-start gap-2 rounded-md border border-white/10 bg-black/20 p-2">
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>設定</span><strong class="font-bold text-[#6dff9a]">表示中</strong></li>
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>OBS</span><strong class="font-bold text-[#6dff9a]">${state.obsMode ? 'ON' : 'OFF'}</strong></li>
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>透過</span><strong class="font-bold text-[#6dff9a]">${state.transparent ? 'ON' : 'OFF'}</strong></li>
@@ -932,8 +932,8 @@ function configureUpperBodyCamera(): void {
 }
 
 function configureControlPreviewCamera(): void {
-  camera.position.set(0, 1.46, 4.35);
-  camera.lookAt(0, 1.28, 0);
+  camera.position.set(-0.1, 1.35, 6.4);
+  camera.lookAt(-0.1, 1.15, 0);
   camera.updateProjectionMatrix();
 }
 
