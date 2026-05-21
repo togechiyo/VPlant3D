@@ -93,6 +93,8 @@ http://127.0.0.1:5173/?obs=1&transparent=1
 
 Setup Mode includes local `.vrm` and `.vrma` file inputs. Local model and motion files are loaded from the user's machine and are not committed to this repository. Multiple `.vrma` files can be loaded into motion slots, then replayed with one button from the Setup Dock.
 
+OBS Browser Source is treated as the render-only output target. Camera, microphone, MediaPipe, and setup controls should move toward a separate Control / Capture page running in Chrome, with a local relay sending avatar state to OBS.
+
 Mic Reactive Mouth can request microphone access in Setup Mode and drive the loaded VRM's `aa` expression from microphone volume. It is simple RMS-based mouth movement, not phoneme lip sync.
 For users who do not want camera-based mocap, Setup Mode also provides camera-free Auto Blink, Idle Sway, and one-button VRM expression presets.
 
@@ -106,6 +108,7 @@ Setup Mode also includes Avatar Framing sliders for X/Y position, scale, and Y-a
 
 - [VRM Awards / #MadeWithVRM notes](./docs/vrm-award.md)
 - [VPlant3D for OBS concept](./docs/vplant3d-for-obs.md)
+- [OBS architecture redesign](./docs/obs-architecture-redesign.md)
 - [Third-party libraries](./docs/third-party-libraries.md)
 - [VRMA implementation notes](./docs/vrma-implementation-notes.md)
 - [Mic Reactive Mouth notes](./docs/mic-reactive-mouth-notes.md)

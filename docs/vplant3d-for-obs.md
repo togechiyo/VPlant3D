@@ -18,6 +18,10 @@ VPlant3D for OBS は、全部入りの VTuber 配信ソフトではない。
 
 配信者は OBS の Browser Source に VPlant3D for OBS を読み込むことで、VRM アバターを背景透過のまま配信画面へ重ねたり、簡易 3D 部屋の中に配置したりできる。
 
+ただし、カメラ・マイク・MediaPipe のような入力処理は OBS Browser Source 内で完結させない方針へ見直す。OBS は背景透過の最終描画に集中し、操作・入力・キャプチャは Chrome の Control / Capture Page が担当する。両者はローカル Relay を通して avatar state を同期する。
+
+詳細設計: [OBS Architecture Redesign](./obs-architecture-redesign.md)
+
 ## 背景
 
 VRM コンソーシアム公式ハッカソン向けの作品として構想した。
@@ -49,6 +53,8 @@ MMD_modoki では PNG / WebM 出力や MediaBunny による動画書き出しを
 - Style Wall
 - Image Panel
 - Look / Shader プリセット
+
+実装上は、このうち「OBSで見せるもの」と「Chromeで操作・入力するもの」を分ける。OBS側は `?obs=1&transparent=1` の Render Page、Chrome側は `?control=1` の Control / Capture Page として扱う。
 
 ### 3. 背景透過を重視する
 

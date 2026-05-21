@@ -1303,3 +1303,35 @@
 ### Next
 
 - 手の骨格OFF時に肘トラッキングが残る挙動は、現状Body Track側の仕様として残す。必要ならBody側に腕トラック専用のON/OFFを追加する
+
+## 2026-05-21 OBS Architecture Redesign
+
+### Goal
+
+- OBS Browser Sourceで背景透過とカメラ取得が安定しない問題を受け、OBS向けHTMLアプリの根本設計を見直す
+- カメラ・マイク・MediaPipeをOBS内で完結させる前提をやめ、実装方針をドキュメント化する
+
+### Did
+
+- `docs/obs-architecture-redesign.md` を追加した
+- OBS Render Page、Chrome Control / Capture Page、Local Relayの3分割構成を採用候補として整理した
+- OBS側は `/?obs=1&transparent=1` でUIなし・透過・描画専用にする方針を書いた
+- Chrome側は `/?control=1` でVRM/VRMA選択、カメラ、マイク、MediaPipe、表情、姿勢、モーション操作を担当する方針を書いた
+- Local RelayはWebSocket/Nodeで、VRM/VRMAファイル共有とavatar state同期を担当する方針を書いた
+- READMEとVPlant3Dコンセプト文書から新設計へリンクした
+
+### Worked
+
+- OBSの仕様差分をアプリの失敗として抱え込まず、OBSはrender-onlyに絞る設計へ切り出せた
+- 透明背景、カメラ権限、マイク権限、MediaPipe処理を別々に検証できる構成になった
+
+### Failed / Blocked
+
+- 今回は設計ドキュメント更新のみ。コード変更と自動テストは未実施
+- OBS Browser SourceでローカルRelayへWebSocket接続できるかは実装後にOBS実機確認が必要
+
+### Next
+
+- `/?obs=1&transparent=1` をRender Page、`/?control=1` をControl Pageとして明確に分離する
+- 最小のLocal Relayを追加し、Chrome ControlからOBS Renderへavatar framingや表情値を送る
+- VRM/VRMAファイルはControlからRelayへ渡し、OBS RenderがRelay URLから読む方式をMVP候補にする
