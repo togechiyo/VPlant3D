@@ -117,15 +117,15 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     poseLandmarkCount: 0,
     poseUpperBodyVisibleCount: 0,
     poseAverageVisibility: 0,
-    poseSummaryText: 'Camera idle.',
+    poseSummaryText: '待機',
     poseMirrorInput: true,
     faceTrackingEnabled: true,
     faceTrackingStatus: 'idle',
-    faceTrackingSummary: 'Face tracking idle.',
+    faceTrackingSummary: '顔: 待機',
     faceTrackingError: null,
     handTrackingEnabled: true,
     handTrackingStatus: 'idle',
-    handTrackingSummary: 'Hand tracking idle.',
+    handTrackingSummary: '手: 待機',
     handTrackingError: null,
     avatarOffsetX: 0,
     avatarOffsetY: 0,
@@ -229,7 +229,7 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
         poseLandmarkCount: 0,
         poseUpperBodyVisibleCount: 0,
         poseAverageVisibility: 0,
-        poseSummaryText: 'Pose debug stopped.',
+        poseSummaryText: '停止',
       }),
     setPoseStopped: () =>
       set({
@@ -238,7 +238,7 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
         poseLandmarkCount: 0,
         poseUpperBodyVisibleCount: 0,
         poseAverageVisibility: 0,
-        poseSummaryText: 'Camera idle.',
+        poseSummaryText: '待機',
       }),
     setPoseFrame: (
       landmarkCount,
@@ -274,13 +274,13 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
       set({
         faceTrackingStatus: 'error',
         faceTrackingError: message,
-        faceTrackingSummary: 'Face tracking stopped.',
+        faceTrackingSummary: '顔: 停止',
       }),
     setFaceTrackingStopped: () =>
       set({
         faceTrackingStatus: 'idle',
         faceTrackingError: null,
-        faceTrackingSummary: 'Face tracking idle.',
+        faceTrackingSummary: '顔: 待機',
       }),
     setFaceTrackingFrame: (summary) =>
       set({
@@ -304,13 +304,13 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
       set({
         handTrackingStatus: 'error',
         handTrackingError: message,
-        handTrackingSummary: 'Hand tracking stopped.',
+        handTrackingSummary: '手: 停止',
       }),
     setHandTrackingStopped: () =>
       set({
         handTrackingStatus: 'idle',
         handTrackingError: null,
-        handTrackingSummary: 'Hand tracking idle.',
+        handTrackingSummary: '手: 待機',
       }),
     setHandTrackingFrame: (summary) =>
       set({

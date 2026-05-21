@@ -204,113 +204,109 @@ if (!state.obsMode) {
     <div class="grid grid-flow-col auto-cols-[minmax(260px,340px)] items-start gap-3 overflow-x-auto overflow-y-hidden pb-1 [&>*]:max-h-[calc(34vh-32px)] [&>*]:overflow-y-auto">
     <div class="grid gap-3 rounded-md border border-[#6dff9a]/35 bg-black/20 p-3">
       <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM Model</span>
-        <strong id="vrm-status-text" class="text-sm font-bold text-[#eef4f2]">Choose a local .vrm file.</strong>
-        <span id="vrm-file-text" class="min-h-5 text-sm text-[#9fa9aa]">No file selected.</span>
+        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM</span>
+        <strong id="vrm-status-text" class="text-sm font-bold text-[#eef4f2]">VRM未選択</strong>
+        <span id="vrm-file-text" class="min-h-5 text-sm text-[#9fa9aa]">未読み込み</span>
       </div>
       <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/10 px-3 py-3 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff] hover:bg-white/[0.04]">
         <input id="vrm-file-input" class="sr-only" type="file" accept=".vrm" />
-        Load local VRM
+        VRMを読み込む
       </label>
     </div>
     <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
       <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Head / Face</span>
-        <span class="text-[11px] font-bold uppercase tracking-normal text-[#9fa9aa]">Mic Reactive Mouth</span>
-        <strong id="mic-status-text" class="text-sm font-bold text-[#eef4f2]">Microphone idle.</strong>
-        <span id="mic-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before testing mouth movement.</span>
+        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">顔 / 口</span>
+        <strong id="mic-status-text" class="text-sm font-bold text-[#eef4f2]">マイク停止中</strong>
+        <span id="mic-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">音量で口を動かす</span>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
-        <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
+        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">マイク開始</button>
+        <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
       </div>
       <div class="grid grid-cols-2 gap-2">
         <label class="inline-flex items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="face-tracking-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
-          Face / lips
+          顔/口
         </label>
         <label class="inline-flex items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="auto-blink-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
-          Auto blink
+          自動まばたき
         </label>
       </div>
-      <span id="face-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Face tracking idle.</span>
+      <span id="face-tracking-text" class="text-xs font-bold text-[#9fa9aa]">顔: 待機</span>
       <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
         <div class="flex items-center justify-between gap-3">
-          <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Expression preset</span>
-          <span id="expression-preset-text" class="text-xs font-bold text-[#9fa9aa]">Neutral</span>
+          <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">表情</span>
+          <span id="expression-preset-text" class="text-xs font-bold text-[#9fa9aa]">通常</span>
         </div>
         <div class="grid grid-cols-4 gap-2">
-          <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-xs font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button" data-expression-preset="neutral">Neutral</button>
-          <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-1.5 text-xs font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy">Happy</button>
-          <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-1.5 text-xs font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="surprised">Surprise</button>
-          <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="relaxed">Relax</button>
+          <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-xs font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button" data-expression-preset="neutral">通常</button>
+          <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-1.5 text-xs font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy">笑顔</button>
+          <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-1.5 text-xs font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="surprised">驚き</button>
+          <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="relaxed">ゆるめ</button>
         </div>
       </div>
       <div class="grid gap-2">
         <div class="grid gap-1">
-          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>Level</span><span>RMS</span></div>
+          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>音量</span><span>RMS</span></div>
           <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-level-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
         </div>
         <div class="grid gap-1">
-          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>Mouth</span><span>aa</span></div>
+          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>口</span><span>aa</span></div>
           <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-mouth-bar" class="h-full w-0 rounded-full bg-[#6dff9a] transition-[width] duration-75"></div></div>
         </div>
       </div>
     </div>
     <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Body Track</span>
-        <span class="text-[11px] font-bold uppercase tracking-normal text-[#9fa9aa]">MediaPipe Pose Debug</span>
-        <strong id="pose-status-text" class="text-sm font-bold text-[#eef4f2]">Camera idle.</strong>
-        <span id="pose-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Start camera to inspect upper-body landmarks.</span>
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">体トラック</span>
+        <strong id="pose-status-text" class="text-sm font-bold text-[#eef4f2]">カメラ停止中</strong>
+        <span id="pose-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">上半身を動かす</span>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
-        <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
+        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">カメラ開始</button>
+        <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
       </div>
       <div class="grid grid-cols-2 gap-2">
         <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="idle-sway-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-          Idle sway
+          揺らぎ
         </label>
         <label class="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="pose-mirror-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-          Mirror input
+          ミラー
         </label>
       </div>
       <div class="relative aspect-video overflow-hidden rounded-md border border-white/10 bg-[#0b0f10]">
         <video id="pose-video" class="h-full w-full scale-x-[-1] object-cover opacity-0" autoplay muted playsinline></video>
         <canvas id="pose-canvas" class="pointer-events-none absolute inset-0 h-full w-full scale-x-[-1]"></canvas>
-        <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-black/45 px-2 py-1 text-[11px] font-bold text-[#9fa9aa]">Camera image hidden. Skeleton only.</div>
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-black/45 px-2 py-1 text-[11px] font-bold text-[#9fa9aa]">骨格のみ表示</div>
       </div>
       <div class="grid gap-2">
         <div class="flex items-center justify-between gap-3 text-xs font-bold text-[#9fa9aa]">
-          <span>Upper body visibility</span>
-          <span id="pose-summary-text">Camera idle.</span>
+          <span>検出</span>
+          <span id="pose-summary-text">待機</span>
         </div>
         <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="pose-visibility-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
       </div>
       <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Torso / upper arm retarget</span>
-        <span class="text-xs font-bold text-[#9fa9aa]">Body and upper-arm tracking. Hands are skeleton debug only for now.</span>
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">体 / 腕</span>
       </div>
     </div>
     <div class="grid content-start gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Hand Skeleton</span>
-        <strong class="text-sm font-bold text-[#eef4f2]">Debug overlay only</strong>
-        <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Hand tracking idle.</span>
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">手</span>
+        <strong class="text-sm font-bold text-[#eef4f2]">骨格表示</strong>
+        <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">手: 待機</span>
       </div>
       <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
         <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        Arm / hand track
+        腕/手トラック
       </label>
-      <span class="text-xs font-bold text-[#9fa9aa]">VRM finger retarget is not implemented yet.</span>
     </div>
     <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
       <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Avatar Framing</span>
+        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">位置調整</span>
       </div>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
         <span class="flex justify-between"><span>X</span><span id="avatar-offset-x-text">0.00</span></span>
@@ -321,41 +317,41 @@ if (!state.obsMode) {
         <input id="avatar-offset-y-input" class="accent-[#6dff9a]" type="range" min="-0.8" max="0.8" step="0.01" value="0" />
       </label>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-        <span class="flex justify-between"><span>Scale</span><span id="avatar-scale-text">1.00x</span></span>
+        <span class="flex justify-between"><span>拡大</span><span id="avatar-scale-text">1.00x</span></span>
         <input id="avatar-scale-input" class="accent-[#38d5ff]" type="range" min="0.7" max="1.7" step="0.01" value="1" />
       </label>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-        <span class="flex justify-between"><span>Rotate Y</span><span id="avatar-rotation-y-text">0°</span></span>
+        <span class="flex justify-between"><span>回転</span><span id="avatar-rotation-y-text">0°</span></span>
         <input id="avatar-rotation-y-input" class="accent-[#38d5ff]" type="range" min="-180" max="180" step="1" value="0" />
       </label>
-      <button id="avatar-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">Reset framing</button>
+      <button id="avatar-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">リセット</button>
     </div>
     <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">VRMA Motion</span>
-        <strong id="vrma-status-text" class="text-sm font-bold text-[#eef4f2]">Choose a local .vrma file.</strong>
-        <span id="vrma-file-text" class="min-h-5 text-sm text-[#9fa9aa]">No motion selected.</span>
-        <span id="vrma-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before playing VRMA.</span>
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">VRMA</span>
+        <strong id="vrma-status-text" class="text-sm font-bold text-[#eef4f2]">VRMA未選択</strong>
+        <span id="vrma-file-text" class="min-h-5 text-sm text-[#9fa9aa]">未読み込み</span>
+        <span id="vrma-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">VRMが必要</span>
       </div>
       <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a] hover:bg-white/[0.04]">
         <input id="vrma-file-input" class="sr-only" type="file" accept=".vrma" multiple />
-        Load local VRMA
+        VRMAを読み込む
       </label>
       <div class="grid grid-cols-[1fr_1fr_auto] gap-2">
-        <button id="vrma-play-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Play</button>
-        <button id="vrma-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop</button>
+        <button id="vrma-play-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">再生</button>
+        <button id="vrma-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
         <label class="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="vrma-loop-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
-          Loop
+          ループ
         </label>
       </div>
       <div id="vrma-slot-list" class="grid gap-2"></div>
     </div>
     <ul class="m-0 grid list-none content-start gap-2 rounded-md border border-white/10 bg-black/20 p-3">
-      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Setup Mode</span><strong class="font-bold text-[#6dff9a]">Active</strong></li>
-      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>OBS Mode</span><strong class="font-bold text-[#6dff9a]">${state.obsMode ? 'On' : 'Off'}</strong></li>
-      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Transparent</span><strong class="font-bold text-[#6dff9a]">${state.transparent ? 'On' : 'Off'}</strong></li>
-      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>Render</span><strong class="font-bold text-[#6dff9a]">${state.rendererName}</strong></li>
+      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>設定</span><strong class="font-bold text-[#6dff9a]">表示中</strong></li>
+      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>OBS</span><strong class="font-bold text-[#6dff9a]">${state.obsMode ? 'ON' : 'OFF'}</strong></li>
+      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>透過</span><strong class="font-bold text-[#6dff9a]">${state.transparent ? 'ON' : 'OFF'}</strong></li>
+      <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>描画</span><strong class="font-bold text-[#6dff9a]">WebGL</strong></li>
     </ul>
     </div>
   `;
@@ -538,7 +534,7 @@ async function handleVrmFileSelection(file: File | null): Promise<void> {
   }
 
   if (!file) {
-    appStore.getState().setVrmError('Choose a local .vrm file.');
+    appStore.getState().setVrmError('VRMを選択してください');
     return;
   }
 
@@ -573,7 +569,7 @@ async function handleVrmaFileSelection(files: File[] | File | null): Promise<voi
     currentVrma = null;
     selectedVrmaSlotIndex = -1;
     stopVrmaPlayback();
-    appStore.getState().setVrmaError('Choose a local .vrma file.');
+    appStore.getState().setVrmaError('VRMAを選択してください');
     renderVrmaSlotList();
     return;
   }
@@ -606,7 +602,7 @@ async function handleVrmaFileSelection(files: File[] | File | null): Promise<voi
     resetVrmaMixer();
     const selectedSlot = vrmaSlots[0];
     if (!selectedSlot) {
-      throw new VrmaLoadError('No VRMA motion was loaded.');
+      throw new VrmaLoadError('VRMAを読み込めませんでした');
     }
     appStore.getState().setVrmaReady(selectedSlot.name, selectedSlot.duration);
     renderVrmaSlotList();
@@ -765,7 +761,7 @@ function applyAvatarTransform(): void {
 function updateVrmStatusUi(nextState: AppState): void {
   if (vrmStatusText && vrmFileText) {
     vrmStatusText.textContent = getVrmStatusText(nextState);
-    vrmFileText.textContent = nextState.vrmFileName ?? 'No file selected.';
+    vrmFileText.textContent = nextState.vrmFileName ?? '未読み込み';
   }
 
   updateVrmaStatusUi(nextState);
@@ -777,13 +773,13 @@ function updateVrmStatusUi(nextState: AppState): void {
 function getVrmStatusText(nextState: AppState): string {
   switch (nextState.vrmStatus) {
     case 'idle':
-      return 'Choose a local .vrm file.';
+      return 'VRM未選択';
     case 'loading':
-      return 'Loading VRM...';
+      return 'VRM読み込み中';
     case 'ready':
-      return 'VRM loaded.';
+      return 'VRM読み込み済み';
     case 'error':
-      return nextState.vrmError ?? 'Failed to load the selected VRM file.';
+      return nextState.vrmError ?? 'VRM読み込み失敗';
   }
 }
 
@@ -861,12 +857,12 @@ function ensureLookAtQuaternionProxy(vrm: VRM): void {
 
 function startVrmaPlayback(): void {
   if (!currentVrm) {
-    appStore.getState().setVrmaError('Load a VRM before playing VRMA.');
+    appStore.getState().setVrmaError('VRMを先に読み込んでください');
     return;
   }
 
   if (!currentVrma) {
-    appStore.getState().setVrmaError('Choose a local .vrma file before playback.');
+    appStore.getState().setVrmaError('VRMAを選択してください');
     return;
   }
 
@@ -927,19 +923,19 @@ function updateVrmaStatusUi(nextState: AppState): void {
 function getVrmaStatusText(nextState: AppState): string {
   switch (nextState.vrmaStatus) {
     case 'idle':
-      return 'Choose a local .vrma file.';
+      return 'VRMA未選択';
     case 'loading':
-      return 'Loading VRMA...';
+      return 'VRMA読み込み中';
     case 'ready':
-      return nextState.vrmaPlaybackStatus === 'playing' ? 'VRMA playing.' : 'VRMA loaded.';
+      return nextState.vrmaPlaybackStatus === 'playing' ? 'VRMA再生中' : 'VRMA読み込み済み';
     case 'error':
-      return nextState.vrmaError ?? 'Failed to load the selected VRMA file.';
+      return nextState.vrmaError ?? 'VRMA読み込み失敗';
   }
 }
 
 function getVrmaFileText(nextState: AppState): string {
   if (!nextState.vrmaFileName) {
-    return 'No motion selected.';
+    return '未読み込み';
   }
 
   if (nextState.vrmaDuration === null) {
@@ -951,14 +947,14 @@ function getVrmaFileText(nextState: AppState): string {
 
 function getVrmaRequirementText(nextState: AppState): string {
   if (nextState.vrmStatus !== 'ready') {
-    return 'Load a VRM before playing VRMA.';
+    return 'VRMが必要';
   }
 
   if (nextState.vrmaStatus !== 'ready') {
-    return 'Load a VRMA motion to enable playback.';
+    return 'VRMAを読み込む';
   }
 
-  return nextState.vrmaLoop ? 'Ready to play in loop mode.' : 'Ready to play once.';
+  return nextState.vrmaLoop ? 'ループ再生可' : '1回再生';
 }
 
 function renderVrmaSlotList(): void {
@@ -968,7 +964,7 @@ function renderVrmaSlotList(): void {
 
   if (vrmaSlots.length === 0) {
     vrmaSlotList.innerHTML =
-      '<span class="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold text-[#9fa9aa]">No VRMA slots loaded.</span>';
+      '<span class="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold text-[#9fa9aa]">スロットなし</span>';
     return;
   }
 
@@ -1104,12 +1100,12 @@ function updateExpressionPresetUi(): void {
 
   expressionPresetText.textContent =
     selectedExpressionPreset === 'neutral'
-      ? 'Neutral'
+      ? '通常'
       : selectedExpressionPreset === 'happy'
-        ? 'Happy'
+        ? '笑顔'
         : selectedExpressionPreset === 'surprised'
-          ? 'Surprise'
-          : 'Relax';
+          ? '驚き'
+          : 'ゆるめ';
 }
 
 function isExpressionPresetId(value: unknown): value is VrmExpressionPresetId {
@@ -1126,7 +1122,7 @@ function getMicErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'Failed to start microphone capture.';
+  return 'マイク開始失敗';
 }
 
 function updateMicStatusUi(nextState: AppState): void {
@@ -1158,26 +1154,26 @@ function updateMicStatusUi(nextState: AppState): void {
 function getMicStatusText(nextState: AppState): string {
   switch (nextState.micStatus) {
     case 'idle':
-      return 'Microphone idle.';
+      return 'マイク停止中';
     case 'requesting':
-      return 'Requesting microphone permission...';
+      return 'マイク許可待ち';
     case 'active':
-      return 'Microphone active.';
+      return 'マイク使用中';
     case 'error':
-      return nextState.micError ?? 'Failed to start microphone capture.';
+      return nextState.micError ?? 'マイク開始失敗';
   }
 }
 
 function getMicRequirementText(nextState: AppState): string {
   if (nextState.vrmStatus !== 'ready') {
-    return 'Load a VRM before testing mouth movement.';
+    return 'VRMが必要';
   }
 
   if (nextState.micStatus === 'active') {
-    return 'Voice volume is driving the VRM aa expression.';
+    return '音量連動中';
   }
 
-  return 'Start mic to drive the VRM aa expression.';
+  return '音量で口を動かす';
 }
 
 async function startPoseDebug(): Promise<void> {
@@ -1185,7 +1181,7 @@ async function startPoseDebug(): Promise<void> {
   appStore.getState().setPoseRequesting();
 
   if (!poseVideoElement || !poseCanvasElement) {
-    appStore.getState().setPoseError('Pose debug UI is not available.');
+    appStore.getState().setPoseError('カメラUIなし');
     return;
   }
 
@@ -1403,8 +1399,8 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
     .getState()
     .setFaceTrackingFrame(
       categories.length === 0
-        ? 'No face detected.'
-        : `Face expressions: blink ${Math.max(faceExpressionWeights.blinkLeft, faceExpressionWeights.blinkRight).toFixed(2)}, mouth ${faceExpressionWeights.aa.toFixed(2)}.`,
+        ? '顔: 未検出'
+        : `顔: まばたき ${Math.max(faceExpressionWeights.blinkLeft, faceExpressionWeights.blinkRight).toFixed(2)} / 口 ${faceExpressionWeights.aa.toFixed(2)}`,
     );
 }
 
@@ -1421,8 +1417,8 @@ function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
     .getState()
     .setHandTrackingFrame(
       summary.handCount === 0
-        ? 'No hands detected.'
-        : `Hands: ${summary.labels.join(', ')} (${summary.handCount}).`,
+        ? '手: 未検出'
+        : `手: ${summary.handCount}`,
     );
 }
 
@@ -1714,14 +1710,14 @@ function restoreHeadBone(): void {
 
 function formatPoseSummary(summary: UpperBodyPoseSummary): string {
   if (!summary.poseDetected) {
-    return 'No pose detected.';
+    return '未検出';
   }
 
   const visibility = Math.round(summary.averageUpperBodyVisibility * 100);
   const shoulder = summary.shoulderSpan === null ? 'n/a' : summary.shoulderSpan.toFixed(2);
   const lean = summary.torsoLean === null ? 'n/a' : summary.torsoLean.toFixed(2);
 
-  return `${summary.landmarkCount} landmarks, upper ${summary.upperBodyVisibleCount}/9, vis ${visibility}%, span ${shoulder}, lean ${lean}.`;
+  return `${visibility}% / 肩 ${shoulder} / 傾き ${lean}`;
 }
 
 function getPoseErrorMessage(error: unknown): string {
@@ -1729,7 +1725,7 @@ function getPoseErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'Failed to start MediaPipe pose debug.';
+  return 'カメラ開始失敗';
 }
 
 function updatePoseStatusUi(nextState: AppState): void {
@@ -1806,35 +1802,35 @@ function getTrackingStatusText(
     case 'active':
       return summary;
     case 'loading':
-      return 'Loading model...';
+      return '読込中';
     case 'error':
-      return error ?? 'Tracking failed.';
+      return error ?? '失敗';
   }
 }
 
 function getPoseStatusText(nextState: AppState): string {
   switch (nextState.poseStatus) {
     case 'idle':
-      return 'Camera idle.';
+      return 'カメラ停止中';
     case 'requesting':
-      return 'Requesting camera permission...';
+      return 'カメラ許可待ち';
     case 'loading':
-      return 'Loading MediaPipe pose model...';
+      return 'モデル読込中';
     case 'active':
-      return 'MediaPipe pose debug active.';
+      return 'カメラ使用中';
     case 'error':
-      return nextState.poseError ?? 'Failed to start MediaPipe pose debug.';
+      return nextState.poseError ?? 'カメラ開始失敗';
   }
 }
 
 function getPoseRequirementText(nextState: AppState): string {
   if (nextState.poseStatus === 'active') {
-    return 'Move shoulders and upper body while checking the skeleton overlay.';
+    return 'トラック中';
   }
 
   if (nextState.poseStatus === 'error') {
-    return 'Check camera permission, HTTPS/localhost rules, and model download access.';
+    return '権限を確認';
   }
 
-  return 'Start camera to inspect upper-body landmarks.';
+  return '上半身を動かす';
 }

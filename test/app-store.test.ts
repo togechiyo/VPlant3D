@@ -31,15 +31,15 @@ describe('createAppStore', () => {
       poseLandmarkCount: 0,
       poseUpperBodyVisibleCount: 0,
       poseAverageVisibility: 0,
-      poseSummaryText: 'Camera idle.',
+      poseSummaryText: '待機',
       poseMirrorInput: true,
       faceTrackingEnabled: true,
       faceTrackingStatus: 'idle',
-      faceTrackingSummary: 'Face tracking idle.',
+      faceTrackingSummary: '顔: 待機',
       faceTrackingError: null,
       handTrackingEnabled: true,
       handTrackingStatus: 'idle',
-      handTrackingSummary: 'Hand tracking idle.',
+      handTrackingSummary: '手: 待機',
       handTrackingError: null,
       avatarOffsetX: 0,
       avatarOffsetY: 0,
@@ -206,7 +206,7 @@ describe('createAppStore', () => {
     expect(store.getState()).toMatchObject({
       poseStatus: 'idle',
       poseError: null,
-      poseSummaryText: 'Camera idle.',
+      poseSummaryText: '待機',
       poseMirrorInput: false,
     });
   });
@@ -256,9 +256,9 @@ describe('createAppStore', () => {
 
     expect(store.getState()).toMatchObject({
       faceTrackingStatus: 'idle',
-      faceTrackingSummary: 'Face tracking idle.',
+      faceTrackingSummary: '顔: 待機',
       handTrackingStatus: 'idle',
-      handTrackingSummary: 'Hand tracking idle.',
+      handTrackingSummary: '手: 待機',
     });
   });
 

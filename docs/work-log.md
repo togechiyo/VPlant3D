@@ -1212,3 +1212,34 @@
 ### Next
 
 - `Arm / hand track` OFF時にskeleton overlay上の腕線も非表示にするか、pose debug表示だけは残すかを使用感で決める
+
+## 2026-05-21 Compact Japanese Setup UI
+
+### Goal
+
+- Setup Dockの説明書きを減らし、操作を邪魔しない密度にする
+- UI表示を日本語へ統一する
+
+### Did
+
+- Setup Dock内のカード名、ボタン、ステータス、補助テキストを日本語化した
+- 長い説明文を削り、`VRMが必要`、`トラック中`、`骨格表示` など短い状態表示へ変更
+- Hand cardから未実装説明文を削除し、`腕/手トラック` と `骨格表示` の短い表示へ整理した
+- 表情プリセットを `通常`、`笑顔`、`驚き`、`ゆるめ` に変更した
+- E2Eとstoreテストの期待文言を日本語UIへ合わせた
+
+### Worked
+
+- `npm run test` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run lint` は成功
+- `npm run test:e2e` は成功
+- Browser previewで `VRMを読み込む`、`マイク開始`、`カメラ開始`、`腕/手トラック` が表示され、旧説明文が消えていることを確認した
+
+### Failed / Blocked
+
+- `VRMが必要` がマイクカードとVRMAカードの2箇所に出てE2E strict modeになったため、`#vrma-requirement-text` へ検証対象を絞った
+
+### Next
+
+- 実際のChrome表示で、日本語ラベルの折り返しやカード内スクロール量が邪魔でないか確認する

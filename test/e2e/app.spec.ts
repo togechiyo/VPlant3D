@@ -15,39 +15,38 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
 
   expect(page.viewportSize()).toEqual({ width: 1920, height: 1080 });
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
-  await expect(page.getByText('Setup Mode')).toBeVisible();
-  await expect(page.getByText('Load local VRM', { exact: true })).toBeVisible();
-  await expect(page.getByText('Load local VRMA', { exact: true })).toBeVisible();
+  await expect(page.getByText('設定')).toBeVisible();
+  await expect(page.getByText('VRMを読み込む', { exact: true })).toBeVisible();
+  await expect(page.getByText('VRMAを読み込む', { exact: true })).toBeVisible();
   await expect(page.locator('#vrm-file-input')).toHaveAttribute('accept', '.vrm');
   await expect(page.locator('#vrma-file-input')).toHaveAttribute('accept', '.vrma');
   await expect(page.locator('#vrma-file-input')).toHaveAttribute('multiple', '');
-  await expect(page.getByText('Load a VRM before playing VRMA.')).toBeVisible();
+  await expect(page.locator('#vrma-requirement-text')).toHaveText('VRMが必要');
   await expect(page.locator('#vrma-play-button')).toBeDisabled();
-  await expect(page.getByText('Avatar Framing')).toBeVisible();
+  await expect(page.getByText('位置調整')).toBeVisible();
   await expect(page.locator('#avatar-offset-x-input')).toHaveValue('0');
   await expect(page.locator('#avatar-scale-input')).toHaveValue('1');
-  await expect(page.getByText('Mic Reactive Mouth')).toBeVisible();
-  await expect(page.getByText('Microphone idle.')).toBeVisible();
+  await expect(page.getByText('顔 / 口')).toBeVisible();
+  await expect(page.getByText('マイク停止中')).toBeVisible();
   await expect(page.locator('#mic-start-button')).toBeEnabled();
   await expect(page.locator('#mic-stop-button')).toBeDisabled();
-  await expect(page.getByText('Auto blink')).toBeVisible();
+  await expect(page.getByText('自動まばたき')).toBeVisible();
   await expect(page.locator('#auto-blink-input')).toBeChecked();
-  await expect(page.getByText('Idle sway')).toBeVisible();
+  await expect(page.getByText('揺らぎ')).toBeVisible();
   await expect(page.locator('#idle-sway-input')).toBeChecked();
-  await expect(page.getByText('Expression preset')).toBeVisible();
-  await expect(page.getByText('Happy')).toBeVisible();
-  await expect(page.getByText('MediaPipe Pose Debug')).toBeVisible();
-  await expect(page.getByText('Start camera to inspect upper-body landmarks.')).toBeVisible();
-  await expect(page.getByText('Camera image hidden. Skeleton only.')).toBeVisible();
+  await expect(page.getByText('表情')).toBeVisible();
+  await expect(page.getByText('笑顔')).toBeVisible();
+  await expect(page.getByText('体トラック')).toBeVisible();
+  await expect(page.getByText('上半身を動かす')).toBeVisible();
+  await expect(page.getByText('骨格のみ表示')).toBeVisible();
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
-  await expect(page.getByText('Mirror input')).toBeVisible();
+  await expect(page.getByText('ミラー')).toBeVisible();
   await expect(page.locator('#pose-mirror-input')).toBeChecked();
-  await expect(page.getByText('Face / lips')).toBeVisible();
+  await expect(page.getByText('顔/口')).toBeVisible();
   await expect(page.locator('#hand-tracking-input')).toBeChecked();
-  await expect(page.getByText('Hand Skeleton', { exact: true })).toBeVisible();
-  await expect(page.getByText('Arm / hand track')).toBeVisible();
-  await expect(page.getByText('Debug overlay only')).toBeVisible();
-  await expect(page.getByText('VRM finger retarget is not implemented yet.')).toBeVisible();
+  await expect(page.getByText('手', { exact: true })).toBeVisible();
+  await expect(page.getByText('腕/手トラック')).toBeVisible();
+  await expect(page.getByText('骨格表示')).toBeVisible();
   await expect(page.locator('#face-tracking-input')).toBeChecked();
   await expect(page.locator('#pose-start-button')).toBeEnabled();
   await expect(page.locator('#pose-stop-button')).toBeDisabled();
@@ -60,13 +59,13 @@ test('OBS transparent mode hides Setup UI but keeps the scene canvas', async ({ 
   await page.goto('/?obs=1&transparent=1');
 
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
-  await expect(page.getByText('Load local VRM', { exact: true })).toHaveCount(0);
-  await expect(page.getByText('Load local VRMA', { exact: true })).toHaveCount(0);
-  await expect(page.getByText('Mic Reactive Mouth')).toHaveCount(0);
-  await expect(page.getByText('Auto blink')).toHaveCount(0);
-  await expect(page.getByText('Expression preset')).toHaveCount(0);
-  await expect(page.getByText('MediaPipe Pose Debug')).toHaveCount(0);
-  await expect(page.getByText('Setup Mode')).toHaveCount(0);
+  await expect(page.getByText('VRMを読み込む', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('VRMAを読み込む', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('顔 / 口')).toHaveCount(0);
+  await expect(page.getByText('自動まばたき')).toHaveCount(0);
+  await expect(page.getByText('表情')).toHaveCount(0);
+  await expect(page.getByText('体トラック')).toHaveCount(0);
+  await expect(page.getByText('設定')).toHaveCount(0);
   expect(errors()).toEqual([]);
 });
 
@@ -78,7 +77,7 @@ test('loads the local Alicia VRM candidate when it exists', async ({ page }) => 
   await page.goto('/');
   await page.locator('#vrm-file-input').setInputFiles(aliciaVrmPath);
 
-  await expect(page.getByText('VRM loaded.')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText('VRM読み込み済み')).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText('AliciaSolid.vrm')).toBeVisible();
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
   expect(errors()).toEqual([]);
@@ -94,21 +93,21 @@ test('loads the local VRMA candidate and toggles playback when local assets exis
 
   await page.goto('/');
   await page.locator('#vrm-file-input').setInputFiles(aliciaVrmPath);
-  await expect(page.getByText('VRM loaded.')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText('VRM読み込み済み')).toBeVisible({ timeout: 30_000 });
 
   await page.locator('#vrma-file-input').setInputFiles(greetingVrmaPath);
-  await expect(page.getByText('VRMA loaded.')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText('VRMA読み込み済み')).toBeVisible({ timeout: 30_000 });
   await expect(page.locator('#vrma-file-text')).toContainText('VRMA_02.vrma');
   await expect(page.locator('#vrma-slot-list button')).toContainText('VRMA_02.vrma');
-  await expect(page.getByText('Ready to play in loop mode.')).toBeVisible();
+  await expect(page.getByText('ループ再生可')).toBeVisible();
   await expect(page.locator('#vrma-play-button')).toBeEnabled();
 
   await page.locator('#vrma-play-button').click();
-  await expect(page.getByText('VRMA playing.')).toBeVisible();
+  await expect(page.getByText('VRMA再生中')).toBeVisible();
   await expect(page.locator('#vrma-stop-button')).toBeEnabled();
 
   await page.locator('#vrma-stop-button').click();
-  await expect(page.getByText('VRMA loaded.')).toBeVisible();
+  await expect(page.getByText('VRMA読み込み済み')).toBeVisible();
   await expect(page.locator('#vrma-play-button')).toBeEnabled();
   expect(errors()).toEqual([]);
 });
