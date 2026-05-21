@@ -48,7 +48,7 @@ export function createUpperBodyRetargetPose(
     -options.maxChestYaw,
     options.maxChestYaw,
   );
-  const chestRoll = clamp(-shoulderTilt * 2.8, -options.maxChestRoll, options.maxChestRoll);
+  const chestRoll = clamp(-shoulderTilt * 1.9, -options.maxChestRoll, options.maxChestRoll);
   const leftArmLift = options.mirrorInput
     ? (summary.rightArmLift ?? 0)
     : (summary.leftArmLift ?? 0);
@@ -71,7 +71,7 @@ export function createUpperBodyRetargetPose(
     chestYaw,
     chestRoll,
     neckYaw: clamp(chestYaw * 0.45, -options.maxNeckYaw, options.maxNeckYaw),
-    neckRoll: clamp(chestRoll * 0.45, -options.maxNeckRoll, options.maxNeckRoll),
+    neckRoll: clamp(chestRoll * 0.32, -options.maxNeckRoll, options.maxNeckRoll),
     leftUpperArmRoll,
     rightUpperArmRoll,
   };

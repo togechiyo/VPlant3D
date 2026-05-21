@@ -39,9 +39,9 @@ describe('createUpperBodyRetargetPose', () => {
     expect(pose.chestYaw).toBeCloseTo(-0.12);
     expect(pose.leftUpperArmRoll).toBeCloseTo(0);
     expect(pose.rightUpperArmRoll).toBeCloseTo(0);
-    expect(pose.chestRoll).toBeCloseTo(0.168);
+    expect(pose.chestRoll).toBeCloseTo(0.114);
     expect(pose.neckYaw).toBeCloseTo(-0.054);
-    expect(pose.neckRoll).toBeCloseTo(0.0756);
+    expect(pose.neckRoll).toBeCloseTo(0.03648);
   });
 
   it('can map motion without mirroring', () => {
@@ -63,7 +63,7 @@ describe('createUpperBodyRetargetPose', () => {
     );
 
     expect(pose.chestYaw).toBeCloseTo(0.12);
-    expect(pose.chestRoll).toBeCloseTo(-0.168);
+    expect(pose.chestRoll).toBeCloseTo(-0.114);
   });
 
   it('adds a subtle torso turn from shoulder depth', () => {
@@ -126,7 +126,7 @@ describe('createUpperBodyRetargetPose', () => {
     expect(pose.chestYaw).toBeCloseTo(0.26);
     expect(pose.chestRoll).toBeCloseTo(0.34);
     expect(pose.neckYaw).toBeCloseTo(0.117);
-    expect(pose.neckRoll).toBeCloseTo(0.15);
+    expect(pose.neckRoll).toBeCloseTo(0.1088);
   });
 });
 

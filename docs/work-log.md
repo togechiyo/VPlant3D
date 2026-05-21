@@ -964,3 +964,30 @@
 
 - Chromeで頭を横に大きく振ったとき、上限に当たりすぎず自然に真横寄りまで向くか確認する
 - 体を横に回したとき、胸の追従が十分か確認する
+
+## 2026-05-21 Softer Torso Roll From Head Tilt
+
+### Goal
+
+- 人間確認で、頭の傾きが体へ反映されすぎて見える問題を少し緩める
+
+### Did
+
+- 肩傾き由来のchest roll係数を下げた
+- chest rollからneck rollへの追従係数も下げた
+- 体の横回転yawと肘trackingは変更しなかった
+- `test/upper-body-retarget.test.ts` の期待値を更新
+
+### Worked
+
+- `npm run test -- upper-body-retarget` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 実カメラでの体幹rollの体感は人間確認が必要
+
+### Next
+
+- Chromeで頭だけ傾けたとき、体がついてきすぎないか確認する
