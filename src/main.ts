@@ -73,19 +73,27 @@ const appStore = createAppStore(options);
 const state = appStore.getState();
 const isRenderPage = state.obsMode;
 const isControlPage = !state.obsMode;
+document.documentElement.classList.toggle('is-transparent-render', state.transparent);
+document.body.classList.toggle('is-transparent-render', state.transparent);
 
 const viewport = document.createElement('section');
-viewport.className = state.transparent
-  ? 'viewport viewport--transparent'
-  : 'viewport';
+viewport.className = [
+  'viewport',
+  state.transparent ? 'viewport--transparent' : '',
+  isControlPage ? 'viewport--control' : 'viewport--render',
+]
+  .filter(Boolean)
+  .join(' ');
 
 const renderer = new THREE.WebGLRenderer({
   alpha: state.transparent,
   antialias: true,
+  premultipliedAlpha: false,
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x101314, state.transparent ? 0 : 1);
+renderer.setClearColor(state.transparent ? 0x000000 : 0x101314, state.transparent ? 0 : 1);
+renderer.setClearAlpha(state.transparent ? 0 : 1);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.86;
@@ -101,6 +109,9 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 1.35, 4.2);
 camera.lookAt(0, 1.25, 0);
+if (isControlPage) {
+  configureControlPreviewCamera();
+}
 
 const keyLight = new THREE.DirectionalLight(0xf4fbff, 1.75);
 keyLight.position.set(0.35, 3.4, 4.2);
@@ -129,6 +140,7 @@ scene.add(cube);
 
 const grid = new THREE.GridHelper(8, 16, 0x38d5ff, 0x263436);
 grid.position.y = -0.2;
+grid.visible = !state.transparent;
 scene.add(grid);
 
 let currentVrm: VRM | null = null;
@@ -220,9 +232,9 @@ relayClient.connect();
 if (isControlPage) {
   const panel = document.createElement('aside');
   panel.className =
-    'absolute inset-x-6 bottom-6 grid max-h-[34vh] gap-3 overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-3 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
+    'absolute inset-x-4 bottom-4 grid max-h-[42vh] gap-2 overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-2 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
   panel.innerHTML = `
-    <div class="grid grid-flow-col auto-cols-[minmax(260px,340px)] items-start gap-3 overflow-x-auto overflow-y-hidden pb-1 [&>*]:max-h-[calc(34vh-32px)] [&>*]:overflow-y-auto">
+    <div class="grid grid-flow-col auto-cols-[minmax(240px,310px)] items-start gap-2 overflow-x-auto overflow-y-hidden pb-1 [&>*]:max-h-[calc(42vh-28px)] [&>*]:overflow-y-auto">
     <div class="grid gap-3 rounded-md border border-[#6dff9a]/35 bg-black/20 p-3">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM</span>
@@ -909,8 +921,19 @@ function fitObjectToDefaultView(object: THREE.Object3D): void {
 }
 
 function configureUpperBodyCamera(): void {
+  if (isControlPage) {
+    configureControlPreviewCamera();
+    return;
+  }
+
   camera.position.set(0, 1.58, 2.55);
   camera.lookAt(0, 1.38, 0);
+  camera.updateProjectionMatrix();
+}
+
+function configureControlPreviewCamera(): void {
+  camera.position.set(0, 1.46, 4.35);
+  camera.lookAt(0, 1.28, 0);
   camera.updateProjectionMatrix();
 }
 

@@ -14,6 +14,10 @@
   --neon-blue: #38d5ff;
 }
 
+:root.is-transparent-render {
+  background: transparent;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -30,6 +34,11 @@ body,
 
 body {
   overflow: hidden;
+  background: #101314;
+}
+
+body.is-transparent-render {
+  background: transparent;
 }
 
 .viewport {
@@ -43,7 +52,11 @@ body {
 }
 
 .viewport--transparent {
-  background: transparent;
+  background: transparent !important;
+}
+
+.viewport--transparent .scene-canvas {
+  background: transparent !important;
 }
 
 .scene-canvas {

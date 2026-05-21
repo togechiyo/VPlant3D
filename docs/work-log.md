@@ -1467,3 +1467,37 @@
 
 - OBS側Browser Sourceをrefreshするか、一度削除して再追加し、`?obs=1&transparent=1` でVRMが出るか確認する
 - まだ出ない場合は、OBS Render Pageに接続/asset受信状態の小さなdebug表示を `?debug=1` で出せるようにする
+
+## 2026-05-21 Control Preview Compact and Transparent Render Pass
+
+### Goal
+
+- Control側のモデルプレビューを小さくし、操作ドックの情報密度を上げる
+- OBS Render Pageの透過が効かない問題を改善する
+
+### Did
+
+- Control Pageではカメラを引いて、モデルプレビューを小さく表示するようにした
+- Setup Dockを少し高くし、カード幅と余白を詰めた
+- `transparent=1` 時にHTML root、body、viewport、canvas背景を明示的に透明化した
+- Three.js rendererに `premultipliedAlpha: false` と `setClearAlpha(0)` を指定した
+- 透明OBS Renderではグリッドを非表示にした
+- Relayが状態を持つようになったため、Playwright E2Eを1 workerで直列実行するようにした
+- OBS確認用dev serverを修正版で再起動した
+
+### Worked
+
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test` は成功
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- Playwright E2Eを並列実行すると、stateful Relayの最新messageがテスト間で干渉したため、直列実行へ変更した
+- OBS Browser Sourceで本当に透明になるかは人間確認待ち
+
+### Next
+
+- OBS側で背景が透明になるか確認する
+- まだ黒背景が残る場合は、OBS Browser Source設定のCustom CSS、source background、alpha handlingを確認し、`?debug=1` の背景診断表示を追加する
