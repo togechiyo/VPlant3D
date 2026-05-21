@@ -7,6 +7,10 @@ const host = '127.0.0.1';
 const port = Number.parseInt(process.env.PORT ?? '5173', 10);
 const maxAssetBytes = 256 * 1024 * 1024;
 const assets = new Map();
+let latestVrmAssetMessage = null;
+let latestVrmaSlotsMessage = null;
+let latestStateMessage = null;
+let latestVrmaCommandMessage = null;
 
 const vite = await createViteServer({
   server: {
@@ -51,8 +55,11 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 webSocketServer.on('connection', (webSocket) => {
+  sendLatestMessages(webSocket);
+
   webSocket.on('message', (data) => {
     const message = data.toString();
+    rememberLatestMessage(message);
 
     for (const client of webSocketServer.clients) {
       if (client !== webSocket && client.readyState === 1) {
@@ -65,6 +72,46 @@ webSocketServer.on('connection', (webSocket) => {
 server.listen(port, host, () => {
   console.log(`VPlant3D dev relay running at http://${host}:${port}/`);
 });
+
+function sendLatestMessages(webSocket) {
+  for (const message of [
+    latestVrmAssetMessage,
+    latestVrmaSlotsMessage,
+    latestStateMessage,
+    latestVrmaCommandMessage,
+  ]) {
+    if (message && webSocket.readyState === 1) {
+      webSocket.send(message);
+    }
+  }
+}
+
+function rememberLatestMessage(message) {
+  try {
+    const parsed = JSON.parse(message);
+
+    if (parsed?.type === 'asset' && parsed.asset?.kind === 'vrm') {
+      latestVrmAssetMessage = message;
+      return;
+    }
+
+    if (parsed?.type === 'vrmaSlots') {
+      latestVrmaSlotsMessage = message;
+      return;
+    }
+
+    if (parsed?.type === 'state') {
+      latestStateMessage = message;
+      return;
+    }
+
+    if (parsed?.type === 'vrmaCommand') {
+      latestVrmaCommandMessage = message;
+    }
+  } catch {
+    // Ignore malformed client messages; browser clients also validate on receipt.
+  }
+}
 
 async function handleAssetUpload(request, response, kindValue) {
   const kind = kindValue === 'vrma' ? 'vrma' : kindValue === 'vrm' ? 'vrm' : null;

@@ -1436,3 +1436,34 @@
 - まずは現在のWeb + Relay構成をOBSで確認する
 - 提出前に余裕がある場合のみ、TauriをRelay launcherとして試すか判断する
 - Tauri検証時はChrome Control Page fallbackを残す
+
+## 2026-05-21 Relay Replay for Late OBS Render
+
+### Goal
+
+- Control側ではVRMを読み込めるが、OBS側Render Pageにモデルが出ない問題を改善する
+- OBS Browser SourceがControlより後に開いたりrefreshした場合でも、最新VRM asset通知を受け取れるようにする
+
+### Did
+
+- Local Relayが最新のVRM asset、VRMA slot、state、VRMA command messageを保持するようにした
+- WebSocket新規接続時に、保持している最新messageを再送するようにした
+- Playwrightに、Controlで先にVRMを読み込んでからRender Pageを開くE2Eを追加した
+- OBS確認用dev serverを修正版Relayで再起動した
+
+### Worked
+
+- `npm run test:e2e` は成功
+- `npm run lint` は成功
+- `npm run test` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+
+### Failed / Blocked
+
+- OBS Browser Source実機での再確認は人間確認待ち
+- OBS側CEFでWebSocket自体が遮断されている場合は、さらにHTTP polling fallbackなどが必要になる可能性がある
+
+### Next
+
+- OBS側Browser Sourceをrefreshするか、一度削除して再追加し、`?obs=1&transparent=1` でVRMが出るか確認する
+- まだ出ない場合は、OBS Render Pageに接続/asset受信状態の小さなdebug表示を `?debug=1` で出せるようにする

@@ -125,6 +125,37 @@ test('relays a local VRM from Control page to OBS render page when local assets 
   await context.close();
 });
 
+test('replays the latest local VRM to an OBS render page that opens later', async ({
+  browser,
+}) => {
+  test.skip(!existsSync(aliciaVrmPath), 'local Alicia VRM is not available in this workspace');
+
+  const context = await browser.newContext({
+    viewport: {
+      width: 1920,
+      height: 1080,
+    },
+  });
+  const controlPage = await context.newPage();
+  const controlErrors = collectPageErrors(controlPage);
+
+  await controlPage.goto('/?control=1');
+  await controlPage.locator('#vrm-file-input').setInputFiles(aliciaVrmPath);
+  await expect(controlPage.getByText('VRM読み込み済み')).toBeVisible({ timeout: 30_000 });
+
+  const renderPage = await context.newPage();
+  const renderErrors = collectPageErrors(renderPage);
+  const renderAssetResponse = renderPage.waitForResponse((response) =>
+    response.url().includes('/relay/assets/') && response.status() === 200,
+  );
+
+  await renderPage.goto('/?obs=1&transparent=1');
+  await renderAssetResponse;
+  await expect(renderPage.locator('canvas.scene-canvas')).toBeVisible();
+  expect([...controlErrors(), ...renderErrors()]).toEqual([]);
+  await context.close();
+});
+
 test('loads the local VRMA candidate and toggles playback when local assets exist', async ({
   page,
 }) => {
