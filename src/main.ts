@@ -154,6 +154,14 @@ const restBoneQuaternions = new Map<string, THREE.Quaternion>();
 const avatarBasePosition = new THREE.Vector3();
 const avatarBaseScale = new THREE.Vector3(1, 1, 1);
 let avatarBaseRotationY = 0;
+const idleArmBoneNames = [
+  VRMHumanBoneName.LeftUpperArm,
+  VRMHumanBoneName.RightUpperArm,
+  VRMHumanBoneName.LeftLowerArm,
+  VRMHumanBoneName.RightLowerArm,
+  VRMHumanBoneName.LeftHand,
+  VRMHumanBoneName.RightHand,
+];
 
 if (!state.obsMode) {
   const panel = document.createElement('aside');
@@ -486,6 +494,7 @@ function replaceCurrentVrm(nextVrm: VRM): void {
 
   currentVrm = nextVrm;
   fitObjectToDefaultView(nextVrm.scene);
+  applyIdleArmPose(nextVrm);
   configureUpperBodyCamera();
   captureAvatarBaseTransform(nextVrm.scene);
   applyAvatarTransform();
@@ -530,6 +539,34 @@ function configureUpperBodyCamera(): void {
   camera.updateProjectionMatrix();
 }
 
+function applyIdleArmPose(vrm: VRM): void {
+  rotateNormalizedBone(vrm, VRMHumanBoneName.LeftUpperArm, 0, 0, 1.12);
+  rotateNormalizedBone(vrm, VRMHumanBoneName.RightUpperArm, 0, 0, -1.12);
+  rotateNormalizedBone(vrm, VRMHumanBoneName.LeftLowerArm, 0, 0, 0.2);
+  rotateNormalizedBone(vrm, VRMHumanBoneName.RightLowerArm, 0, 0, -0.2);
+  rotateNormalizedBone(vrm, VRMHumanBoneName.LeftHand, 0, 0.05, 0.08);
+  rotateNormalizedBone(vrm, VRMHumanBoneName.RightHand, 0, -0.05, -0.08);
+  vrm.humanoid.update();
+  vrm.scene.updateMatrixWorld(true);
+}
+
+function rotateNormalizedBone(
+  vrm: VRM,
+  boneName: VRMHumanBoneName,
+  x: number,
+  y: number,
+  z: number,
+): void {
+  const bone = vrm.humanoid.getNormalizedBoneNode(boneName);
+
+  if (!bone) {
+    return;
+  }
+
+  const delta = new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, 'XYZ'));
+  bone.quaternion.multiply(delta);
+}
+
 function captureRestBoneQuaternions(vrm: VRM): void {
   restBoneQuaternions.clear();
 
@@ -537,6 +574,7 @@ function captureRestBoneQuaternions(vrm: VRM): void {
     VRMHumanBoneName.Chest,
     VRMHumanBoneName.UpperChest,
     VRMHumanBoneName.Neck,
+    ...idleArmBoneNames,
   ]) {
     const bone = vrm.humanoid.getNormalizedBoneNode(boneName);
 
@@ -1092,7 +1130,9 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
 
   const result = faceTracker.detect(videoFrame, frameTime);
   const categories = result.faceBlendshapes[0]?.categories ?? [];
-  const nextWeights = createVrmFaceExpressionWeights(categories);
+  const nextWeights = createVrmFaceExpressionWeights(categories, {
+    mirrorInput: appStore.getState().poseMirrorInput,
+  });
   faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights);
   applyFaceExpressions(faceExpressionWeights);
   appStore

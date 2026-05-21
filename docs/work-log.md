@@ -679,3 +679,47 @@
 
 - 人間のChromeでAvatar Framingの操作感を確認する
 - 使いやすければlocalStorage保存とOBS Modeへの引き継ぎを追加する
+
+## 2026-05-21 Face Mirror, Blink Curve, and Idle Arms
+
+### Goal
+
+- 人間確認で見つかった違和感を直す
+- 体幹mocapがmirror反映なのに顔だけ非mirrorになる問題を解消する
+- blinkが半目に見えやすい問題を減らす
+- VRMロード直後のT pose腕を、腰の横あたりへ自然に下げる
+
+### Did
+
+- `createVrmFaceExpressionWeights` に `mirrorInput` optionを追加
+- `Mirror mocap input` が有効なとき、face blendshapeのleft/right categoryを入れ替えてからVRM expressionへ流すようにした
+- blink weightを線形ではなく、開き/閉じへ寄せるカーブに変更した
+- VRMロード直後にupper/lower armとhandへ軽いidle pose回転を入れるようにした
+- idle pose適用後のbone quaternionをrestとして保存するため、既存の上半身mocap復帰処理との整合を保った
+- Face/Hand tracking notesへmirrorとblink curveの方針を追記
+
+### Worked
+
+- `npm run test -- face-expression-retarget` は成功
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+- In-app browserでSetup Mode表示を確認
+- Playwrightでlocal Alicia VRMを読み込み、腕がT poseではなく下がることをスクリーンショットで確認
+
+### Failed / Blocked
+
+- 最初の腕下げ符号が逆で、腕が上がる状態になった。スクリーンショット確認で発見し、左右のZ回転符号を反転して修正した
+- 実カメラでのface mirrorの体感は人間確認が必要
+
+### Decisions
+
+- 顔のmirrorは独立toggleを増やさず、まず `Mirror mocap input` に揃える
+- blinkはbinaryにしすぎず、中間を短くする程度のカーブに留める
+- 腕下げはVRMAや後続mocapの邪魔を避けるため、ロード直後のidle poseとして最小限にする
+
+### Next
+
+- 人間のChromeで、mirror有効時の顔左右とblinkの見た目を確認する
+- 腕位置がモデルごとに合わない場合は、Setup ModeにIdle arm pose strengthかpresetを追加する

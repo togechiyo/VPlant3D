@@ -51,6 +51,10 @@ MediaPipe Face Landmarker can output blendshape categories. The first mapping us
 - `mouthSmileLeft` / `mouthSmileRight` -> VRM `happy` and a small `ee`
 - `browInnerUp` / `browOuterUp*` -> VRM `surprised`
 
+Side-specific face expressions follow the same `Mirror mocap input` setting as upper-body mocap. When mirror input is enabled, left/right blink and side-specific smile/stretch/brow categories are swapped before writing VRM expression weights.
+
+Blink weights use a shaped curve instead of direct linear MediaPipe scores. Low blink scores are biased toward open eyes, high blink scores are biased toward closed eyes, and the middle range is compressed so the avatar spends less time in an unintended half-closed look.
+
 When Face expressions are active, Mic Reactive Mouth no longer writes the VRM `aa` expression so the two mouth drivers do not fight each other.
 
 ## Hand Tracking

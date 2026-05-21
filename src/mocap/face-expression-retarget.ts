@@ -12,6 +12,10 @@ export interface VrmFaceExpressionWeights {
   surprised: number;
 }
 
+export interface VrmFaceExpressionOptions {
+  mirrorInput?: boolean;
+}
+
 export function createNeutralFaceExpressionWeights(): VrmFaceExpressionWeights {
   return {
     blinkLeft: 0,
@@ -28,6 +32,7 @@ export function createNeutralFaceExpressionWeights(): VrmFaceExpressionWeights {
 
 export function createVrmFaceExpressionWeights(
   categories: Category[] | null | undefined,
+  options: VrmFaceExpressionOptions = {},
 ): VrmFaceExpressionWeights {
   if (!categories || categories.length === 0) {
     return createNeutralFaceExpressionWeights();
@@ -36,19 +41,27 @@ export function createVrmFaceExpressionWeights(
   const jawOpen = getScore(categories, 'jawOpen');
   const mouthFunnel = getScore(categories, 'mouthFunnel');
   const mouthPucker = getScore(categories, 'mouthPucker');
+  const eyeBlinkLeft = getMirroredScore(categories, 'eyeBlinkLeft', options.mirrorInput);
+  const eyeBlinkRight = getMirroredScore(categories, 'eyeBlinkRight', options.mirrorInput);
   const mouthSmile =
-    (getScore(categories, 'mouthSmileLeft') + getScore(categories, 'mouthSmileRight')) / 2;
+    (getMirroredScore(categories, 'mouthSmileLeft', options.mirrorInput) +
+      getMirroredScore(categories, 'mouthSmileRight', options.mirrorInput)) /
+    2;
   const mouthStretch =
-    (getScore(categories, 'mouthStretchLeft') + getScore(categories, 'mouthStretchRight')) / 2;
+    (getMirroredScore(categories, 'mouthStretchLeft', options.mirrorInput) +
+      getMirroredScore(categories, 'mouthStretchRight', options.mirrorInput)) /
+    2;
   const browInnerUp = getScore(categories, 'browInnerUp');
   const browOuterUp =
-    (getScore(categories, 'browOuterUpLeft') + getScore(categories, 'browOuterUpRight')) / 2;
+    (getMirroredScore(categories, 'browOuterUpLeft', options.mirrorInput) +
+      getMirroredScore(categories, 'browOuterUpRight', options.mirrorInput)) /
+    2;
   const roundMouth = Math.max(mouthFunnel, mouthPucker);
   const openMouth = Math.max(0, jawOpen - roundMouth * 0.25);
 
   return {
-    blinkLeft: clamp01(getScore(categories, 'eyeBlinkLeft') * 1.25),
-    blinkRight: clamp01(getScore(categories, 'eyeBlinkRight') * 1.25),
+    blinkLeft: shapeBlinkWeight(eyeBlinkLeft),
+    blinkRight: shapeBlinkWeight(eyeBlinkRight),
     aa: clamp01(openMouth * 1.35),
     ih: clamp01(mouthStretch * 0.7),
     ou: clamp01(roundMouth * 1.05),
@@ -81,6 +94,36 @@ export function smoothFaceExpressionWeights(
 
 function getScore(categories: Category[], categoryName: string): number {
   return categories.find((category) => category.categoryName === categoryName)?.score ?? 0;
+}
+
+function getMirroredScore(categories: Category[], categoryName: string, mirrorInput = false): number {
+  return getScore(categories, mirrorInput ? getOppositeSideCategory(categoryName) : categoryName);
+}
+
+function getOppositeSideCategory(categoryName: string): string {
+  if (categoryName.endsWith('Left')) {
+    return `${categoryName.slice(0, -4)}Right`;
+  }
+
+  if (categoryName.endsWith('Right')) {
+    return `${categoryName.slice(0, -5)}Left`;
+  }
+
+  return categoryName;
+}
+
+function shapeBlinkWeight(score: number): number {
+  const value = clamp01(score);
+
+  if (value < 0.35) {
+    return value * value * 0.6;
+  }
+
+  if (value > 0.72) {
+    return 1 - (1 - value) * (1 - value) * 0.55;
+  }
+
+  return 0.08 + (value - 0.35) * 0.9;
 }
 
 function lerp(previous: number, next: number, amount: number): number {
