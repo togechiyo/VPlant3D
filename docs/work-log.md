@@ -1594,3 +1594,33 @@
 ### Next
 
 - Chrome側をリロードし、右上previewと右下control panelが見えるか確認する
+
+## 2026-05-21 OBS Render Head-Centered Framing
+
+### Goal
+
+- OBSに映すRender Pageでモデル上部が見切れがちな問題を改善する
+- カメラの視芯付近にキャラの顔/頭が来るようにする
+
+### Did
+
+- OBS Render Page用の上半身カメラを少し引いた
+- Render PageのlookAtを顔/頭寄りの高さへ上げた
+- Control Pageの簡易プレビュー用カメラには影響しないよう、Control/Renderでカメラ設定を分けたまま調整した
+- OBS確認用dev serverを修正版で再起動した
+
+### Worked
+
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run lint` は成功
+- `npm run test` は成功
+
+### Failed / Blocked
+
+- OBS実機での見切れ改善は人間確認待ち
+
+### Next
+
+- OBS Browser Sourceを再読み込みし、顔が画面中央付近に来るか確認する
+- 必要ならRender専用の「顔位置/上半身/全身」framing presetを追加する

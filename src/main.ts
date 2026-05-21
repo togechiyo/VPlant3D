@@ -925,8 +925,8 @@ function configureUpperBodyCamera(): void {
     return;
   }
 
-  camera.position.set(0, 1.58, 2.55);
-  camera.lookAt(0, 1.38, 0);
+  camera.position.set(0, 1.62, 3.05);
+  camera.lookAt(0, 1.64, 0);
   camera.updateProjectionMatrix();
 }
 
