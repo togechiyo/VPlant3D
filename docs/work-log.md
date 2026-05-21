@@ -857,3 +857,44 @@
 
 - Chromeで頭を傾けたときに、水平補正ではなく自然な傾きに見えるか確認する
 - うなづきが強すぎる場合はpitchだけ少し戻す
+
+## 2026-05-21 Subtle Torso Turn and Upper Arm Spike
+
+### Goal
+
+- 人間確認で、体の横回転も少しだけ取りたいという要望に対応する
+- 可能なら腕を肘まで、まずは上腕だけ控えめにtrackingする
+
+### Did
+
+- `summarizeUpperBodyPose` に肩のz差から `torsoTurn` を追加
+- 肩と肘の2D位置から `leftArmLift` / `rightArmLift` を追加
+- `createUpperBodyRetargetPose` で、torso leanに加えて `torsoTurn` を小さくchest yawへ混ぜるようにした
+- elbow liftを左右UpperArmのroll deltaへ控えめに変換した
+- VRM反映側でLeft/RightUpperArmへrest pose基準の追加回転を流すようにした
+- pose summary / upper body retargetのテストを更新
+
+### Worked
+
+- `npm run test -- pose-landmarks upper-body-retarget` は成功
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 上腕trackingの方向と強さは実カメラで人間確認が必要
+- 肘より先、手首、指、IKは未実装
+
+### Decisions
+
+- 体の横回転は重み少なめにし、既存の体幹lean/rollを壊さないようにする
+- 腕はまずUpperArmだけ、rest姿勢からの追加回転に留める
+- 手首や肘IKは今回入れず、動きの方向性を見てから判断する
+
+### Next
+
+- Chromeで体を横に回したとき、胸が少しついてくるか確認する
+- 腕を横に上げたとき、肩から肘までが少し反応するか確認する
+- 腕が暴れる場合はmaxArmRollを下げるか、Setup Mode toggleを追加する

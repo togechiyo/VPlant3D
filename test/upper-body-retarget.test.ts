@@ -36,9 +36,11 @@ describe('createUpperBodyRetargetPose', () => {
     );
 
     expect(pose.enabled).toBe(true);
-    expect(pose.chestYaw).toBeCloseTo(-0.13);
+    expect(pose.chestYaw).toBeCloseTo(-0.12);
+    expect(pose.leftUpperArmRoll).toBeCloseTo(0);
+    expect(pose.rightUpperArmRoll).toBeCloseTo(0);
     expect(pose.chestRoll).toBeCloseTo(0.168);
-    expect(pose.neckYaw).toBeCloseTo(-0.0585);
+    expect(pose.neckYaw).toBeCloseTo(-0.054);
     expect(pose.neckRoll).toBeCloseTo(0.0756);
   });
 
@@ -56,11 +58,38 @@ describe('createUpperBodyRetargetPose', () => {
         maxChestRoll: 0.34,
         maxNeckYaw: 0.12,
         maxNeckRoll: 0.15,
+        maxArmRoll: 0.58,
       },
     );
 
-    expect(pose.chestYaw).toBeCloseTo(0.13);
+    expect(pose.chestYaw).toBeCloseTo(0.12);
     expect(pose.chestRoll).toBeCloseTo(-0.168);
+  });
+
+  it('adds a subtle torso turn from shoulder depth', () => {
+    const pose = createUpperBodyRetargetPose(
+      createSummary({
+        averageUpperBodyVisibility: 0.8,
+        torsoLean: 0,
+        torsoTurn: 0.5,
+      }),
+    );
+
+    expect(pose.chestYaw).toBeCloseTo(-0.09);
+    expect(pose.neckYaw).toBeCloseTo(-0.0405);
+  });
+
+  it('maps elbow lift to upper arm roll deltas', () => {
+    const pose = createUpperBodyRetargetPose(
+      createSummary({
+        averageUpperBodyVisibility: 0.8,
+        leftArmLift: 0.5,
+        rightArmLift: 0.25,
+      }),
+    );
+
+    expect(pose.leftUpperArmRoll).toBeCloseTo(-0.29);
+    expect(pose.rightUpperArmRoll).toBeCloseTo(0.145);
   });
 
   it('clamps large movements', () => {
@@ -89,6 +118,8 @@ describe('smoothUpperBodyRetargetPose', () => {
         chestRoll: -0.2,
         neckYaw: 0.05,
         neckRoll: -0.08,
+        leftUpperArmRoll: -0.2,
+        rightUpperArmRoll: 0.1,
       },
       0.25,
     );
@@ -99,6 +130,8 @@ describe('smoothUpperBodyRetargetPose', () => {
       chestRoll: -0.05,
       neckYaw: 0.0125,
       neckRoll: -0.02,
+      leftUpperArmRoll: -0.05,
+      rightUpperArmRoll: 0.025,
     });
   });
 });
@@ -115,6 +148,9 @@ function createSummary(overrides: Partial<UpperBodyPoseSummary>): UpperBodyPoseS
     shoulderSpan: 0.4,
     shoulderTilt: 0,
     torsoLean: 0,
+    torsoTurn: 0,
+    leftArmLift: 0,
+    rightArmLift: 0,
     ...overrides,
   };
 }

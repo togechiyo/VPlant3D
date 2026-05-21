@@ -1313,6 +1313,16 @@ function applyUpperBodyRetarget(): void {
     yaw: upperBodyRetargetPose.neckYaw,
     roll: upperBodyRetargetPose.neckRoll,
   });
+  applyArmRetarget(
+    currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.LeftUpperArm),
+    VRMHumanBoneName.LeftUpperArm,
+    upperBodyRetargetPose.leftUpperArmRoll,
+  );
+  applyArmRetarget(
+    currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.RightUpperArm),
+    VRMHumanBoneName.RightUpperArm,
+    upperBodyRetargetPose.rightUpperArmRoll,
+  );
 }
 
 function applyBoneRetarget(
@@ -1334,6 +1344,22 @@ function applyBoneRetarget(
   bone.userData.vplant3dMocapActive = pose.enabled;
 }
 
+function applyArmRetarget(
+  bone: THREE.Object3D | null,
+  restBoneName: string,
+  roll: number,
+): void {
+  if (!bone) {
+    return;
+  }
+
+  const restQuaternion = restBoneQuaternions.get(restBoneName) ?? bone.quaternion;
+  const delta = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, roll, 'XYZ'));
+
+  bone.quaternion.copy(restQuaternion).multiply(delta);
+  bone.userData.vplant3dMocapActive = upperBodyRetargetPose.enabled;
+}
+
 function resetUpperBodyRetarget(): void {
   upperBodyRetargetPose = createNeutralRetargetPose(false);
   restoreUpperBodyBones();
@@ -1348,6 +1374,8 @@ function restoreUpperBodyBones(): void {
     VRMHumanBoneName.Chest,
     VRMHumanBoneName.UpperChest,
     VRMHumanBoneName.Neck,
+    VRMHumanBoneName.LeftUpperArm,
+    VRMHumanBoneName.RightUpperArm,
   ]) {
     const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
     const restQuaternion = restBoneQuaternions.get(boneName);

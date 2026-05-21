@@ -6,6 +6,8 @@ export interface UpperBodyRetargetPose {
   chestRoll: number;
   neckYaw: number;
   neckRoll: number;
+  leftUpperArmRoll: number;
+  rightUpperArmRoll: number;
 }
 
 export interface UpperBodyRetargetOptions {
@@ -15,6 +17,7 @@ export interface UpperBodyRetargetOptions {
   maxChestRoll: number;
   maxNeckYaw: number;
   maxNeckRoll: number;
+  maxArmRoll: number;
 }
 
 export const defaultUpperBodyRetargetOptions: UpperBodyRetargetOptions = {
@@ -24,6 +27,7 @@ export const defaultUpperBodyRetargetOptions: UpperBodyRetargetOptions = {
   maxChestRoll: 0.34,
   maxNeckYaw: 0.12,
   maxNeckRoll: 0.15,
+  maxArmRoll: 0.58,
 };
 
 export function createUpperBodyRetargetPose(
@@ -37,8 +41,23 @@ export function createUpperBodyRetargetPose(
   const inputDirection = options.mirrorInput ? -1 : 1;
   const torsoLean = (summary.torsoLean ?? 0) * inputDirection;
   const shoulderTilt = (summary.shoulderTilt ?? 0) * inputDirection;
-  const chestYaw = clamp(-torsoLean * 2.6, -options.maxChestYaw, options.maxChestYaw);
+  const torsoTurn = (summary.torsoTurn ?? 0) * inputDirection;
+  const chestYaw = clamp(
+    -torsoLean * 2.4 + torsoTurn * 0.18,
+    -options.maxChestYaw,
+    options.maxChestYaw,
+  );
   const chestRoll = clamp(-shoulderTilt * 2.8, -options.maxChestRoll, options.maxChestRoll);
+  const leftUpperArmRoll = clamp(
+    -(summary.leftArmLift ?? 0) * options.maxArmRoll,
+    -options.maxArmRoll,
+    0,
+  );
+  const rightUpperArmRoll = clamp(
+    (summary.rightArmLift ?? 0) * options.maxArmRoll,
+    0,
+    options.maxArmRoll,
+  );
 
   return {
     enabled: true,
@@ -46,6 +65,8 @@ export function createUpperBodyRetargetPose(
     chestRoll,
     neckYaw: clamp(chestYaw * 0.45, -options.maxNeckYaw, options.maxNeckYaw),
     neckRoll: clamp(chestRoll * 0.45, -options.maxNeckRoll, options.maxNeckRoll),
+    leftUpperArmRoll,
+    rightUpperArmRoll,
   };
 }
 
@@ -62,6 +83,8 @@ export function smoothUpperBodyRetargetPose(
     chestRoll: lerp(previous.chestRoll, next.chestRoll, amount),
     neckYaw: lerp(previous.neckYaw, next.neckYaw, amount),
     neckRoll: lerp(previous.neckRoll, next.neckRoll, amount),
+    leftUpperArmRoll: lerp(previous.leftUpperArmRoll, next.leftUpperArmRoll, amount),
+    rightUpperArmRoll: lerp(previous.rightUpperArmRoll, next.rightUpperArmRoll, amount),
   };
 }
 
@@ -72,6 +95,8 @@ export function createNeutralRetargetPose(enabled = false): UpperBodyRetargetPos
     chestRoll: 0,
     neckYaw: 0,
     neckRoll: 0,
+    leftUpperArmRoll: 0,
+    rightUpperArmRoll: 0,
   };
 }
 
