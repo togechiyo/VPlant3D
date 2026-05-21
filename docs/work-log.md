@@ -600,3 +600,46 @@
 
 - 人間のChromeでMirror on/off、補正量、上半身画角を確認する
 - まだ弱い場合はsensitivity sliderを追加する
+
+## 2026-05-21 Face and Hand Tracking Spike
+
+### Goal
+
+- VRM仕様とMediaPipe Face/HandのWeb APIを確認し、フェイストラッキング、リップシンク、ハンドトラッキングの最初の実装を入れる
+- 生カメラ映像は表示しない方針を維持する
+
+### Did
+
+- VRM 1.0 expression spec、VRM expression overview、MediaPipe Face Landmarker / Hand Landmarker Web docsを確認
+- `src/mocap/mediapipe-face-hand.ts` を追加し、FaceLandmarker / HandLandmarker runtime wrapperを実装
+- `src/mocap/face-expression-retarget.ts` を追加し、MediaPipe face blendshapeからVRM preset expressionへの変換を実装
+- `src/mocap/hand-landmarks.ts` を追加し、handednessとvisibility summaryを分離
+- Face tracking active中はMic Reactive MouthがVRM `aa` を上書きしないようにした
+- Setup ModeのMediaPipe panelへ `Face expressions / lip sync` と `Hand skeleton` のcheckboxとstatusを追加
+- Hand Landmarkerの結果を黒いデバッグpanel上に緑の手骨格として描くようにした
+- `docs/face-hand-tracking-notes.md` を追加
+- README、third-party libraries、Human Handoff Boardを更新
+
+### Worked
+
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 実際の表情追従・口形状・手骨格の品質は人間のChrome確認が必要
+- 手のVRM指ボーン反映は未実装。まず骨格検出の安定性を見る
+
+### Decisions
+
+- Face trackingはVRMのpreset expressionだけを使う
+- Face tracking active中はMic Reactive Mouthとの口制御競合を避ける
+- Hand trackingはまずskeleton overlayまで。指retargetingやgesture反応は次段階
+
+### Next
+
+- 人間のChromeでFace expressions / lip syncとHand skeletonを確認する
+- Faceのgainが強い/弱い場合はmappingを調整する
+- Hand skeletonが安定するなら、次に手振り/ピースなどのgesture reactionか、控えめな指retargetを検討する

@@ -8,6 +8,12 @@ import { parseObsQuery } from './obs/query';
 import type { AppState } from './state/app-store';
 import { createAppStore } from './state/app-store';
 import { MicReactiveMouth } from './audio/mic-reactive-mouth';
+import {
+  createNeutralFaceExpressionWeights,
+  createVrmFaceExpressionWeights,
+  smoothFaceExpressionWeights,
+} from './mocap/face-expression-retarget';
+import { summarizeHandTracking } from './mocap/hand-landmarks';
 import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
 import {
   createNeutralRetargetPose,
@@ -16,6 +22,8 @@ import {
   smoothUpperBodyRetargetPose,
 } from './mocap/upper-body-retarget';
 import type { MediaPipePoseDebug } from './mocap/mediapipe-pose-debug';
+import type { MediaPipeFaceTracker, MediaPipeHandTracker } from './mocap/mediapipe-face-hand';
+import type { VrmFaceExpressionWeights } from './mocap/face-expression-retarget';
 import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
@@ -124,9 +132,16 @@ let poseVisibilityBar: HTMLElement | null = null;
 let poseStartButton: HTMLButtonElement | null = null;
 let poseStopButton: HTMLButtonElement | null = null;
 let poseMirrorInput: HTMLInputElement | null = null;
+let faceTrackingInput: HTMLInputElement | null = null;
+let handTrackingInput: HTMLInputElement | null = null;
+let faceTrackingText: HTMLElement | null = null;
+let handTrackingText: HTMLElement | null = null;
 let poseAnimationFrameId: number | null = null;
 let lastPoseVideoTime = -1;
 let upperBodyRetargetPose = createNeutralRetargetPose(false);
+let faceExpressionWeights = createNeutralFaceExpressionWeights();
+let faceTracker: MediaPipeFaceTracker | null = null;
+let handTracker: MediaPipeHandTracker | null = null;
 const restBoneQuaternions = new Map<string, THREE.Quaternion>();
 
 if (!state.obsMode) {
@@ -210,6 +225,18 @@ if (!state.obsMode) {
         <input id="pose-mirror-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
         Mirror mocap input
       </label>
+      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+        <label class="inline-flex items-center gap-2 text-sm font-bold text-[#9fa9aa]">
+          <input id="face-tracking-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
+          Face expressions / lip sync
+        </label>
+        <span id="face-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Face tracking idle.</span>
+        <label class="inline-flex items-center gap-2 text-sm font-bold text-[#9fa9aa]">
+          <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+          Hand skeleton
+        </label>
+        <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Hand tracking idle.</span>
+      </div>
       <div class="grid grid-cols-2 gap-2">
         <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-[#6dff9a]/10 disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
         <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
@@ -248,6 +275,10 @@ if (!state.obsMode) {
   poseStartButton = panel.querySelector<HTMLButtonElement>('#pose-start-button');
   poseStopButton = panel.querySelector<HTMLButtonElement>('#pose-stop-button');
   poseMirrorInput = panel.querySelector<HTMLInputElement>('#pose-mirror-input');
+  faceTrackingInput = panel.querySelector<HTMLInputElement>('#face-tracking-input');
+  handTrackingInput = panel.querySelector<HTMLInputElement>('#hand-tracking-input');
+  faceTrackingText = panel.querySelector<HTMLElement>('#face-tracking-text');
+  handTrackingText = panel.querySelector<HTMLElement>('#hand-tracking-text');
 
   vrmFileInput?.addEventListener('change', () => {
     const file = vrmFileInput.files?.[0] ?? null;
@@ -275,6 +306,12 @@ if (!state.obsMode) {
   poseStopButton?.addEventListener('click', stopPoseDebug);
   poseMirrorInput?.addEventListener('change', () => {
     appStore.getState().setPoseMirrorInput(poseMirrorInput?.checked ?? true);
+  });
+  faceTrackingInput?.addEventListener('change', () => {
+    appStore.getState().setFaceTrackingEnabled(faceTrackingInput?.checked ?? true);
+  });
+  handTrackingInput?.addEventListener('change', () => {
+    appStore.getState().setHandTrackingEnabled(handTrackingInput?.checked ?? true);
   });
 
   viewport.append(panel);
@@ -643,12 +680,31 @@ function sampleMicReactiveMouth(): void {
   }
 
   const frame = micController.sample();
-  applyMouthOpen(frame.mouthOpen);
+  if (appStore.getState().faceTrackingStatus !== 'active') {
+    applyMouthOpen(frame.mouthOpen);
+  }
   appStore.getState().setMicFrame(frame.rms, frame.mouthOpen);
 }
 
 function applyMouthOpen(value: number): void {
   currentVrm?.expressionManager?.setValue('aa', value);
+}
+
+function applyFaceExpressions(weights: VrmFaceExpressionWeights): void {
+  currentVrm?.expressionManager?.setValue('blinkLeft', weights.blinkLeft);
+  currentVrm?.expressionManager?.setValue('blinkRight', weights.blinkRight);
+  currentVrm?.expressionManager?.setValue('aa', weights.aa);
+  currentVrm?.expressionManager?.setValue('ih', weights.ih);
+  currentVrm?.expressionManager?.setValue('ou', weights.ou);
+  currentVrm?.expressionManager?.setValue('ee', weights.ee);
+  currentVrm?.expressionManager?.setValue('oh', weights.oh);
+  currentVrm?.expressionManager?.setValue('happy', weights.happy);
+  currentVrm?.expressionManager?.setValue('surprised', weights.surprised);
+}
+
+function resetFaceExpressions(): void {
+  faceExpressionWeights = createNeutralFaceExpressionWeights();
+  applyFaceExpressions(faceExpressionWeights);
 }
 
 function getMicErrorMessage(error: unknown): string {
@@ -731,10 +787,40 @@ async function startPoseDebug(): Promise<void> {
     poseVideoElement.srcObject = poseStream;
     await poseVideoElement.play();
 
+    const nextState = appStore.getState();
     appStore.getState().setPoseLoading();
+    if (nextState.faceTrackingEnabled) {
+      appStore.getState().setFaceTrackingLoading();
+    } else {
+      appStore.getState().setFaceTrackingStopped();
+    }
+    if (nextState.handTrackingEnabled) {
+      appStore.getState().setHandTrackingLoading();
+    } else {
+      appStore.getState().setHandTrackingStopped();
+    }
+
     const { MediaPipePoseDebug } = await import('./mocap/mediapipe-pose-debug');
-    poseController = await MediaPipePoseDebug.create();
+    const faceHandModule = await import('./mocap/mediapipe-face-hand');
+    const [nextPoseController, nextFaceTracker, nextHandTracker] = await Promise.all([
+      MediaPipePoseDebug.create(),
+      nextState.faceTrackingEnabled
+        ? faceHandModule.MediaPipeFaceTracker.create()
+        : Promise.resolve(null),
+      nextState.handTrackingEnabled
+        ? faceHandModule.MediaPipeHandTracker.create()
+        : Promise.resolve(null),
+    ]);
+    poseController = nextPoseController;
+    faceTracker = nextFaceTracker;
+    handTracker = nextHandTracker;
     appStore.getState().setPoseActive();
+    if (faceTracker) {
+      appStore.getState().setFaceTrackingActive();
+    }
+    if (handTracker) {
+      appStore.getState().setHandTrackingActive();
+    }
     lastPoseVideoTime = -1;
     poseAnimationFrameId = window.requestAnimationFrame(runPoseDebugFrame);
   } catch (error) {
@@ -751,6 +837,10 @@ function stopPoseDebug(): void {
 
   poseController?.close();
   poseController = null;
+  faceTracker?.close();
+  faceTracker = null;
+  handTracker?.close();
+  handTracker = null;
   poseStream?.getTracks().forEach((track) => track.stop());
   poseStream = null;
   lastPoseVideoTime = -1;
@@ -762,7 +852,10 @@ function stopPoseDebug(): void {
 
   clearPoseCanvas();
   resetUpperBodyRetarget();
+  resetFaceExpressions();
   appStore.getState().setPoseStopped();
+  appStore.getState().setFaceTrackingStopped();
+  appStore.getState().setHandTrackingStopped();
 }
 
 function runPoseDebugFrame(frameTime: number): void {
@@ -785,6 +878,8 @@ function runPoseDebugFrame(frameTime: number): void {
       const summary = summarizeUpperBodyPose(landmarks);
       updateUpperBodyRetarget(summary);
       drawPoseDebugLandmarks(landmarks);
+      runFaceTrackingFrame(poseVideoElement, frameTime);
+      runHandTrackingFrame(poseVideoElement, frameTime);
       appStore
         .getState()
         .setPoseFrame(
@@ -866,6 +961,112 @@ function drawPoseDebugLandmarks(landmarks: Array<{ x: number; y: number; visibil
     context.beginPath();
     context.arc(point.x * width, point.y * height, 4, 0, Math.PI * 2);
     context.fill();
+  }
+}
+
+function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): void {
+  if (!faceTracker || appStore.getState().faceTrackingStatus !== 'active') {
+    return;
+  }
+
+  const result = faceTracker.detect(videoFrame, frameTime);
+  const categories = result.faceBlendshapes[0]?.categories ?? [];
+  const nextWeights = createVrmFaceExpressionWeights(categories);
+  faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights);
+  applyFaceExpressions(faceExpressionWeights);
+  appStore
+    .getState()
+    .setFaceTrackingFrame(
+      categories.length === 0
+        ? 'No face detected.'
+        : `Face expressions: blink ${Math.max(faceExpressionWeights.blinkLeft, faceExpressionWeights.blinkRight).toFixed(2)}, mouth ${faceExpressionWeights.aa.toFixed(2)}.`,
+    );
+}
+
+function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): void {
+  if (!handTracker || appStore.getState().handTrackingStatus !== 'active') {
+    return;
+  }
+
+  const result = handTracker.detect(videoFrame, frameTime);
+  const summary = summarizeHandTracking(result.landmarks, result.handedness);
+  drawHandDebugLandmarks(result.landmarks);
+  appStore
+    .getState()
+    .setHandTrackingFrame(
+      summary.handCount === 0
+        ? 'No hands detected.'
+        : `Hands: ${summary.labels.join(', ')} (${summary.handCount}).`,
+    );
+}
+
+function drawHandDebugLandmarks(
+  hands: Array<Array<{ x: number; y: number; visibility?: number }>>,
+): void {
+  if (!poseCanvasElement || hands.length === 0) {
+    return;
+  }
+
+  const context = poseCanvasElement.getContext('2d');
+
+  if (!context) {
+    return;
+  }
+
+  const width = poseCanvasElement.clientWidth;
+  const height = poseCanvasElement.clientHeight;
+  const connections = [
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [3, 4],
+    [0, 5],
+    [5, 6],
+    [6, 7],
+    [7, 8],
+    [0, 9],
+    [9, 10],
+    [10, 11],
+    [11, 12],
+    [0, 13],
+    [13, 14],
+    [14, 15],
+    [15, 16],
+    [0, 17],
+    [17, 18],
+    [18, 19],
+    [19, 20],
+    [5, 9],
+    [9, 13],
+    [13, 17],
+  ] as const;
+
+  context.lineWidth = 2;
+  context.strokeStyle = '#6dff9a';
+  context.shadowColor = 'rgba(109, 255, 154, 0.85)';
+  context.shadowBlur = 8;
+
+  for (const hand of hands) {
+    for (const [fromIndex, toIndex] of connections) {
+      const from = hand[fromIndex];
+      const to = hand[toIndex];
+
+      if (!from || !to) {
+        continue;
+      }
+
+      context.beginPath();
+      context.moveTo(from.x * width, from.y * height);
+      context.lineTo(to.x * width, to.y * height);
+      context.stroke();
+    }
+
+    context.fillStyle = '#dfffee';
+    for (const point of hand) {
+      context.beginPath();
+      context.arc(point.x * width, point.y * height, 3, 0, Math.PI * 2);
+      context.fill();
+    }
   }
 }
 
@@ -1000,6 +1201,38 @@ function updatePoseStatusUi(nextState: AppState): void {
     poseMirrorInput.checked = nextState.poseMirrorInput;
   }
 
+  if (faceTrackingInput) {
+    faceTrackingInput.checked = nextState.faceTrackingEnabled;
+    faceTrackingInput.disabled =
+      nextState.poseStatus === 'requesting' ||
+      nextState.poseStatus === 'loading' ||
+      nextState.poseStatus === 'active';
+  }
+
+  if (handTrackingInput) {
+    handTrackingInput.checked = nextState.handTrackingEnabled;
+    handTrackingInput.disabled =
+      nextState.poseStatus === 'requesting' ||
+      nextState.poseStatus === 'loading' ||
+      nextState.poseStatus === 'active';
+  }
+
+  if (faceTrackingText) {
+    faceTrackingText.textContent = getTrackingStatusText(
+      nextState.faceTrackingStatus,
+      nextState.faceTrackingSummary,
+      nextState.faceTrackingError,
+    );
+  }
+
+  if (handTrackingText) {
+    handTrackingText.textContent = getTrackingStatusText(
+      nextState.handTrackingStatus,
+      nextState.handTrackingSummary,
+      nextState.handTrackingError,
+    );
+  }
+
   if (poseStartButton) {
     poseStartButton.disabled =
       nextState.poseStatus === 'requesting' ||
@@ -1009,6 +1242,22 @@ function updatePoseStatusUi(nextState: AppState): void {
 
   if (poseStopButton) {
     poseStopButton.disabled = nextState.poseStatus !== 'active';
+  }
+}
+
+function getTrackingStatusText(
+  status: AppState['faceTrackingStatus'],
+  summary: string,
+  error: string | null,
+): string {
+  switch (status) {
+    case 'idle':
+    case 'active':
+      return summary;
+    case 'loading':
+      return 'Loading model...';
+    case 'error':
+      return error ?? 'Tracking failed.';
   }
 }
 

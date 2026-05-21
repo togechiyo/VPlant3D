@@ -33,6 +33,14 @@ describe('createAppStore', () => {
       poseAverageVisibility: 0,
       poseSummaryText: 'Camera idle.',
       poseMirrorInput: true,
+      faceTrackingEnabled: true,
+      faceTrackingStatus: 'idle',
+      faceTrackingSummary: 'Face tracking idle.',
+      faceTrackingError: null,
+      handTrackingEnabled: true,
+      handTrackingStatus: 'idle',
+      handTrackingSummary: 'Hand tracking idle.',
+      handTrackingError: null,
     });
   });
 
@@ -196,6 +204,57 @@ describe('createAppStore', () => {
       poseError: null,
       poseSummaryText: 'Camera idle.',
       poseMirrorInput: false,
+    });
+  });
+
+  it('tracks face and hand tracking options and status', () => {
+    const store = createAppStore({
+      obsMode: false,
+      transparent: false,
+    });
+
+    store.getState().setFaceTrackingEnabled(false);
+    store.getState().setHandTrackingEnabled(false);
+    store.getState().setFaceTrackingLoading();
+    store.getState().setHandTrackingLoading();
+
+    expect(store.getState()).toMatchObject({
+      faceTrackingEnabled: false,
+      faceTrackingStatus: 'loading',
+      handTrackingEnabled: false,
+      handTrackingStatus: 'loading',
+    });
+
+    store.getState().setFaceTrackingActive();
+    store.getState().setHandTrackingActive();
+    store.getState().setFaceTrackingFrame('Face expressions active.');
+    store.getState().setHandTrackingFrame('Hands: Left, Right.');
+
+    expect(store.getState()).toMatchObject({
+      faceTrackingStatus: 'active',
+      faceTrackingSummary: 'Face expressions active.',
+      handTrackingStatus: 'active',
+      handTrackingSummary: 'Hands: Left, Right.',
+    });
+
+    store.getState().setFaceTrackingError('Face model failed');
+    store.getState().setHandTrackingError('Hand model failed');
+
+    expect(store.getState()).toMatchObject({
+      faceTrackingStatus: 'error',
+      faceTrackingError: 'Face model failed',
+      handTrackingStatus: 'error',
+      handTrackingError: 'Hand model failed',
+    });
+
+    store.getState().setFaceTrackingStopped();
+    store.getState().setHandTrackingStopped();
+
+    expect(store.getState()).toMatchObject({
+      faceTrackingStatus: 'idle',
+      faceTrackingSummary: 'Face tracking idle.',
+      handTrackingStatus: 'idle',
+      handTrackingSummary: 'Hand tracking idle.',
     });
   });
 });

@@ -95,6 +95,7 @@ Mic Reactive Mouth can request microphone access in Setup Mode and drive the loa
 
 MediaPipe Pose Debug can request camera access in Setup Mode and show upper-body pose landmarks as a skeleton-only overlay. The raw camera image is hidden to avoid face leaks. It is a verification spike for future neck/chest/shoulder tracking, not production VRM retargeting yet.
 Mocap input can be mirrored in Setup Mode so the avatar response can match the user's camera intuition.
+Face tracking can drive VRM blink, mouth, and simple emotion expressions from MediaPipe face blendshapes. Hand tracking currently draws a skeleton overlay for verification.
 When a VRM is loaded, the default camera frames the avatar around the upper body for OBS-friendly VTuber use.
 
 ## Documentation
@@ -105,6 +106,7 @@ When a VRM is loaded, the default camera frames the avatar around the upper body
 - [VRMA implementation notes](./docs/vrma-implementation-notes.md)
 - [Mic Reactive Mouth notes](./docs/mic-reactive-mouth-notes.md)
 - [MediaPipe Pose Debug notes](./docs/mediapipe-pose-debug-notes.md)
+- [Face and Hand Tracking notes](./docs/face-hand-tracking-notes.md)
 - [MMD_modoki reference notes](./docs/mmd-modoki-reference.md)
 - [Codex usage notes](./docs/codex-usage-2026-05-20.md)
 - [Human handoff board](./docs/human-handoff-board.md)

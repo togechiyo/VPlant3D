@@ -28,6 +28,27 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
+### Todo: 人間のGoogle ChromeでFace / Hand Trackingを確認
+
+- Owner: Human or Codex with Chrome extension
+- Needed by: フェイス/ハンド機能のMVP採否判断前
+- Why: 顔表情、まばたき、口形状、手の映り方は実カメラ・照明・人間の動きで確認する必要があるため
+- What to check:
+  - `npm run dev` で `http://127.0.0.1:5173/` を開く
+  - VRMを読み込む
+  - `Face expressions / lip sync` と `Hand skeleton` がonになっていることを確認する
+  - `Start camera` を押す
+  - まばたきでVRMの目が閉じる
+  - 口を開く、丸める、笑う動きでVRMの口/表情が変わる
+  - マイク口パクとFace lip syncが同時に暴れない
+  - 手をカメラに映すと緑の手骨格が出る
+  - console errorがない
+
+Notes:
+
+- 現時点の手は骨格表示のみ。VRM指ボーンへの反映は未実装
+- Face tracking active中は、Mic Reactive Mouthはメーター表示は続けるがVRM `aa` への書き込みを止める
+
 ### Todo: 人間のGoogle ChromeでMediaPipeのVRM反映を確認
 
 - Owner: Human or Codex with Chrome extension

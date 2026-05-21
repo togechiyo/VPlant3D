@@ -42,7 +42,7 @@ Versions and licenses below were verified from installed package metadata in `no
 
 | Package / API | Version | License | Role |
 | --- | ---: | --- | --- |
-| `@mediapipe/tasks-vision` | `0.10.35` | Apache-2.0 | Camera-based upper-body tracking spike. Current implementation uses Pose Landmarker in VIDEO mode for a Setup Mode debug preview and landmark summary. |
+| `@mediapipe/tasks-vision` | `0.10.35` | Apache-2.0 | Camera-based tracking. Current implementation uses Pose Landmarker for upper-body mocap, Face Landmarker for VRM expressions/lip sync, and Hand Landmarker for hand skeleton verification. |
 | Web Audio API | n/a | n/a | Browser API for microphone input and RMS volume analysis for Mic Reactive Mouth. Uses `AudioContext`, `MediaStreamAudioSourceNode`, and `AnalyserNode.getFloatTimeDomainData`. |
 | MediaDevices API | n/a | n/a | Browser API for microphone and camera devices. |
 

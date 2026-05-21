@@ -8,6 +8,7 @@ export type VrmLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 export type VrmaLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 export type MicStatus = 'idle' | 'requesting' | 'active' | 'error';
 export type PoseStatus = 'idle' | 'requesting' | 'loading' | 'active' | 'error';
+export type TrackingStatus = 'idle' | 'loading' | 'active' | 'error';
 
 export interface AppState {
   obsMode: boolean;
@@ -33,6 +34,14 @@ export interface AppState {
   poseAverageVisibility: number;
   poseSummaryText: string;
   poseMirrorInput: boolean;
+  faceTrackingEnabled: boolean;
+  faceTrackingStatus: TrackingStatus;
+  faceTrackingSummary: string;
+  faceTrackingError: string | null;
+  handTrackingEnabled: boolean;
+  handTrackingStatus: TrackingStatus;
+  handTrackingSummary: string;
+  handTrackingError: string | null;
   setVrmLoading: (fileName: string) => void;
   setVrmReady: (fileName: string) => void;
   setVrmError: (message: string) => void;
@@ -58,6 +67,18 @@ export interface AppState {
     summaryText: string,
   ) => void;
   setPoseMirrorInput: (mirrorInput: boolean) => void;
+  setFaceTrackingEnabled: (enabled: boolean) => void;
+  setFaceTrackingLoading: () => void;
+  setFaceTrackingActive: () => void;
+  setFaceTrackingError: (message: string) => void;
+  setFaceTrackingStopped: () => void;
+  setFaceTrackingFrame: (summary: string) => void;
+  setHandTrackingEnabled: (enabled: boolean) => void;
+  setHandTrackingLoading: () => void;
+  setHandTrackingActive: () => void;
+  setHandTrackingError: (message: string) => void;
+  setHandTrackingStopped: () => void;
+  setHandTrackingFrame: (summary: string) => void;
 }
 
 export type AppStore = ReturnType<typeof createAppStore>;
@@ -89,6 +110,14 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     poseAverageVisibility: 0,
     poseSummaryText: 'Camera idle.',
     poseMirrorInput: true,
+    faceTrackingEnabled: true,
+    faceTrackingStatus: 'idle',
+    faceTrackingSummary: 'Face tracking idle.',
+    faceTrackingError: null,
+    handTrackingEnabled: true,
+    handTrackingStatus: 'idle',
+    handTrackingSummary: 'Hand tracking idle.',
+    handTrackingError: null,
     setVrmLoading: (fileName) =>
       set({
         vrmStatus: 'loading',
@@ -213,6 +242,66 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     setPoseMirrorInput: (mirrorInput) =>
       set({
         poseMirrorInput: mirrorInput,
+      }),
+    setFaceTrackingEnabled: (enabled) =>
+      set({
+        faceTrackingEnabled: enabled,
+      }),
+    setFaceTrackingLoading: () =>
+      set({
+        faceTrackingStatus: 'loading',
+        faceTrackingError: null,
+      }),
+    setFaceTrackingActive: () =>
+      set({
+        faceTrackingStatus: 'active',
+        faceTrackingError: null,
+      }),
+    setFaceTrackingError: (message) =>
+      set({
+        faceTrackingStatus: 'error',
+        faceTrackingError: message,
+        faceTrackingSummary: 'Face tracking stopped.',
+      }),
+    setFaceTrackingStopped: () =>
+      set({
+        faceTrackingStatus: 'idle',
+        faceTrackingError: null,
+        faceTrackingSummary: 'Face tracking idle.',
+      }),
+    setFaceTrackingFrame: (summary) =>
+      set({
+        faceTrackingSummary: summary,
+      }),
+    setHandTrackingEnabled: (enabled) =>
+      set({
+        handTrackingEnabled: enabled,
+      }),
+    setHandTrackingLoading: () =>
+      set({
+        handTrackingStatus: 'loading',
+        handTrackingError: null,
+      }),
+    setHandTrackingActive: () =>
+      set({
+        handTrackingStatus: 'active',
+        handTrackingError: null,
+      }),
+    setHandTrackingError: (message) =>
+      set({
+        handTrackingStatus: 'error',
+        handTrackingError: message,
+        handTrackingSummary: 'Hand tracking stopped.',
+      }),
+    setHandTrackingStopped: () =>
+      set({
+        handTrackingStatus: 'idle',
+        handTrackingError: null,
+        handTrackingSummary: 'Hand tracking idle.',
+      }),
+    setHandTrackingFrame: (summary) =>
+      set({
+        handTrackingSummary: summary,
       }),
   }));
 }

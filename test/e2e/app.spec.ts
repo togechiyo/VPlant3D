@@ -32,6 +32,10 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
   await expect(page.getByText('Mirror mocap input')).toBeVisible();
   await expect(page.locator('#pose-mirror-input')).toBeChecked();
+  await expect(page.getByText('Face expressions / lip sync')).toBeVisible();
+  await expect(page.getByText('Hand skeleton')).toBeVisible();
+  await expect(page.locator('#face-tracking-input')).toBeChecked();
+  await expect(page.locator('#hand-tracking-input')).toBeChecked();
   await expect(page.locator('#pose-start-button')).toBeEnabled();
   await expect(page.locator('#pose-stop-button')).toBeDisabled();
   expect(errors()).toEqual([]);
