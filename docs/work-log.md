@@ -1877,3 +1877,32 @@
 
 - OBSで同じ動作を確認し、フレーム落ちっぽい段差が減ったか見る
 - まだピクつく場合は、relay送信頻度、補間係数、MediaPipe入力側の安定化を調整する
+
+## 2026-05-21 Slow Retarget Release
+
+### Goal
+
+- OBS Render Pageで、検出が弱くなった瞬間に棒立ちへ戻ろうとしてブレる問題を軽減する
+
+### Did
+
+- Render側のrelay補間を、目標が有効な時と無効/未検出の時で分けた
+- 有効なモーションへは通常速度で追従し、未検出で棒立ちへ戻る時はかなり遅く戻すようにした
+- `smoothUpperBodyRetargetPose` の未検出時release量も小さくし、短い検出落ちで上半身が強く戻らないようにした
+
+### Worked
+
+- `npm run test -- test/upper-body-retarget.test.ts` は成功
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- OBS実機でのブレ改善は人間確認が必要
+
+### Next
+
+- OBSで、検出が一瞬弱くなる場面でも棒立ちへ吸われるようなブレが減ったか確認する
+- まだ残る場合は、Control側で姿勢targetを一定時間ホールドする

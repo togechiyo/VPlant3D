@@ -240,9 +240,9 @@ describe('smoothUpperBodyRetargetPose', () => {
     );
 
     expect(smoothed.enabled).toBe(true);
-    expect(smoothed.chestYaw).toBeCloseTo(0.075);
-    expect(smoothed.leftUpperArmRoll).toBeCloseTo(-0.15);
-    expect(smoothed.leftLowerArmRoll).toBeCloseTo(-0.3);
+    expect(smoothed.chestYaw).toBeCloseTo(0.098);
+    expect(smoothed.leftUpperArmRoll).toBeCloseTo(-0.196);
+    expect(smoothed.leftLowerArmRoll).toBeCloseTo(-0.392);
   });
 });
 

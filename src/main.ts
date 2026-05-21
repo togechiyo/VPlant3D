@@ -758,15 +758,23 @@ function updateRelayRenderMotion(delta: number): void {
     return;
   }
 
-  const motionSmoothing = getFrameSmoothing(delta, 26);
+  const activeMotionSmoothing = getFrameSmoothing(delta, 18);
+  const releaseMotionSmoothing = getFrameSmoothing(delta, 1.8);
+  const headSmoothing = relayHeadTarget.enabled ? activeMotionSmoothing : releaseMotionSmoothing;
+  const upperBodySmoothing = relayUpperBodyTarget.enabled
+    ? activeMotionSmoothing
+    : releaseMotionSmoothing;
+  const handSmoothing = hasHandTarget(relayHandTarget)
+    ? activeMotionSmoothing
+    : releaseMotionSmoothing;
   const expressionSmoothing = getFrameSmoothing(delta, 34);
-  headRetargetPose = smoothHeadRetargetPose(headRetargetPose, relayHeadTarget, motionSmoothing);
+  headRetargetPose = smoothHeadRetargetPose(headRetargetPose, relayHeadTarget, headSmoothing);
   upperBodyRetargetPose = smoothUpperBodyRetargetPose(
     upperBodyRetargetPose,
     relayUpperBodyTarget,
-    motionSmoothing,
+    upperBodySmoothing,
   );
-  handRetargetPose = smoothHandRetargetPose(handRetargetPose, relayHandTarget, motionSmoothing);
+  handRetargetPose = smoothHandRetargetPose(handRetargetPose, relayHandTarget, handSmoothing);
   faceExpressionWeights = smoothFaceExpressionWeights(
     faceExpressionWeights,
     relayExpressionTarget,
@@ -774,6 +782,10 @@ function updateRelayRenderMotion(delta: number): void {
   );
   applyHeadRetarget();
   applyRelayExpressions(faceExpressionWeights);
+}
+
+function hasHandTarget(pose: HandRetargetPose): boolean {
+  return Boolean(pose.left || pose.right);
 }
 
 function createRelayExpressionTarget(

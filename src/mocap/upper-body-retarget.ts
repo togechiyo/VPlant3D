@@ -107,6 +107,23 @@ export function smoothUpperBodyRetargetPose(
   smoothing = 0.34,
 ): UpperBodyRetargetPose {
   const amount = clamp(smoothing, 0, 1);
+
+  if (!next.enabled) {
+    const releaseAmount = amount * 0.08;
+
+    return {
+      enabled: hasVisibleMotion(previous, 0.006),
+      chestYaw: lerp(previous.chestYaw, 0, releaseAmount),
+      chestRoll: lerp(previous.chestRoll, 0, releaseAmount),
+      neckYaw: lerp(previous.neckYaw, 0, releaseAmount),
+      neckRoll: lerp(previous.neckRoll, 0, releaseAmount),
+      leftUpperArmRoll: lerp(previous.leftUpperArmRoll, 0, releaseAmount),
+      rightUpperArmRoll: lerp(previous.rightUpperArmRoll, 0, releaseAmount),
+      leftLowerArmRoll: lerp(previous.leftLowerArmRoll, 0, releaseAmount),
+      rightLowerArmRoll: lerp(previous.rightLowerArmRoll, 0, releaseAmount),
+    };
+  }
+
   const nextEnabled = next.enabled || hasVisibleMotion(previous, 0.006);
 
   return {
