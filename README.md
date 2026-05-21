@@ -115,6 +115,7 @@ Setup Mode also includes Avatar Framing sliders for X/Y position, scale, and Y-a
 - [VRM Awards / #MadeWithVRM notes](./docs/vrm-award.md)
 - [VPlant3D for OBS concept](./docs/vplant3d-for-obs.md)
 - [OBS architecture redesign](./docs/obs-architecture-redesign.md)
+- [Future desktop app and MCP considerations](./docs/future-desktop-and-mcp-considerations.md)
 - [Third-party libraries](./docs/third-party-libraries.md)
 - [VRMA implementation notes](./docs/vrma-implementation-notes.md)
 - [Mic Reactive Mouth notes](./docs/mic-reactive-mouth-notes.md)

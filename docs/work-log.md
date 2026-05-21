@@ -1373,3 +1373,35 @@
 - Relay接続状態をControl Pageに短いbadgeで表示する
 - VRMA asset load完了前にplay commandが来た場合のpending command処理を追加する
 - Control/Render間の同期対象を整理し、送信頻度やmessageサイズを調整する
+
+## 2026-05-21 Future Desktop / MCP Consideration
+
+### Goal
+
+- 本体アプリのElectron化と、VPlant3DのMCPサーバー化を導入前に検討する
+- ハッカソンMVPに入れるべきか、後日候補にするべきかを整理する
+
+### Did
+
+- `docs/future-desktop-and-mcp-considerations.md` を追加した
+- Electron化はControl/Relayを配布しやすくする後日候補として整理した
+- MCPサーバー化はCodexなどのエージェントが状態確認・操作しやすくする開発/運用補助として整理した
+- どちらも現時点では導入しない判断を明記した
+- READMEのDocumentation一覧に追加した
+
+### Worked
+
+- ElectronとMCPを、MVPの配信者向け価値と、後日の開発運用価値に分けて判断できる形にできた
+- Electron公式Process Model / Automated Testing、MCP公式Architectureを参照して考察に反映した
+
+### Failed / Blocked
+
+- 実装はしていない
+- Electron化した場合のmacOS権限、署名、配布、OBS連携の実コストは未検証
+- MCP hostからの接続やtool contractは未設計
+
+### Next
+
+- まずOBS実機でControl/Render/Relay構成を確認する
+- Electron化は提出後、配布体験を改善する必要が出たら再検討する
+- MCP化はCodexからの状態確認やデバッグ自動化が本当に必要になったら、読み取り専用toolから検討する
