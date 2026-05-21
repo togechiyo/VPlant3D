@@ -1275,3 +1275,31 @@
 ### Next
 
 - 実機確認後、デフォルトを `まばたき=モーキャプ / 口=マイク` のままでよいか調整する
+
+## 2026-05-21 Keep Head Tracking Independent From Face Modes
+
+### Goal
+
+- まばたきや口の入力方式をモーキャプ以外にしても、頭の動きが制限されないようにする
+- 頭の向きは表情ではなく、カメラ姿勢入力として扱う
+
+### Did
+
+- Face trackerを、まばたき/口のモードから切り離して、カメラ起動中は頭トラック用に維持するようにした
+- `まばたき=自動/オフ` や `口=マイク/オフ` でも `applyHeadRetarget()` が継続するようにした
+- Face tracker statusは、表情モーキャプが不要な時は `頭: トラック中` と表示するようにした
+
+### Worked
+
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- 実カメラで、まばたき=自動/オフ時にも頭の向きが自然に残るかは人間の目視確認が必要
+
+### Next
+
+- 手の骨格OFF時に肘トラッキングが残る挙動は、現状Body Track側の仕様として残す。必要ならBody側に腕トラック専用のON/OFFを追加する

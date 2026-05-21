@@ -1168,24 +1168,12 @@ function getLipSyncModeFromSelect(): LipSyncMode {
   return value === 'mocap' || value === 'off' ? value : 'mic';
 }
 
-function needsFaceMocap(): boolean {
-  return blinkMode === 'mocap' || lipSyncMode === 'mocap';
-}
-
 function syncFaceTrackingEnabledFromModes(): void {
-  appStore.getState().setFaceTrackingEnabled(needsFaceMocap());
+  appStore.getState().setFaceTrackingEnabled(true);
 }
 
 async function syncFaceTrackerForCurrentModes(): Promise<void> {
   if (appStore.getState().poseStatus !== 'active') {
-    return;
-  }
-
-  if (!needsFaceMocap()) {
-    faceTracker?.close();
-    faceTracker = null;
-    resetFaceExpressions();
-    appStore.getState().setFaceTrackingStopped();
     return;
   }
 
@@ -1478,12 +1466,20 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
   headRetargetPose = smoothHeadRetargetPose(headRetargetPose, nextHeadPose);
   applyMocapFaceExpressions(faceExpressionWeights);
   applyHeadRetarget();
+  const faceSummaryParts = [
+    blinkMode === 'mocap'
+      ? `まばたき ${Math.max(faceExpressionWeights.blinkLeft, faceExpressionWeights.blinkRight).toFixed(2)}`
+      : null,
+    lipSyncMode === 'mocap' ? `口 ${faceExpressionWeights.aa.toFixed(2)}` : null,
+  ].filter((part): part is string => part !== null);
   appStore
     .getState()
     .setFaceTrackingFrame(
       categories.length === 0
         ? '顔: 未検出'
-        : `顔: まばたき ${Math.max(faceExpressionWeights.blinkLeft, faceExpressionWeights.blinkRight).toFixed(2)} / 口 ${faceExpressionWeights.aa.toFixed(2)}`,
+        : faceSummaryParts.length > 0
+          ? `顔: ${faceSummaryParts.join(' / ')}`
+          : '頭: トラック中',
     );
 }
 
