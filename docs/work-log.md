@@ -828,3 +828,32 @@
 
 - Chromeで頭の傾きが十分か確認する
 - 照明がモデルごとに合わない場合は、Setup Modeにlighting exposure / presetを追加する
+
+## 2026-05-21 Head Nod and Roll Direction Tune
+
+### Goal
+
+- 人間確認で、頭が常に水平を取るように見える違和感を直す
+- うなづき方向の動きをもっと取れるようにする
+
+### Did
+
+- Head retargetのyaw mirror方向は維持しつつ、rollだけ独立した符号に分けた
+- mirror ON時のrollを反転し、水平補正ではなく頭の傾きとして出る方向へ調整した
+- pitch gainとmax pitchを上げ、うなづき/見上げを拾いやすくした
+- `test/head-retarget.test.ts` を更新し、yawとrollの符号を別々に固定した
+
+### Worked
+
+- `npm run test -- head-retarget` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 実カメラでのうなづき量とroll方向は人間確認が必要
+
+### Next
+
+- Chromeで頭を傾けたときに、水平補正ではなく自然な傾きに見えるか確認する
+- うなづきが強すぎる場合はpitchだけ少し戻す

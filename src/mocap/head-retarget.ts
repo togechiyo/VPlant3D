@@ -20,12 +20,12 @@ export interface HeadRetargetOptions {
 
 export const defaultHeadRetargetOptions: HeadRetargetOptions = {
   mirrorInput: true,
-  pitchGain: 0.55,
+  pitchGain: 0.95,
   yawGain: 0.75,
-  rollGain: 1,
-  maxPitch: 0.26,
+  rollGain: 0.9,
+  maxPitch: 0.42,
   maxYaw: 0.38,
-  maxRoll: 0.45,
+  maxRoll: 0.4,
 };
 
 export function createNeutralHeadRetargetPose(enabled = false): HeadRetargetPose {
@@ -84,13 +84,22 @@ export function createHeadRetargetPose(
     data[15],
   );
   const euler = new THREE.Euler().setFromRotationMatrix(transform, 'YXZ');
-  const direction = nextOptions.mirrorInput ? 1 : -1;
+  const yawDirection = nextOptions.mirrorInput ? 1 : -1;
+  const rollDirection = nextOptions.mirrorInput ? -1 : 1;
 
   return {
     enabled: true,
     pitch: clamp(euler.x * nextOptions.pitchGain, -nextOptions.maxPitch, nextOptions.maxPitch),
-    yaw: clamp(euler.y * nextOptions.yawGain * direction, -nextOptions.maxYaw, nextOptions.maxYaw),
-    roll: clamp(euler.z * nextOptions.rollGain * direction, -nextOptions.maxRoll, nextOptions.maxRoll),
+    yaw: clamp(
+      euler.y * nextOptions.yawGain * yawDirection,
+      -nextOptions.maxYaw,
+      nextOptions.maxYaw,
+    ),
+    roll: clamp(
+      euler.z * nextOptions.rollGain * rollDirection,
+      -nextOptions.maxRoll,
+      nextOptions.maxRoll,
+    ),
   };
 }
 
