@@ -21,6 +21,7 @@ export interface UpperBodyRetargetOptions {
   maxNeckRoll: number;
   maxArmRoll: number;
   maxLowerArmRoll: number;
+  trackArms: boolean;
 }
 
 export const defaultUpperBodyRetargetOptions: UpperBodyRetargetOptions = {
@@ -32,6 +33,7 @@ export const defaultUpperBodyRetargetOptions: UpperBodyRetargetOptions = {
   maxNeckRoll: 0.15,
   maxArmRoll: 0.58,
   maxLowerArmRoll: 1.08,
+  trackArms: true,
 };
 
 export function createUpperBodyRetargetPose(
@@ -71,28 +73,20 @@ export function createUpperBodyRetargetPose(
   const rightLowerArmBend = options.mirrorInput
     ? (summary.leftLowerArmBend ?? 0)
     : (summary.rightLowerArmBend ?? 0);
-  const leftUpperArmRoll = clamp(
-    -leftArmLift * options.maxArmRoll,
-    -options.maxArmRoll,
-    0,
-  );
-  const rightUpperArmRoll = clamp(
-    rightArmLift * options.maxArmRoll,
-    0,
-    options.maxArmRoll,
-  );
   const leftLowerArmMotion = Math.max(leftLowerArmBend, leftLowerArmLift * 0.45);
   const rightLowerArmMotion = Math.max(rightLowerArmBend, rightLowerArmLift * 0.45);
-  const leftLowerArmRoll = clamp(
-    -leftLowerArmMotion * options.maxLowerArmRoll,
-    -options.maxLowerArmRoll,
-    0,
-  );
-  const rightLowerArmRoll = clamp(
-    rightLowerArmMotion * options.maxLowerArmRoll,
-    0,
-    options.maxLowerArmRoll,
-  );
+  const leftUpperArmRoll = options.trackArms
+    ? clamp(-leftArmLift * options.maxArmRoll, -options.maxArmRoll, 0)
+    : 0;
+  const rightUpperArmRoll = options.trackArms
+    ? clamp(rightArmLift * options.maxArmRoll, 0, options.maxArmRoll)
+    : 0;
+  const leftLowerArmRoll = options.trackArms
+    ? clamp(-leftLowerArmMotion * options.maxLowerArmRoll, -options.maxLowerArmRoll, 0)
+    : 0;
+  const rightLowerArmRoll = options.trackArms
+    ? clamp(rightLowerArmMotion * options.maxLowerArmRoll, 0, options.maxLowerArmRoll)
+    : 0;
 
   return {
     enabled: true,

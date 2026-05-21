@@ -60,6 +60,7 @@ describe('createUpperBodyRetargetPose', () => {
         maxNeckRoll: 0.15,
         maxArmRoll: 0.58,
         maxLowerArmRoll: 1.08,
+        trackArms: true,
       },
     );
 
@@ -119,6 +120,37 @@ describe('createUpperBodyRetargetPose', () => {
     expect(pose.rightLowerArmRoll).toBeCloseTo(0.81);
   });
 
+  it('can disable upper and lower arm tracking while preserving torso motion', () => {
+    const pose = createUpperBodyRetargetPose(
+      createSummary({
+        averageUpperBodyVisibility: 0.8,
+        shoulderTilt: 0.06,
+        torsoLean: -0.05,
+        leftArmLift: 0.7,
+        rightArmLift: 0.4,
+        leftLowerArmBend: 0.8,
+        rightLowerArmBend: 0.6,
+      }),
+      {
+        minVisibility: 0.32,
+        mirrorInput: true,
+        maxChestYaw: 0.26,
+        maxChestRoll: 0.34,
+        maxNeckYaw: 0.12,
+        maxNeckRoll: 0.15,
+        maxArmRoll: 0.58,
+        maxLowerArmRoll: 1.08,
+        trackArms: false,
+      },
+    );
+
+    expect(pose.chestYaw).not.toBe(0);
+    expect(pose.leftUpperArmRoll).toBe(0);
+    expect(pose.rightUpperArmRoll).toBe(0);
+    expect(pose.leftLowerArmRoll).toBe(0);
+    expect(pose.rightLowerArmRoll).toBe(0);
+  });
+
   it('can map elbow lift without mirroring', () => {
     const pose = createUpperBodyRetargetPose(
       createSummary({
@@ -135,6 +167,7 @@ describe('createUpperBodyRetargetPose', () => {
         maxNeckRoll: 0.15,
         maxArmRoll: 0.58,
         maxLowerArmRoll: 1.08,
+        trackArms: true,
       },
     );
 

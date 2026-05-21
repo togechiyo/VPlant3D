@@ -536,7 +536,7 @@ if (isControlPage) {
     const enabled = handTrackingInput?.checked ?? true;
     appStore.getState().setHandTrackingEnabled(enabled);
     if (!enabled) {
-      resetHandRetarget();
+      clearArmRetargetPose();
       appStore.getState().setHandTrackingStopped();
     } else if (handTracker && appStore.getState().poseStatus === 'active') {
       appStore.getState().setHandTrackingActive();
@@ -1927,13 +1927,19 @@ function clearPoseCanvas(): void {
 }
 
 function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
+  const nextState = appStore.getState();
   upperBodyRetargetPose = smoothUpperBodyRetargetPose(
     upperBodyRetargetPose,
     createUpperBodyRetargetPose(summary, {
       ...defaultUpperBodyRetargetOptions,
-      mirrorInput: appStore.getState().poseMirrorInput,
+      mirrorInput: nextState.poseMirrorInput,
+      trackArms: nextState.handTrackingEnabled,
     }),
   );
+
+  if (!nextState.handTrackingEnabled) {
+    clearArmRetargetPose();
+  }
 }
 
 function applyUpperBodyRetarget(): void {
@@ -2240,6 +2246,14 @@ function applyArmRetarget(
 function resetUpperBodyRetarget(): void {
   upperBodyRetargetPose = createNeutralRetargetPose(false);
   restoreUpperBodyBones();
+}
+
+function clearArmRetargetPose(): void {
+  upperBodyRetargetPose.leftUpperArmRoll = 0;
+  upperBodyRetargetPose.rightUpperArmRoll = 0;
+  upperBodyRetargetPose.leftLowerArmRoll = 0;
+  upperBodyRetargetPose.rightLowerArmRoll = 0;
+  resetHandRetarget();
 }
 
 function restoreUpperBodyBones(): void {

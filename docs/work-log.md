@@ -1754,3 +1754,33 @@
 
 - 手を顔の横に持ってきた時、肘が折れて手首目標へ近づくか確認する
 - まだ手首位置が遠い場合、Hand Landmarkerのwrist点をPose wristの補正に使う
+
+## 2026-05-21 Hand Toggle Stops Arm Retarget
+
+### Goal
+
+- 手トラックOFF時に、MediaPipe由来の腕・手の反映も止められるようにする
+
+### Did
+
+- `Hand / finger` チェックボックスを、指だけでなく上腕・下腕・手首のretarget有効/無効として扱うようにした
+- 手トラックOFF時は上腕/下腕retarget値を即ゼロにし、手首/指retargetもリセットするようにした
+- 胴体・首の上半身トラックは残るため、腕だけ暴れる時に止められる
+- upper-body retargetの純粋ロジックに `trackArms` オプションを追加し、腕OFF時のテストを追加した
+
+### Worked
+
+- `npm run test -- test/upper-body-retarget.test.ts` は成功
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- 実カメラで、チェックOFF時に腕の揺れが止まるかは人間確認が必要
+
+### Next
+
+- Chromeでカメラ使用中に `手 / 指` をOFFにし、腕・手が戻って動かないか確認する
+- 必要ならUI文言を「腕 / 手」へ変更して意味をさらに明確にする
