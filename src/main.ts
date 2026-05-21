@@ -182,6 +182,23 @@ if (!state.obsMode) {
     'absolute inset-x-6 bottom-6 grid max-h-[34vh] gap-3 overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-3 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
   panel.innerHTML = `
     <div class="flex min-h-12 items-center gap-2 overflow-x-auto rounded-md border border-white/10 bg-black/25 p-2">
+      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
+        <input id="face-tracking-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
+        Face expressions / lip sync
+      </label>
+      <button id="mic-start-button" class="shrink-0 rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
+      <button id="mic-stop-button" class="shrink-0 rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
+      <button id="pose-start-button" class="shrink-0 rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
+      <button id="pose-stop-button" class="shrink-0 rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
+      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
+        <input id="pose-mirror-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+        Mirror mocap input
+      </label>
+      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
+        <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+        Hand skeleton
+      </label>
+      <span class="h-7 w-px shrink-0 bg-white/10"></span>
       <label class="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff] hover:bg-white/[0.04]">
         <input id="vrm-file-input" class="sr-only" type="file" accept=".vrm" />
         Load local VRM
@@ -196,24 +213,58 @@ if (!state.obsMode) {
         <input id="vrma-loop-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
         Loop
       </label>
-      <button id="mic-start-button" class="shrink-0 rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
-      <button id="mic-stop-button" class="shrink-0 rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
-      <button id="pose-start-button" class="shrink-0 rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
-      <button id="pose-stop-button" class="shrink-0 rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
-      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
-        <input id="pose-mirror-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        Mirror mocap input
-      </label>
-      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
-        <input id="face-tracking-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
-        Face expressions / lip sync
-      </label>
-      <label class="inline-flex shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-bold text-[#9fa9aa]">
-        <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        Hand skeleton
-      </label>
     </div>
     <div class="grid grid-flow-col auto-cols-[minmax(260px,340px)] items-start gap-3 overflow-x-auto overflow-y-hidden pb-1 [&>*]:max-h-[calc(34vh-88px)] [&>*]:overflow-y-auto">
+    <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Head / Face</span>
+        <span class="text-[11px] font-bold uppercase tracking-normal text-[#9fa9aa]">Mic Reactive Mouth</span>
+        <strong id="mic-status-text" class="text-sm font-bold text-[#eef4f2]">Microphone idle.</strong>
+        <span id="mic-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before testing mouth movement.</span>
+      </div>
+      <span id="face-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Face tracking idle.</span>
+      <div class="grid gap-2">
+        <div class="grid gap-1">
+          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>Level</span><span>RMS</span></div>
+          <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-level-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
+        </div>
+        <div class="grid gap-1">
+          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>Mouth</span><span>aa</span></div>
+          <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-mouth-bar" class="h-full w-0 rounded-full bg-[#6dff9a] transition-[width] duration-75"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Body Track</span>
+        <span class="text-[11px] font-bold uppercase tracking-normal text-[#9fa9aa]">MediaPipe Pose Debug</span>
+        <strong id="pose-status-text" class="text-sm font-bold text-[#eef4f2]">Camera idle.</strong>
+        <span id="pose-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Start camera to inspect upper-body landmarks.</span>
+      </div>
+      <div class="relative aspect-video overflow-hidden rounded-md border border-white/10 bg-[#0b0f10]">
+        <video id="pose-video" class="h-full w-full scale-x-[-1] object-cover opacity-0" autoplay muted playsinline></video>
+        <canvas id="pose-canvas" class="pointer-events-none absolute inset-0 h-full w-full scale-x-[-1]"></canvas>
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-black/45 px-2 py-1 text-[11px] font-bold text-[#9fa9aa]">Camera image hidden. Skeleton only.</div>
+      </div>
+      <div class="grid gap-2">
+        <div class="flex items-center justify-between gap-3 text-xs font-bold text-[#9fa9aa]">
+          <span>Upper body visibility</span>
+          <span id="pose-summary-text">Camera idle.</span>
+        </div>
+        <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="pose-visibility-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
+      </div>
+      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Torso / upper arm retarget</span>
+        <span class="text-xs font-bold text-[#9fa9aa]">Mirror and camera controls are in the toolbar.</span>
+      </div>
+    </div>
+    <div class="grid content-start gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Hand Track</span>
+        <strong class="text-sm font-bold text-[#eef4f2]">Hand tracking status</strong>
+        <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Hand tracking idle.</span>
+      </div>
+    </div>
     <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM Model</span>
@@ -249,46 +300,6 @@ if (!state.obsMode) {
         <strong id="vrma-status-text" class="text-sm font-bold text-[#eef4f2]">Choose a local .vrma file.</strong>
         <span id="vrma-file-text" class="min-h-5 text-sm text-[#9fa9aa]">No motion selected.</span>
         <span id="vrma-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before playing VRMA.</span>
-      </div>
-    </div>
-    <div class="grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
-      <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Mic Reactive Mouth</span>
-        <strong id="mic-status-text" class="text-sm font-bold text-[#eef4f2]">Microphone idle.</strong>
-        <span id="mic-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before testing mouth movement.</span>
-      </div>
-      <div class="grid gap-2">
-        <div class="grid gap-1">
-          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>Level</span><span>RMS</span></div>
-          <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-level-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
-        </div>
-        <div class="grid gap-1">
-          <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>Mouth</span><span>aa</span></div>
-          <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-mouth-bar" class="h-full w-0 rounded-full bg-[#6dff9a] transition-[width] duration-75"></div></div>
-        </div>
-      </div>
-    </div>
-    <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
-      <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">MediaPipe Pose Debug</span>
-        <strong id="pose-status-text" class="text-sm font-bold text-[#eef4f2]">Camera idle.</strong>
-        <span id="pose-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Start camera to inspect upper-body landmarks.</span>
-      </div>
-      <div class="relative aspect-video overflow-hidden rounded-md border border-white/10 bg-[#0b0f10]">
-        <video id="pose-video" class="h-full w-full scale-x-[-1] object-cover opacity-0" autoplay muted playsinline></video>
-        <canvas id="pose-canvas" class="pointer-events-none absolute inset-0 h-full w-full scale-x-[-1]"></canvas>
-        <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-black/45 px-2 py-1 text-[11px] font-bold text-[#9fa9aa]">Camera image hidden. Skeleton only.</div>
-      </div>
-      <div class="grid gap-2">
-        <div class="flex items-center justify-between gap-3 text-xs font-bold text-[#9fa9aa]">
-          <span>Upper body visibility</span>
-          <span id="pose-summary-text">Camera idle.</span>
-        </div>
-        <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="pose-visibility-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
-      </div>
-      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-        <span id="face-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Face tracking idle.</span>
-        <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">Hand tracking idle.</span>
       </div>
     </div>
     <ul class="m-0 grid list-none content-start gap-2 rounded-md border border-white/10 bg-black/20 p-3">

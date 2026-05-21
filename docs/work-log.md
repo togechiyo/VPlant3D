@@ -1083,3 +1083,34 @@
 ### Next
 
 - 必要ならtoolbarボタンをアイコン化、カテゴリごとにグルーピング、または詳細カードの折りたたみを追加する
+
+## 2026-05-21 Tracking-First Dock Order
+
+### Goal
+
+- Setup Dockの項目順を、左から頭系、体トラック、ハンドトラックの順にする
+- 操作ツールバーと詳細カードの意味的な並びを揃える
+
+### Did
+
+- Toolbar先頭を `Face expressions / lip sync`、Mic、Camera、Mirror、Handの順へ変更
+- VRM/VRMA loadとmotion playbackはtracking操作群の右へ移動
+- Detail card rowを `Head / Face`、`Body Track`、`Hand Track`、`VRM Model`、`Avatar Framing`、`VRMA Motion`、statusの順へ変更
+- Head / Face cardへMic Reactive MouthとFace tracking statusを集約
+- Body Track cardへMediaPipe Pose Debug、skeleton preview、upper-body visibilityを集約
+- Hand Track cardを独立させ、hand tracking statusを表示
+
+### Worked
+
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run test:e2e` は成功
+- `npm run lint` は成功
+- Playwrightでlocal Alicia VRMを読み込み、Head/Body/Hand順のdock表示をスクリーンショット確認した
+
+### Failed / Blocked
+
+- 右端status cardは画面幅によって横スクロールが必要
+
+### Next
+
+- 操作感を見て、必要ならstatus cardを縮めるか非表示/折りたたみにする
