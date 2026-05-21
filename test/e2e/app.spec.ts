@@ -45,6 +45,7 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('Face / lips')).toBeVisible();
   await expect(page.locator('#hand-tracking-input')).toBeChecked();
   await expect(page.getByText('Hand Skeleton', { exact: true })).toBeVisible();
+  await expect(page.getByText('Arm / hand track')).toBeVisible();
   await expect(page.getByText('Debug overlay only')).toBeVisible();
   await expect(page.getByText('VRM finger retarget is not implemented yet.')).toBeVisible();
   await expect(page.locator('#face-tracking-input')).toBeChecked();

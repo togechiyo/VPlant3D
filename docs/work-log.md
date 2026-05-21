@@ -1182,3 +1182,33 @@
 
 - 実際のChrome/OBSで、VRM Modelが左端で迷わず押せるか、カード横スクロール量が許容範囲か確認する
 - Hand trackingをVRM finger retargetまで進める場合は、MediaPipe hand landmarksからVRM finger bonesへの対応表とmirror方針を先に設計する
+
+## 2026-05-21 Prioritized Capture Controls
+
+### Goal
+
+- Mic / CameraのStart/Stopを各項目内の上側へ移動し、操作しやすくする
+- Hand track checkboxで、手の骨格デバッグだけでなく腕/上半身retargetもON/OFFできるようにする
+
+### Did
+
+- Head / Face cardの上側に `Start mic` / `Stop mic` を移動
+- Body Track cardの上側に `Start camera` / `Stop camera` を移動
+- Hand cardのcheckbox表示を `Arm / hand track` に変更
+- `Arm / hand track` をOFFにした時、上半身/腕retargetをリセットし、Hand skeleton frame処理も止めるようにした
+- Camera active中でも `Arm / hand track` checkboxは操作できるようにした
+
+### Worked
+
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+- `npm run test` は成功
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 実際のカメラ入力中に `Arm / hand track` を切り替えた時の見た目は、人間のChrome確認が必要
+
+### Next
+
+- `Arm / hand track` OFF時にskeleton overlay上の腕線も非表示にするか、pose debug表示だけは残すかを使用感で決める

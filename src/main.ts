@@ -221,6 +221,10 @@ if (!state.obsMode) {
         <span id="mic-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Load a VRM before testing mouth movement.</span>
       </div>
       <div class="grid grid-cols-2 gap-2">
+        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
+        <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
         <label class="inline-flex items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="face-tracking-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
           Face / lips
@@ -253,10 +257,6 @@ if (!state.obsMode) {
           <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-mouth-bar" class="h-full w-0 rounded-full bg-[#6dff9a] transition-[width] duration-75"></div></div>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-2">
-        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start mic</button>
-        <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop mic</button>
-      </div>
     </div>
     <div class="grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
@@ -264,6 +264,10 @@ if (!state.obsMode) {
         <span class="text-[11px] font-bold uppercase tracking-normal text-[#9fa9aa]">MediaPipe Pose Debug</span>
         <strong id="pose-status-text" class="text-sm font-bold text-[#eef4f2]">Camera idle.</strong>
         <span id="pose-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Start camera to inspect upper-body landmarks.</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
+        <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
       </div>
       <div class="grid grid-cols-2 gap-2">
         <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
@@ -291,10 +295,6 @@ if (!state.obsMode) {
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">Torso / upper arm retarget</span>
         <span class="text-xs font-bold text-[#9fa9aa]">Body and upper-arm tracking. Hands are skeleton debug only for now.</span>
       </div>
-      <div class="grid grid-cols-2 gap-2">
-        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
-        <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
-      </div>
     </div>
     <div class="grid content-start gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
@@ -304,7 +304,7 @@ if (!state.obsMode) {
       </div>
       <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
         <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        Hand skeleton
+        Arm / hand track
       </label>
       <span class="text-xs font-bold text-[#9fa9aa]">VRM finger retarget is not implemented yet.</span>
     </div>
@@ -454,7 +454,14 @@ if (!state.obsMode) {
     appStore.getState().setFaceTrackingEnabled(faceTrackingInput?.checked ?? true);
   });
   handTrackingInput?.addEventListener('change', () => {
-    appStore.getState().setHandTrackingEnabled(handTrackingInput?.checked ?? true);
+    const enabled = handTrackingInput?.checked ?? true;
+    appStore.getState().setHandTrackingEnabled(enabled);
+    if (!enabled) {
+      resetUpperBodyRetarget();
+      appStore.getState().setHandTrackingStopped();
+    } else if (handTracker && appStore.getState().poseStatus === 'active') {
+      appStore.getState().setHandTrackingActive();
+    }
   });
   autoBlinkInput?.addEventListener('change', () => {
     autoBlinkEnabled = autoBlinkInput?.checked ?? true;
@@ -1283,7 +1290,11 @@ function runPoseDebugFrame(frameTime: number): void {
       const result = poseController.detect(poseVideoElement, frameTime);
       const landmarks = result.landmarks[0] ?? [];
       const summary = summarizeUpperBodyPose(landmarks);
-      updateUpperBodyRetarget(summary);
+      if (appStore.getState().handTrackingEnabled) {
+        updateUpperBodyRetarget(summary);
+      } else {
+        resetUpperBodyRetarget();
+      }
       drawPoseDebugLandmarks(landmarks);
       runFaceTrackingFrame(poseVideoElement, frameTime);
       runHandTrackingFrame(poseVideoElement, frameTime);
@@ -1398,7 +1409,8 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
 }
 
 function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): void {
-  if (!handTracker || appStore.getState().handTrackingStatus !== 'active') {
+  const nextState = appStore.getState();
+  if (!nextState.handTrackingEnabled || !handTracker || nextState.handTrackingStatus !== 'active') {
     return;
   }
 
@@ -1528,7 +1540,8 @@ function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
 }
 
 function applyUpperBodyRetarget(): void {
-  if (!currentVrm || appStore.getState().poseStatus !== 'active') {
+  const nextState = appStore.getState();
+  if (!currentVrm || nextState.poseStatus !== 'active' || !nextState.handTrackingEnabled) {
     return;
   }
 
@@ -1752,8 +1765,7 @@ function updatePoseStatusUi(nextState: AppState): void {
     handTrackingInput.checked = nextState.handTrackingEnabled;
     handTrackingInput.disabled =
       nextState.poseStatus === 'requesting' ||
-      nextState.poseStatus === 'loading' ||
-      nextState.poseStatus === 'active';
+      nextState.poseStatus === 'loading';
   }
 
   if (faceTrackingText) {
