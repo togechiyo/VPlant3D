@@ -1784,3 +1784,35 @@
 
 - Chromeでカメラ使用中に `手 / 指` をOFFにし、腕・手が戻って動かないか確認する
 - 必要ならUI文言を「腕 / 手」へ変更して意味をさらに明確にする
+
+## 2026-05-21 Vertical Control Layout
+
+### Goal
+
+- コントローラー画面を、上に16:9モデルプレビュー、その下に縦並び操作パネルという配置へ変更する
+
+### Did
+
+- Control Pageを縦flexレイアウトに変更した
+- モデルプレビューを上部中央、16:9、最大幅720px相当にした
+- 操作パネルをプレビュー直下に同じ幅で配置し、内部スクロールする形にした
+- 左右余白は画面幅に応じて自動調整される
+- E2Eにプレビューの16:9比率、パネルが下に来ること、幅が揃うことの確認を追加した
+
+### Worked
+
+- `npm run test:e2e -- test/e2e/app.spec.ts:11` は成功
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- 初回E2EではCSS `calc()` の乗除算に頼った高さ指定が期待通り動かず、canvasが全高扱いになった
+- flex + `aspect-ratio` + explicit widthで修正した
+
+### Next
+
+- Chromeで、縦長ウィンドウにした時にプレビューと操作パネルの密度が意図通りか確認する
+- 必要なら最大幅720px、低画面高時560pxの値を調整する
