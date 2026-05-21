@@ -24,7 +24,7 @@ export const defaultHeadRetargetOptions: HeadRetargetOptions = {
   yawGain: 1.05,
   rollGain: 0.6,
   maxPitch: 0.42,
-  maxYaw: 1.25,
+  maxYaw: 1.65,
   maxRoll: 0.24,
 };
 
@@ -89,15 +89,13 @@ export function createHeadRetargetPose(
 
   return {
     enabled: true,
-    pitch: clamp(euler.x * nextOptions.pitchGain, -nextOptions.maxPitch, nextOptions.maxPitch),
-    yaw: clamp(
+    pitch: softClamp(euler.x * nextOptions.pitchGain, nextOptions.maxPitch),
+    yaw: softClamp(
       euler.y * nextOptions.yawGain * yawDirection,
-      -nextOptions.maxYaw,
       nextOptions.maxYaw,
     ),
-    roll: clamp(
+    roll: softClamp(
       euler.z * nextOptions.rollGain * rollDirection,
-      -nextOptions.maxRoll,
       nextOptions.maxRoll,
     ),
   };
@@ -111,11 +109,13 @@ export function smoothHeadRetargetPose(
   const amount = clamp(smoothing, 0, 1);
 
   if (!next.enabled) {
+    const releaseAmount = amount * 0.18;
+
     return {
-      enabled: false,
-      pitch: lerp(previous.pitch, 0, amount),
-      yaw: lerp(previous.yaw, 0, amount),
-      roll: lerp(previous.roll, 0, amount),
+      enabled: hasVisibleMotion(previous, 0.01),
+      pitch: lerp(previous.pitch, 0, releaseAmount),
+      yaw: lerp(previous.yaw, 0, releaseAmount),
+      roll: lerp(previous.roll, 0, releaseAmount),
     };
   }
 
@@ -133,4 +133,20 @@ function lerp(previous: number, next: number, amount: number): number {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+function softClamp(value: number, limit: number): number {
+  if (limit <= 0) {
+    return 0;
+  }
+
+  return Math.tanh(value / limit) * limit;
+}
+
+function hasVisibleMotion(pose: HeadRetargetPose, threshold: number): boolean {
+  return (
+    Math.abs(pose.pitch) > threshold ||
+    Math.abs(pose.yaw) > threshold ||
+    Math.abs(pose.roll) > threshold
+  );
 }

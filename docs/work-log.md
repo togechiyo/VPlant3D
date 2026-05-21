@@ -991,3 +991,33 @@
 ### Next
 
 - Chromeで頭だけ傾けたとき、体がついてきすぎないか確認する
+
+## 2026-05-21 Smooth Tracking Loss and Limit Edges
+
+### Goal
+
+- trackingが外れた時や上限に当たった時に、モデルがピクっと急に戻る問題を減らす
+
+### Did
+
+- Head retargetにsoft clampを追加し、yaw/pitch/rollが上限へ硬く当たりすぎないようにした
+- soft clamp後も真横寄りyawが出るようにhead yaw上限を少し広げた
+- Face trackingが一時的に外れた時は、head poseを通常より遅いrelease係数でゼロへ戻すようにした
+- Upper body retargetも、検出なし/visibility不足になった時に即disabledへ落とさず、既存motionが残っている間はsmoothでゆっくりゼロへ戻すようにした
+- head / upper bodyのrelease挙動をテストに追加
+
+### Worked
+
+- `npm run test -- head-retarget upper-body-retarget` は成功
+- `npm run test` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 実カメラでのtracking loss時の戻り方は人間確認が必要
+
+### Next
+
+- Chromeでわざと顔/上半身を外して、戻りが急すぎないか確認する
+- まだピクつく場合はrelease係数をさらに下げるか、数フレームのholdを追加する

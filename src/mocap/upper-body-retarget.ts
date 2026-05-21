@@ -83,9 +83,10 @@ export function smoothUpperBodyRetargetPose(
   smoothing = 0.34,
 ): UpperBodyRetargetPose {
   const amount = clamp(smoothing, 0, 1);
+  const nextEnabled = next.enabled || hasVisibleMotion(previous, 0.006);
 
   return {
-    enabled: next.enabled,
+    enabled: nextEnabled,
     chestYaw: lerp(previous.chestYaw, next.chestYaw, amount),
     chestRoll: lerp(previous.chestRoll, next.chestRoll, amount),
     neckYaw: lerp(previous.neckYaw, next.neckYaw, amount),
@@ -113,4 +114,15 @@ function lerp(previous: number, next: number, amount: number): number {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+function hasVisibleMotion(pose: UpperBodyRetargetPose, threshold: number): boolean {
+  return (
+    Math.abs(pose.chestYaw) > threshold ||
+    Math.abs(pose.chestRoll) > threshold ||
+    Math.abs(pose.neckYaw) > threshold ||
+    Math.abs(pose.neckRoll) > threshold ||
+    Math.abs(pose.leftUpperArmRoll) > threshold ||
+    Math.abs(pose.rightUpperArmRoll) > threshold
+  );
 }

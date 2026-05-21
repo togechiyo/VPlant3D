@@ -156,6 +156,26 @@ describe('smoothUpperBodyRetargetPose', () => {
       rightUpperArmRoll: 0.025,
     });
   });
+
+  it('keeps releasing motion gradually when tracking is lost', () => {
+    const smoothed = smoothUpperBodyRetargetPose(
+      {
+        enabled: true,
+        chestYaw: 0.1,
+        chestRoll: -0.1,
+        neckYaw: 0.04,
+        neckRoll: -0.03,
+        leftUpperArmRoll: -0.2,
+        rightUpperArmRoll: 0.1,
+      },
+      createNeutralRetargetPose(false),
+      0.25,
+    );
+
+    expect(smoothed.enabled).toBe(true);
+    expect(smoothed.chestYaw).toBeCloseTo(0.075);
+    expect(smoothed.leftUpperArmRoll).toBeCloseTo(-0.15);
+  });
 });
 
 function createSummary(overrides: Partial<UpperBodyPoseSummary>): UpperBodyPoseSummary {
