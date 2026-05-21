@@ -31,7 +31,7 @@ Runtime flow:
 3. Create `PoseLandmarker` with `PoseLandmarker.createFromOptions()`.
 4. Use `runningMode: 'VIDEO'`.
 5. On animation frames, call `poseLandmarker.detectForVideo(video, timestampMs)`.
-6. Draw upper-body landmark debug lines over the camera preview.
+6. Draw upper-body landmark debug lines over a skeleton-only panel.
 
 The first spike uses CPU delegate to avoid fighting the existing Three.js WebGL context.
 
@@ -53,7 +53,7 @@ Production follow-up:
 
 Setup Mode now includes `MediaPipe Pose Debug`:
 
-- camera preview
+- skeleton-only preview. The raw camera image is intentionally hidden because face leaks are unacceptable for VTuber workflows
 - landmark overlay for nose, shoulders, elbows, wrists, hips, and torso links
 - status text for permission/model/loading errors
 - upper-body visibility meter
@@ -83,6 +83,7 @@ Tests live in `test/pose-landmarks.test.ts`.
 
 - No VRM bone retargeting yet.
 - Camera permission and real human movement still require manual confirmation.
+- The hidden `<video>` element remains in the DOM as the MediaPipe input source, but it is rendered transparent; only canvas-drawn landmarks should be visible to the user.
 - `detectForVideo()` runs synchronously on the main thread. Official docs note this can block UI; a Web Worker may be needed later.
 - CPU delegate is safer for the spike but may be slower than GPU.
 - The debug overlay is mirrored for user-facing camera intuition; retargeting math must be explicit about mirrored/non-mirrored coordinates later.

@@ -184,8 +184,9 @@ if (!state.obsMode) {
         <span id="pose-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">Start camera to inspect upper-body landmarks.</span>
       </div>
       <div class="relative aspect-video overflow-hidden rounded-md border border-white/10 bg-[#0b0f10]">
-        <video id="pose-video" class="h-full w-full scale-x-[-1] object-cover opacity-80" autoplay muted playsinline></video>
+        <video id="pose-video" class="h-full w-full scale-x-[-1] object-cover opacity-0" autoplay muted playsinline></video>
         <canvas id="pose-canvas" class="pointer-events-none absolute inset-0 h-full w-full scale-x-[-1]"></canvas>
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-black/45 px-2 py-1 text-[11px] font-bold text-[#9fa9aa]">Camera image hidden. Skeleton only.</div>
       </div>
       <div class="grid gap-2">
         <div class="flex items-center justify-between gap-3 text-xs font-bold text-[#9fa9aa]">
@@ -898,7 +899,7 @@ function getPoseStatusText(nextState: AppState): string {
 
 function getPoseRequirementText(nextState: AppState): string {
   if (nextState.poseStatus === 'active') {
-    return 'Move shoulders and upper body inside the camera preview.';
+    return 'Move shoulders and upper body while checking the skeleton overlay.';
   }
 
   if (nextState.poseStatus === 'error') {

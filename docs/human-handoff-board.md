@@ -1,6 +1,6 @@
 # Human Handoff Board
 
-最終更新日: 2026-05-20
+最終更新日: 2026-05-21
 
 ## 目的
 
@@ -28,15 +28,15 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
-### Todo: 人間のGoogle ChromeでMediaPipe Pose Debugを確認
+### Done: 人間のGoogle ChromeでMediaPipe Pose Debugを確認
 
 - Owner: Human or Codex with Chrome extension
+- Completed: 2026-05-21
 - Needed by: 上半身モーションキャプチャーの採否判断前
 - Why: カメラ権限、照明、実際の肩・胴体の動き、モデルダウンロード可否は人間の実操作が必要なため
-- What to check:
+- What was checked:
   - `npm run dev` で `http://127.0.0.1:5173/` を開く
   - `MediaPipe Pose Debug` の `Start camera` を押してカメラ権限を許可する
-  - カメラプレビューに上半身が映る
   - 鼻、肩、肘、手首、腰の点と線が大きく破綻せず追従する
   - `Upper body visibility` が体の映り方に応じて変わる
   - 肩を傾ける、左右に少し動く、前後に寄る動きでsummaryが更新される
@@ -44,15 +44,17 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 Notes:
 
+- カメラ画像が表示されるのはVTuber用途では顔バレリスクがあるため、骨組みだけ表示するUIへ変更する
 - 現時点ではVRM骨への反映は未実装。あくまでカメラ許可とランドマーク品質確認用
 - 初回はMediaPipeのWASM/modelをネットワークから取得するため、通信できない環境では失敗する可能性がある
 
-### Todo: 人間のGoogle ChromeでMic Reactive Mouthを確認
+### Done: 人間のGoogle ChromeでMic Reactive Mouthを確認
 
 - Owner: Human or Codex with Chrome extension
+- Completed: 2026-05-21
 - Needed by: 口パクデモ調整前
 - Why: マイク権限と実声入力はブラウザのユーザー操作と人間の発話が必要なため
-- What to check:
+- What was checked:
   - `npm run dev` で `http://127.0.0.1:5173/` を開く
   - Alicia VRMなどのVRMを読み込む
   - `Start mic` を押してマイク権限を許可する
@@ -97,12 +99,13 @@ Notes:
 
 - 自動確認は状態表示とブラウザエラー有無の確認であり、モーション品質の目視確認は別途必要
 
-### Todo: 人間のGoogle ChromeでVRMA再生品質を目視確認
+### Done: 人間のGoogle ChromeでVRMA再生品質を目視確認
 
 - Owner: Human or Codex with Chrome extension
+- Completed: 2026-05-21
 - Needed by: VRMAデモ調整前
 - Why: Playwright ChromiumではVRMAのロードと再生状態は確認できるが、動きの自然さ、手足の破綻、モデルサイズとの相性は人間の目で確認する必要があるため
-- What to check:
+- What was checked:
   - `npm run dev` で `http://127.0.0.1:5173/` を開く
   - Alicia VRMを読み込む
   - VRMA_02を読み込んでPlayする
@@ -131,12 +134,13 @@ Notes:
 - Playwright ChromiumでE2E確認済み
 - ローカル確認用であり、Aliciaモデルの公開デモ利用は別途権利確認する
 
-### Todo: 人間のGoogle ChromeでVRM表示を目視確認
+### Done: 人間のGoogle ChromeでVRM表示を目視確認
 
 - Owner: Human or Codex with Chrome extension
+- Completed: 2026-05-21
 - Needed by: デモ調整前
 - Why: Playwright Chromiumでは機械的な成功確認はできたが、人間が見る画角・ライティング・モデルサイズの印象確認は別途必要なため
-- What to check:
+- What was checked:
   - `npm run dev` で `http://127.0.0.1:5173/` を開く
   - Setup Modeの `Load local VRM` から `local-assets/vrm/Alicia_VRM/Alicia/VRM/AliciaSolid.vrm` を選ぶ
   - モデルの大きさ、位置、向き、ライティングが1920x1080想定で破綻していない

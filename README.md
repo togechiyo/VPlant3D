@@ -93,7 +93,7 @@ Setup Mode includes local `.vrm` and `.vrma` file inputs. Local model and motion
 
 Mic Reactive Mouth can request microphone access in Setup Mode and drive the loaded VRM's `aa` expression from microphone volume. It is simple RMS-based mouth movement, not phoneme lip sync.
 
-MediaPipe Pose Debug can request camera access in Setup Mode and show upper-body pose landmarks over a camera preview. It is a verification spike for future neck/chest/shoulder tracking, not production VRM retargeting yet.
+MediaPipe Pose Debug can request camera access in Setup Mode and show upper-body pose landmarks as a skeleton-only overlay. The raw camera image is hidden to avoid face leaks. It is a verification spike for future neck/chest/shoulder tracking, not production VRM retargeting yet.
 
 ## Documentation
 

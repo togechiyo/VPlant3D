@@ -488,3 +488,36 @@
 ### Next
 
 - さらに軽量化するなら、VRMA loaderやPlaywright対象外の重い機能もdynamic import候補にする
+
+## 2026-05-21 Human Verification and Pose Privacy
+
+### Goal
+
+- 人間のChrome確認結果を反映する
+- MediaPipe Pose Debugでカメラ画像が見えないようにし、VTuber用途の顔バレリスクを避ける
+
+### Did
+
+- 人間がVRM読み込み、VRMA読み込み/再生、マイク口パク連動、MediaPipeカメラ動作を確認済み
+- MediaPipe Pose Debugのvideo要素を透明表示にし、骨組みcanvasだけが見えるUIへ変更
+- Setup Modeに `Camera image hidden. Skeleton only.` を表示
+- Playwright E2Eへカメラ画像非表示のCSS確認を追加
+- README、MediaPipe notes、Human Handoff Boardを更新
+
+### Worked
+
+- これから自動テストで確認する
+
+### Failed / Blocked
+
+- カメラ画像が見えるデバッグUIはVTuber用途では顔バレリスクがあるため不採用
+
+### Decisions
+
+- 今後のカメラ/モーキャプ系UIでは、デフォルトで生カメラ映像を出さない
+- デバッグに必要な場合も骨組み、メーター、数値を優先する
+
+### Next
+
+- `npm run test` / `npm run test:e2e` / `npm run build` / `npm run lint` を実行する
+- 問題なければコミット/プッシュする

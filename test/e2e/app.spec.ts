@@ -28,6 +28,8 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#mic-stop-button')).toBeDisabled();
   await expect(page.getByText('MediaPipe Pose Debug')).toBeVisible();
   await expect(page.getByText('Start camera to inspect upper-body landmarks.')).toBeVisible();
+  await expect(page.getByText('Camera image hidden. Skeleton only.')).toBeVisible();
+  await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
   await expect(page.locator('#pose-start-button')).toBeEnabled();
   await expect(page.locator('#pose-stop-button')).toBeDisabled();
   expect(errors()).toEqual([]);
