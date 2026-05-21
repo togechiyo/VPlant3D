@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { VRMUtils } from '@pixiv/three-vrm';
+import { VRMHumanBoneName, VRMUtils } from '@pixiv/three-vrm';
 import type { VRM } from '@pixiv/three-vrm';
 import { createVRMAnimationClip, VRMLookAtQuaternionProxy } from '@pixiv/three-vrm-animation';
 import type { VRMAnimation } from '@pixiv/three-vrm-animation';
@@ -9,8 +9,14 @@ import type { AppState } from './state/app-store';
 import { createAppStore } from './state/app-store';
 import { MicReactiveMouth } from './audio/mic-reactive-mouth';
 import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
+import {
+  createNeutralRetargetPose,
+  createUpperBodyRetargetPose,
+  smoothUpperBodyRetargetPose,
+} from './mocap/upper-body-retarget';
 import type { MediaPipePoseDebug } from './mocap/mediapipe-pose-debug';
 import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
+import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
 import {
   getUnknownVrmLoadErrorMessage,
@@ -57,7 +63,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100,
 );
-camera.position.set(0, 1.2, 6);
+camera.position.set(0, 1.35, 4.2);
+camera.lookAt(0, 1.25, 0);
 
 const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
 keyLight.position.set(2, 4, 4);
@@ -117,6 +124,8 @@ let poseStartButton: HTMLButtonElement | null = null;
 let poseStopButton: HTMLButtonElement | null = null;
 let poseAnimationFrameId: number | null = null;
 let lastPoseVideoTime = -1;
+let upperBodyRetargetPose = createNeutralRetargetPose(false);
+const restBoneQuaternions = new Map<string, THREE.Quaternion>();
 
 if (!state.obsMode) {
   const panel = document.createElement('aside');
@@ -286,6 +295,7 @@ function animate(frameTime = performance.now()): void {
   cube.rotation.x = elapsed * 0.32;
   cube.rotation.y = elapsed * 0.52;
   currentVrmaMixer?.update(delta);
+  applyUpperBodyRetarget();
   sampleMicReactiveMouth();
   currentVrm?.update(delta);
   renderer.render(scene, camera);
@@ -367,7 +377,9 @@ function replaceCurrentVrm(nextVrm: VRM): void {
 
   currentVrm = nextVrm;
   fitObjectToDefaultView(nextVrm.scene);
+  configureUpperBodyCamera();
   scene.add(nextVrm.scene);
+  captureRestBoneQuaternions(nextVrm);
   resetVrmaMixer();
   applyMouthOpen(appStore.getState().mouthOpen);
 }
@@ -399,6 +411,28 @@ function fitObjectToDefaultView(object: THREE.Object3D): void {
 
   const groundedBox = new THREE.Box3().setFromObject(object);
   object.position.y += -0.2 - groundedBox.min.y;
+}
+
+function configureUpperBodyCamera(): void {
+  camera.position.set(0, 1.35, 3.25);
+  camera.lookAt(0, 1.22, 0);
+  camera.updateProjectionMatrix();
+}
+
+function captureRestBoneQuaternions(vrm: VRM): void {
+  restBoneQuaternions.clear();
+
+  for (const boneName of [
+    VRMHumanBoneName.Chest,
+    VRMHumanBoneName.UpperChest,
+    VRMHumanBoneName.Neck,
+  ]) {
+    const bone = vrm.humanoid.getNormalizedBoneNode(boneName);
+
+    if (bone) {
+      restBoneQuaternions.set(boneName, bone.quaternion.clone());
+    }
+  }
 }
 
 function updateVrmStatusUi(nextState: AppState): void {
@@ -717,6 +751,7 @@ function stopPoseDebug(): void {
   }
 
   clearPoseCanvas();
+  resetUpperBodyRetarget();
   appStore.getState().setPoseStopped();
 }
 
@@ -738,6 +773,7 @@ function runPoseDebugFrame(frameTime: number): void {
       const result = poseController.detect(poseVideoElement, frameTime);
       const landmarks = result.landmarks[0] ?? [];
       const summary = summarizeUpperBodyPose(landmarks);
+      updateUpperBodyRetarget(summary);
       drawPoseDebugLandmarks(landmarks);
       appStore
         .getState()
@@ -831,6 +867,83 @@ function clearPoseCanvas(): void {
   }
 
   context.clearRect(0, 0, poseCanvasElement.width, poseCanvasElement.height);
+}
+
+function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
+  upperBodyRetargetPose = smoothUpperBodyRetargetPose(
+    upperBodyRetargetPose,
+    createUpperBodyRetargetPose(summary),
+  );
+}
+
+function applyUpperBodyRetarget(): void {
+  if (!currentVrm || appStore.getState().poseStatus !== 'active') {
+    return;
+  }
+
+  if (!upperBodyRetargetPose.enabled) {
+    restoreUpperBodyBones();
+    return;
+  }
+
+  const upperChest = currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.UpperChest);
+  const chest = currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.Chest);
+  const neck = currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.Neck);
+  const torsoBone = upperChest ?? chest;
+  const torsoBoneName = upperChest ? VRMHumanBoneName.UpperChest : VRMHumanBoneName.Chest;
+
+  applyBoneRetarget(torsoBone, torsoBoneName, upperBodyRetargetPose, {
+    yaw: upperBodyRetargetPose.chestYaw,
+    roll: upperBodyRetargetPose.chestRoll,
+  });
+  applyBoneRetarget(neck, VRMHumanBoneName.Neck, upperBodyRetargetPose, {
+    yaw: upperBodyRetargetPose.neckYaw,
+    roll: upperBodyRetargetPose.neckRoll,
+  });
+}
+
+function applyBoneRetarget(
+  bone: THREE.Object3D | null,
+  restBoneName: string,
+  pose: UpperBodyRetargetPose,
+  rotation: { yaw: number; roll: number },
+): void {
+  if (!bone) {
+    return;
+  }
+
+  const restQuaternion = restBoneQuaternions.get(restBoneName) ?? bone.quaternion;
+  const delta = new THREE.Quaternion().setFromEuler(
+    new THREE.Euler(0, rotation.yaw, rotation.roll, 'XYZ'),
+  );
+
+  bone.quaternion.copy(restQuaternion).multiply(delta);
+  bone.userData.vplant3dMocapActive = pose.enabled;
+}
+
+function resetUpperBodyRetarget(): void {
+  upperBodyRetargetPose = createNeutralRetargetPose(false);
+  restoreUpperBodyBones();
+}
+
+function restoreUpperBodyBones(): void {
+  if (!currentVrm) {
+    return;
+  }
+
+  for (const boneName of [
+    VRMHumanBoneName.Chest,
+    VRMHumanBoneName.UpperChest,
+    VRMHumanBoneName.Neck,
+  ]) {
+    const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
+    const restQuaternion = restBoneQuaternions.get(boneName);
+
+    if (bone && restQuaternion) {
+      bone.quaternion.copy(restQuaternion);
+      bone.userData.vplant3dMocapActive = false;
+    }
+  }
 }
 
 function formatPoseSummary(summary: UpperBodyPoseSummary): string {

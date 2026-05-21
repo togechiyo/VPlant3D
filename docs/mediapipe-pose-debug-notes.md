@@ -11,7 +11,7 @@ The MVP goal is not full retargeting yet. The current goal is to let a human ver
 - Chrome camera permission
 - MediaPipe model loading
 - landmark detection from a live camera
-- whether shoulders, hips, and torso landmarks are plausible enough for later neck/chest/shoulder tracking
+- whether shoulders, hips, and torso landmarks are plausible enough for subtle neck/chest/shoulder tracking
 
 ## Adopted API
 
@@ -61,6 +61,20 @@ Setup Mode now includes `MediaPipe Pose Debug`:
 
 OBS Mode still hides the Setup UI.
 
+## VRM Retargeting Spike
+
+The current implementation applies a conservative retargeting pass while MediaPipe Pose Debug is active and a VRM is loaded.
+
+Implemented behavior:
+
+- chest or upperChest yaw from shoulder-vs-hip horizontal lean
+- chest or upperChest roll from shoulder tilt
+- neck yaw/roll as a smaller follow-through
+- smoothing to reduce jitter
+- automatic reset when Pose Debug stops or landmark visibility drops
+
+This is intentionally small. It is meant to prove that the pipeline can move the avatar from camera landmarks without making the model look broken.
+
 ## Pure Logic
 
 `src/mocap/pose-landmarks.ts` summarizes MediaPipe landmarks without browser dependencies.
@@ -81,7 +95,7 @@ Tests live in `test/pose-landmarks.test.ts`.
 
 ## Known Limitations
 
-- No VRM bone retargeting yet.
+- Retargeting is limited to subtle chest/upperChest and neck yaw/roll.
 - Camera permission and real human movement still require manual confirmation.
 - The hidden `<video>` element remains in the DOM as the MediaPipe input source, but it is rendered transparent; only canvas-drawn landmarks should be visible to the user.
 - `detectForVideo()` runs synchronously on the main thread. Official docs note this can block UI; a Web Worker may be needed later.
@@ -91,9 +105,6 @@ Tests live in `test/pose-landmarks.test.ts`.
 ## Next Steps
 
 - Human verifies camera permission and landmark stability in Chrome.
-- Human checks whether shoulder/torso values are usable for a subtle avatar sway.
-- If stable, implement a conservative retargeting path:
-  - chest yaw/roll from shoulder line and torso lean
-  - neck/head micro-follow from nose and shoulder center
-  - smoothing and dead zones before touching VRM bones
+- Human checks whether the subtle avatar sway feels useful or needs stronger/weaker gain.
+- If stable, add user-facing sensitivity controls and an on/off toggle separate from the debug panel.
 - Add a toggle so motion capture can be enabled independently from the debug preview.

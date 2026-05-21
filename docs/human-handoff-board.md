@@ -28,6 +28,26 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
+### Todo: 人間のGoogle ChromeでMediaPipeのVRM反映を確認
+
+- Owner: Human or Codex with Chrome extension
+- Needed by: 上半身モーションキャプチャーをMVP採用するか決める前
+- Why: 肩・胴体の微小な動きがVRM上で自然かどうかは人間の目で確認する必要があるため
+- What to check:
+  - `npm run dev` で `http://127.0.0.1:5173/` を開く
+  - VRMを読み込む
+  - `MediaPipe Pose Debug` の `Start camera` を押す
+  - 肩を左右に傾ける、体を左右に少し寄せる
+  - VRMの胸または首が控えめに追従する
+  - 追従が強すぎない、弱すぎない、ガタガタしすぎない
+  - `Stop camera` で姿勢が戻る
+  - VRMA再生だけを使う時にMediaPipe停止状態で動きが壊れない
+
+Notes:
+
+- 現在は胸/upperChestと首のyaw/rollのみ。腕や頭位置の本格トラッキングは未実装
+- 反応が弱い場合はgainを上げる。強い場合はmax rotationとsmoothingを下げる
+
 ### Done: 人間のGoogle ChromeでMediaPipe Pose Debugを確認
 
 - Owner: Human or Codex with Chrome extension

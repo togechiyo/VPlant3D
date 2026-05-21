@@ -521,3 +521,42 @@
 
 - `npm run test` / `npm run test:e2e` / `npm run build` / `npm run lint` を実行する
 - 問題なければコミット/プッシュする
+
+## 2026-05-21 MediaPipe Upper Body Retarget Spike
+
+### Goal
+
+- MediaPipeの骨組み検出をVRMの上半身へ控えめに反映する
+- VRM読み込み後のデフォルト画角を、OBS/VTuber用途で扱いやすい上半身寄りへ変更する
+
+### Did
+
+- `src/mocap/upper-body-retarget.ts` を追加し、torso lean / shoulder tiltから胸・首のyaw/rollを作る純ロジックを実装
+- `test/upper-body-retarget.test.ts` を追加
+- MediaPipe Pose Debug active中だけ、VRMの `upperChest` または `chest` と `neck` に小さな回転を反映するようにした
+- landmark visibilityが低い時やPose Debug停止時は上半身骨をrest quaternionへ戻すようにした
+- VRMロード後のカメラを上半身アップ寄りに変更した
+- README、MediaPipe notes、Human Handoff Boardを更新
+
+### Worked
+
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 実際の追従の強さ・自然さは人間の動きと目視確認が必要
+
+### Decisions
+
+- 初回retargetは胸/upperChestと首のみ。腕、手、頭位置の本格反映はまだ行わない
+- MediaPipe停止中はVRMA playbackを壊さないよう、retarget処理を実行しない
+- デフォルト画角は全身確認よりも配信用の上半身見栄えを優先する
+
+### Next
+
+- 人間のChromeで、肩傾きと左右leanがVRMへ反映されるか確認する
+- 追従が弱ければgainを上げる。強い/揺れるならmax rotationやsmoothingを調整する
+- 操作UIとしてMocap enable、sensitivity、reset poseを追加するか検討する
