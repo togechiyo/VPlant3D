@@ -723,3 +723,50 @@
 
 - 人間のChromeで、mirror有効時の顔左右とblinkの見た目を確認する
 - 腕位置がモデルごとに合わない場合は、Setup ModeにIdle arm pose strengthかpresetを追加する
+
+## 2026-05-21 Head Retarget and Lighting Tune
+
+### Goal
+
+- 人間確認で出た追加調整を入れる
+- 肘は曲げず、腕を下げた初期姿勢にする
+- blinkが弱すぎたので、半目を避けつつ反応量を少し戻す
+- Face Landmarkerから頭向きを取得し、VRM headへ控えめに反映する
+- Aliciaで白飛び気味だった描画を照明とtone mappingで落ち着かせる
+
+### Did
+
+- `src/mocap/head-retarget.ts` を追加し、MediaPipe facial transformation matrixからhead pitch/yaw/rollを作る純ロジックを分離
+- Face Landmarkerの `outputFacialTransformationMatrixes` を有効化
+- Face tracking frameでhead poseを平滑化し、VRM `Head` boneへ小さく反映するようにした
+- 体幹mocapとの競合を避けるため、Headだけをface tracking側で制御し、Chest/Neckは既存pose retargetに残した
+- idle arm poseからLowerArm回転を外し、肘を真っ直ぐ寄りにした
+- blink curveを少し軽くして、閉じ反応が見えやすい値に調整した
+- key/rim lightを弱め、ambient greenをやめてneutral hemisphere lightへ変更
+- `renderer.outputColorSpace`、`ACESFilmicToneMapping`、`toneMappingExposure` を設定した
+- Face/Hand tracking notesへhead retargetの方針を追記
+
+### Worked
+
+- `npm run test -- face-expression-retarget head-retarget` は成功
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+- Playwrightでlocal Alicia VRMを読み込み、肘が真っ直ぐ寄りになり、白飛びが弱まったことをスクリーンショットで確認
+
+### Failed / Blocked
+
+- 頭向きの符号と体感は実カメラで人間確認が必要。MediaPipe matrix座標とVRM head座標の最終チューニングは確認後に行う
+- 照明はAliciaでは落ち着いたが、暗色モデルでは暗すぎる可能性がある。後でlight presetやexposure sliderが必要かもしれない
+
+### Decisions
+
+- 頭向きは最初から大きく動かさず、上限付きの控えめな追従にする
+- 肘曲げはモデル依存で違和感が出やすいので、MVPの初期姿勢では入れない
+- 白飛び対策はまず照明強度を下げ、色付きambientを避ける
+
+### Next
+
+- 人間のChromeでblink反応、head yaw/pitch/rollの向き、照明の見た目を確認する
+- 必要ならSetup Modeにblink sensitivity、head tracking strength、lighting exposureを追加する

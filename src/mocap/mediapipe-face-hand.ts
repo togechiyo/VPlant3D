@@ -30,7 +30,7 @@ export class MediaPipeFaceTracker {
       minFacePresenceConfidence: 0.5,
       minTrackingConfidence: 0.5,
       outputFaceBlendshapes: true,
-      outputFacialTransformationMatrixes: false,
+      outputFacialTransformationMatrixes: true,
     });
 
     return new MediaPipeFaceTracker(faceLandmarker);

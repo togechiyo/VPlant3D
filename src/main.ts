@@ -14,6 +14,11 @@ import {
   smoothFaceExpressionWeights,
 } from './mocap/face-expression-retarget';
 import { summarizeHandTracking } from './mocap/hand-landmarks';
+import {
+  createHeadRetargetPose,
+  createNeutralHeadRetargetPose,
+  smoothHeadRetargetPose,
+} from './mocap/head-retarget';
 import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
 import {
   createNeutralRetargetPose,
@@ -24,6 +29,7 @@ import {
 import type { MediaPipePoseDebug } from './mocap/mediapipe-pose-debug';
 import type { MediaPipeFaceTracker, MediaPipeHandTracker } from './mocap/mediapipe-face-hand';
 import type { VrmFaceExpressionWeights } from './mocap/face-expression-retarget';
+import type { HeadRetargetPose } from './mocap/head-retarget';
 import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
@@ -62,6 +68,9 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x101314, state.transparent ? 0 : 1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.72;
 renderer.domElement.className = 'scene-canvas';
 viewport.append(renderer.domElement);
 
@@ -75,15 +84,15 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 1.35, 4.2);
 camera.lookAt(0, 1.25, 0);
 
-const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
-keyLight.position.set(2, 4, 4);
+const keyLight = new THREE.DirectionalLight(0xf4fbff, 1.35);
+keyLight.position.set(2.5, 3.2, 4);
 scene.add(keyLight);
 
-const rimLight = new THREE.DirectionalLight(0x38d5ff, 2.2);
+const rimLight = new THREE.DirectionalLight(0x38d5ff, 0.85);
 rimLight.position.set(-3, 2, -2);
 scene.add(rimLight);
 
-const fillLight = new THREE.AmbientLight(0x6dff9a, 0.35);
+const fillLight = new THREE.HemisphereLight(0xdfefff, 0x101314, 0.42);
 scene.add(fillLight);
 
 const geometry = new THREE.BoxGeometry(1.4, 1.4, 1.4);
@@ -148,6 +157,7 @@ let poseAnimationFrameId: number | null = null;
 let lastPoseVideoTime = -1;
 let upperBodyRetargetPose = createNeutralRetargetPose(false);
 let faceExpressionWeights = createNeutralFaceExpressionWeights();
+let headRetargetPose: HeadRetargetPose = createNeutralHeadRetargetPose(false);
 let faceTracker: MediaPipeFaceTracker | null = null;
 let handTracker: MediaPipeHandTracker | null = null;
 const restBoneQuaternions = new Map<string, THREE.Quaternion>();
@@ -542,10 +552,8 @@ function configureUpperBodyCamera(): void {
 function applyIdleArmPose(vrm: VRM): void {
   rotateNormalizedBone(vrm, VRMHumanBoneName.LeftUpperArm, 0, 0, 1.12);
   rotateNormalizedBone(vrm, VRMHumanBoneName.RightUpperArm, 0, 0, -1.12);
-  rotateNormalizedBone(vrm, VRMHumanBoneName.LeftLowerArm, 0, 0, 0.2);
-  rotateNormalizedBone(vrm, VRMHumanBoneName.RightLowerArm, 0, 0, -0.2);
-  rotateNormalizedBone(vrm, VRMHumanBoneName.LeftHand, 0, 0.05, 0.08);
-  rotateNormalizedBone(vrm, VRMHumanBoneName.RightHand, 0, -0.05, -0.08);
+  rotateNormalizedBone(vrm, VRMHumanBoneName.LeftHand, 0, 0.03, 0);
+  rotateNormalizedBone(vrm, VRMHumanBoneName.RightHand, 0, -0.03, 0);
   vrm.humanoid.update();
   vrm.scene.updateMatrixWorld(true);
 }
@@ -574,6 +582,7 @@ function captureRestBoneQuaternions(vrm: VRM): void {
     VRMHumanBoneName.Chest,
     VRMHumanBoneName.UpperChest,
     VRMHumanBoneName.Neck,
+    VRMHumanBoneName.Head,
     ...idleArmBoneNames,
   ]) {
     const bone = vrm.humanoid.getNormalizedBoneNode(boneName);
@@ -864,6 +873,7 @@ function applyFaceExpressions(weights: VrmFaceExpressionWeights): void {
 function resetFaceExpressions(): void {
   faceExpressionWeights = createNeutralFaceExpressionWeights();
   applyFaceExpressions(faceExpressionWeights);
+  resetHeadRetarget();
 }
 
 function getMicErrorMessage(error: unknown): string {
@@ -1133,8 +1143,13 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
   const nextWeights = createVrmFaceExpressionWeights(categories, {
     mirrorInput: appStore.getState().poseMirrorInput,
   });
+  const nextHeadPose = createHeadRetargetPose(result.facialTransformationMatrixes[0], {
+    mirrorInput: appStore.getState().poseMirrorInput,
+  });
   faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights);
+  headRetargetPose = smoothHeadRetargetPose(headRetargetPose, nextHeadPose);
   applyFaceExpressions(faceExpressionWeights);
+  applyHeadRetarget();
   appStore
     .getState()
     .setFaceTrackingFrame(
@@ -1159,6 +1174,29 @@ function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
         ? 'No hands detected.'
         : `Hands: ${summary.labels.join(', ')} (${summary.handCount}).`,
     );
+}
+
+function applyHeadRetarget(): void {
+  if (!currentVrm) {
+    return;
+  }
+
+  if (!headRetargetPose.enabled) {
+    restoreHeadBone();
+    return;
+  }
+
+  const head = currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.Head);
+  const restQuaternion = restBoneQuaternions.get(VRMHumanBoneName.Head);
+
+  if (!head || !restQuaternion) {
+    return;
+  }
+
+  const delta = new THREE.Quaternion().setFromEuler(
+    new THREE.Euler(headRetargetPose.pitch, headRetargetPose.yaw, headRetargetPose.roll, 'YXZ'),
+  );
+  head.quaternion.copy(restQuaternion).multiply(delta);
 }
 
 function drawHandDebugLandmarks(
@@ -1318,6 +1356,24 @@ function restoreUpperBodyBones(): void {
       bone.quaternion.copy(restQuaternion);
       bone.userData.vplant3dMocapActive = false;
     }
+  }
+}
+
+function resetHeadRetarget(): void {
+  headRetargetPose = createNeutralHeadRetargetPose(false);
+  restoreHeadBone();
+}
+
+function restoreHeadBone(): void {
+  if (!currentVrm) {
+    return;
+  }
+
+  const head = currentVrm.humanoid.getNormalizedBoneNode(VRMHumanBoneName.Head);
+  const restQuaternion = restBoneQuaternions.get(VRMHumanBoneName.Head);
+
+  if (head && restQuaternion) {
+    head.quaternion.copy(restQuaternion);
   }
 }
 

@@ -22,8 +22,8 @@ describe('createVrmFaceExpressionWeights', () => {
       category('browInnerUp', 0.3),
     ]);
 
-    expect(weights.blinkLeft).toBeCloseTo(0.978);
-    expect(weights.blinkRight).toBeCloseTo(0.125);
+    expect(weights.blinkLeft).toBeCloseTo(0.986);
+    expect(weights.blinkRight).toBeCloseTo(0.28);
     expect(weights.aa).toBeCloseTo(0.675);
     expect(weights.happy).toBeCloseTo(0.375);
     expect(weights.surprised).toBeCloseTo(0.165);
@@ -38,8 +38,8 @@ describe('createVrmFaceExpressionWeights', () => {
       { mirrorInput: true },
     );
 
-    expect(weights.blinkLeft).toBeCloseTo(0.024);
-    expect(weights.blinkRight).toBeCloseTo(0.978);
+    expect(weights.blinkLeft).toBeCloseTo(0.07);
+    expect(weights.blinkRight).toBeCloseTo(0.986);
   });
 
   it('shapes blink weights away from a long half-closed state', () => {
@@ -47,8 +47,8 @@ describe('createVrmFaceExpressionWeights', () => {
     const half = createVrmFaceExpressionWeights([category('eyeBlinkLeft', 0.5)]);
     const closed = createVrmFaceExpressionWeights([category('eyeBlinkLeft', 0.85)]);
 
-    expect(open.blinkLeft).toBeLessThan(0.05);
-    expect(half.blinkLeft).toBeLessThan(0.25);
+    expect(open.blinkLeft).toBeLessThan(0.15);
+    expect(half.blinkLeft).toBeLessThan(0.4);
     expect(closed.blinkLeft).toBeGreaterThan(0.98);
   });
 

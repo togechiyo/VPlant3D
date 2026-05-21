@@ -115,15 +115,15 @@ function getOppositeSideCategory(categoryName: string): string {
 function shapeBlinkWeight(score: number): number {
   const value = clamp01(score);
 
-  if (value < 0.35) {
-    return value * value * 0.6;
+  if (value < 0.2) {
+    return value * 0.35;
   }
 
-  if (value > 0.72) {
-    return 1 - (1 - value) * (1 - value) * 0.55;
+  if (value > 0.58) {
+    return 1 - (1 - value) * (1 - value) * 0.35;
   }
 
-  return 0.08 + (value - 0.35) * 0.9;
+  return 0.07 + (value - 0.2) * 1.05;
 }
 
 function lerp(previous: number, next: number, amount: number): number {

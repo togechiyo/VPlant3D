@@ -55,6 +55,8 @@ Side-specific face expressions follow the same `Mirror mocap input` setting as u
 
 Blink weights use a shaped curve instead of direct linear MediaPipe scores. Low blink scores are biased toward open eyes, high blink scores are biased toward closed eyes, and the middle range is compressed so the avatar spends less time in an unintended half-closed look.
 
+Face Landmarker also outputs facial transformation matrices. VPlant3D enables those matrices and uses a small, clamped amount of pitch/yaw/roll on the VRM `head` bone. Upper-body pose tracking still owns chest/neck movement, so face tracking only adds a light head-facing adjustment.
+
 When Face expressions are active, Mic Reactive Mouth no longer writes the VRM `aa` expression so the two mouth drivers do not fight each other.
 
 ## Hand Tracking
