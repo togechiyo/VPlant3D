@@ -643,3 +643,39 @@
 - 人間のChromeでFace expressions / lip syncとHand skeletonを確認する
 - Faceのgainが強い/弱い場合はmappingを調整する
 - Hand skeletonが安定するなら、次に手振り/ピースなどのgesture reactionか、控えめな指retargetを検討する
+
+## 2026-05-21 Avatar Framing Controls
+
+### Goal
+
+- キャラ位置・サイズ・角度をSetup Modeから調整できるようにする
+
+### Did
+
+- Zustand storeへ `avatarOffsetX`、`avatarOffsetY`、`avatarScale`、`avatarRotationY` とreset actionを追加
+- Setup Modeへ `Avatar Framing` panelを追加
+- X / Y / Scale / Rotate Y sliderと `Reset framing` buttonを追加
+- VRMロード後の自動fit結果をbase transformとして保存し、slider値を相対的に反映するようにした
+- Playwright E2EへAvatar Framing UI表示確認を追加
+- README、Human Handoff Boardを更新
+
+### Worked
+
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- localStorage保存は未実装。リロードすると初期値に戻る
+
+### Decisions
+
+- 初回は永続保存よりも、その場でOBS画角を作れることを優先する
+- fit後のbase transformに対する相対操作にして、VRMごとの差を吸収しやすくする
+
+### Next
+
+- 人間のChromeでAvatar Framingの操作感を確認する
+- 使いやすければlocalStorage保存とOBS Modeへの引き継ぎを追加する

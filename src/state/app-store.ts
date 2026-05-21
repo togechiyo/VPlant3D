@@ -42,6 +42,10 @@ export interface AppState {
   handTrackingStatus: TrackingStatus;
   handTrackingSummary: string;
   handTrackingError: string | null;
+  avatarOffsetX: number;
+  avatarOffsetY: number;
+  avatarScale: number;
+  avatarRotationY: number;
   setVrmLoading: (fileName: string) => void;
   setVrmReady: (fileName: string) => void;
   setVrmError: (message: string) => void;
@@ -79,6 +83,11 @@ export interface AppState {
   setHandTrackingError: (message: string) => void;
   setHandTrackingStopped: () => void;
   setHandTrackingFrame: (summary: string) => void;
+  setAvatarOffsetX: (offsetX: number) => void;
+  setAvatarOffsetY: (offsetY: number) => void;
+  setAvatarScale: (scale: number) => void;
+  setAvatarRotationY: (rotationY: number) => void;
+  resetAvatarTransform: () => void;
 }
 
 export type AppStore = ReturnType<typeof createAppStore>;
@@ -118,6 +127,10 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     handTrackingStatus: 'idle',
     handTrackingSummary: 'Hand tracking idle.',
     handTrackingError: null,
+    avatarOffsetX: 0,
+    avatarOffsetY: 0,
+    avatarScale: 1,
+    avatarRotationY: 0,
     setVrmLoading: (fileName) =>
       set({
         vrmStatus: 'loading',
@@ -302,6 +315,29 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     setHandTrackingFrame: (summary) =>
       set({
         handTrackingSummary: summary,
+      }),
+    setAvatarOffsetX: (offsetX) =>
+      set({
+        avatarOffsetX: offsetX,
+      }),
+    setAvatarOffsetY: (offsetY) =>
+      set({
+        avatarOffsetY: offsetY,
+      }),
+    setAvatarScale: (scale) =>
+      set({
+        avatarScale: scale,
+      }),
+    setAvatarRotationY: (rotationY) =>
+      set({
+        avatarRotationY: rotationY,
+      }),
+    resetAvatarTransform: () =>
+      set({
+        avatarOffsetX: 0,
+        avatarOffsetY: 0,
+        avatarScale: 1,
+        avatarRotationY: 0,
       }),
   }));
 }

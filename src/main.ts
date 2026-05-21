@@ -108,6 +108,14 @@ let currentVrmaAction: THREE.AnimationAction | null = null;
 let placeholderVisible = true;
 let vrmStatusText: HTMLElement | null = null;
 let vrmFileText: HTMLElement | null = null;
+let avatarOffsetXInput: HTMLInputElement | null = null;
+let avatarOffsetYInput: HTMLInputElement | null = null;
+let avatarScaleInput: HTMLInputElement | null = null;
+let avatarRotationYInput: HTMLInputElement | null = null;
+let avatarOffsetXText: HTMLElement | null = null;
+let avatarOffsetYText: HTMLElement | null = null;
+let avatarScaleText: HTMLElement | null = null;
+let avatarRotationYText: HTMLElement | null = null;
 let vrmaStatusText: HTMLElement | null = null;
 let vrmaFileText: HTMLElement | null = null;
 let vrmaRequirementText: HTMLElement | null = null;
@@ -143,6 +151,9 @@ let faceExpressionWeights = createNeutralFaceExpressionWeights();
 let faceTracker: MediaPipeFaceTracker | null = null;
 let handTracker: MediaPipeHandTracker | null = null;
 const restBoneQuaternions = new Map<string, THREE.Quaternion>();
+const avatarBasePosition = new THREE.Vector3();
+const avatarBaseScale = new THREE.Vector3(1, 1, 1);
+let avatarBaseRotationY = 0;
 
 if (!state.obsMode) {
   const panel = document.createElement('aside');
@@ -161,6 +172,28 @@ if (!state.obsMode) {
         <input id="vrm-file-input" class="sr-only" type="file" accept=".vrm" />
         Load local VRM
       </label>
+    </div>
+    <div class="mb-4 grid gap-3 rounded-md border border-[#6dff9a]/25 bg-black/20 p-3">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">Avatar Framing</span>
+      </div>
+      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+        <span class="flex justify-between"><span>X</span><span id="avatar-offset-x-text">0.00</span></span>
+        <input id="avatar-offset-x-input" class="accent-[#6dff9a]" type="range" min="-1" max="1" step="0.01" value="0" />
+      </label>
+      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+        <span class="flex justify-between"><span>Y</span><span id="avatar-offset-y-text">0.00</span></span>
+        <input id="avatar-offset-y-input" class="accent-[#6dff9a]" type="range" min="-0.8" max="0.8" step="0.01" value="0" />
+      </label>
+      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+        <span class="flex justify-between"><span>Scale</span><span id="avatar-scale-text">1.00x</span></span>
+        <input id="avatar-scale-input" class="accent-[#38d5ff]" type="range" min="0.7" max="1.7" step="0.01" value="1" />
+      </label>
+      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+        <span class="flex justify-between"><span>Rotate Y</span><span id="avatar-rotation-y-text">0°</span></span>
+        <input id="avatar-rotation-y-input" class="accent-[#38d5ff]" type="range" min="-180" max="180" step="1" value="0" />
+      </label>
+      <button id="avatar-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">Reset framing</button>
     </div>
     <div class="mb-4 grid gap-3 rounded-md border border-[#38d5ff]/25 bg-black/20 p-3">
       <div class="grid gap-1">
@@ -254,6 +287,15 @@ if (!state.obsMode) {
   const vrmaFileInput = panel.querySelector<HTMLInputElement>('#vrma-file-input');
   vrmStatusText = panel.querySelector<HTMLElement>('#vrm-status-text');
   vrmFileText = panel.querySelector<HTMLElement>('#vrm-file-text');
+  avatarOffsetXInput = panel.querySelector<HTMLInputElement>('#avatar-offset-x-input');
+  avatarOffsetYInput = panel.querySelector<HTMLInputElement>('#avatar-offset-y-input');
+  avatarScaleInput = panel.querySelector<HTMLInputElement>('#avatar-scale-input');
+  avatarRotationYInput = panel.querySelector<HTMLInputElement>('#avatar-rotation-y-input');
+  avatarOffsetXText = panel.querySelector<HTMLElement>('#avatar-offset-x-text');
+  avatarOffsetYText = panel.querySelector<HTMLElement>('#avatar-offset-y-text');
+  avatarScaleText = panel.querySelector<HTMLElement>('#avatar-scale-text');
+  avatarRotationYText = panel.querySelector<HTMLElement>('#avatar-rotation-y-text');
+  const avatarResetButton = panel.querySelector<HTMLButtonElement>('#avatar-reset-button');
   vrmaStatusText = panel.querySelector<HTMLElement>('#vrma-status-text');
   vrmaFileText = panel.querySelector<HTMLElement>('#vrma-file-text');
   vrmaRequirementText = panel.querySelector<HTMLElement>('#vrma-requirement-text');
@@ -288,6 +330,26 @@ if (!state.obsMode) {
   vrmaFileInput?.addEventListener('change', () => {
     const file = vrmaFileInput.files?.[0] ?? null;
     void handleVrmaFileSelection(file);
+  });
+  avatarOffsetXInput?.addEventListener('input', () => {
+    appStore.getState().setAvatarOffsetX(Number(avatarOffsetXInput?.value ?? 0));
+    applyAvatarTransform();
+  });
+  avatarOffsetYInput?.addEventListener('input', () => {
+    appStore.getState().setAvatarOffsetY(Number(avatarOffsetYInput?.value ?? 0));
+    applyAvatarTransform();
+  });
+  avatarScaleInput?.addEventListener('input', () => {
+    appStore.getState().setAvatarScale(Number(avatarScaleInput?.value ?? 1));
+    applyAvatarTransform();
+  });
+  avatarRotationYInput?.addEventListener('input', () => {
+    appStore.getState().setAvatarRotationY(Number(avatarRotationYInput?.value ?? 0));
+    applyAvatarTransform();
+  });
+  avatarResetButton?.addEventListener('click', () => {
+    appStore.getState().resetAvatarTransform();
+    applyAvatarTransform();
   });
   vrmaPlayButton?.addEventListener('click', startVrmaPlayback);
   vrmaStopButton?.addEventListener('click', stopVrmaPlayback);
@@ -425,6 +487,8 @@ function replaceCurrentVrm(nextVrm: VRM): void {
   currentVrm = nextVrm;
   fitObjectToDefaultView(nextVrm.scene);
   configureUpperBodyCamera();
+  captureAvatarBaseTransform(nextVrm.scene);
+  applyAvatarTransform();
   scene.add(nextVrm.scene);
   captureRestBoneQuaternions(nextVrm);
   resetVrmaMixer();
@@ -482,6 +546,28 @@ function captureRestBoneQuaternions(vrm: VRM): void {
   }
 }
 
+function captureAvatarBaseTransform(object: THREE.Object3D): void {
+  avatarBasePosition.copy(object.position);
+  avatarBaseScale.copy(object.scale);
+  avatarBaseRotationY = object.rotation.y;
+}
+
+function applyAvatarTransform(): void {
+  if (!currentVrm) {
+    return;
+  }
+
+  const nextState = appStore.getState();
+  currentVrm.scene.position.set(
+    avatarBasePosition.x + nextState.avatarOffsetX,
+    avatarBasePosition.y + nextState.avatarOffsetY,
+    avatarBasePosition.z,
+  );
+  currentVrm.scene.scale.copy(avatarBaseScale).multiplyScalar(nextState.avatarScale);
+  currentVrm.scene.rotation.y =
+    avatarBaseRotationY + THREE.MathUtils.degToRad(nextState.avatarRotationY);
+}
+
 function updateVrmStatusUi(nextState: AppState): void {
   if (vrmStatusText && vrmFileText) {
     vrmStatusText.textContent = getVrmStatusText(nextState);
@@ -491,6 +577,7 @@ function updateVrmStatusUi(nextState: AppState): void {
   updateVrmaStatusUi(nextState);
   updateMicStatusUi(nextState);
   updatePoseStatusUi(nextState);
+  updateAvatarTransformUi(nextState);
 }
 
 function getVrmStatusText(nextState: AppState): string {
@@ -503,6 +590,40 @@ function getVrmStatusText(nextState: AppState): string {
       return 'VRM loaded.';
     case 'error':
       return nextState.vrmError ?? 'Failed to load the selected VRM file.';
+  }
+}
+
+function updateAvatarTransformUi(nextState: AppState): void {
+  if (avatarOffsetXInput) {
+    avatarOffsetXInput.value = nextState.avatarOffsetX.toString();
+  }
+
+  if (avatarOffsetYInput) {
+    avatarOffsetYInput.value = nextState.avatarOffsetY.toString();
+  }
+
+  if (avatarScaleInput) {
+    avatarScaleInput.value = nextState.avatarScale.toString();
+  }
+
+  if (avatarRotationYInput) {
+    avatarRotationYInput.value = nextState.avatarRotationY.toString();
+  }
+
+  if (avatarOffsetXText) {
+    avatarOffsetXText.textContent = nextState.avatarOffsetX.toFixed(2);
+  }
+
+  if (avatarOffsetYText) {
+    avatarOffsetYText.textContent = nextState.avatarOffsetY.toFixed(2);
+  }
+
+  if (avatarScaleText) {
+    avatarScaleText.textContent = `${nextState.avatarScale.toFixed(2)}x`;
+  }
+
+  if (avatarRotationYText) {
+    avatarRotationYText.textContent = `${Math.round(nextState.avatarRotationY)}°`;
   }
 }
 

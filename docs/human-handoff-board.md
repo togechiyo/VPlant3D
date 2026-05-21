@@ -49,6 +49,22 @@ Notes:
 - 現時点の手は骨格表示のみ。VRM指ボーンへの反映は未実装
 - Face tracking active中は、Mic Reactive Mouthはメーター表示は続けるがVRM `aa` への書き込みを止める
 
+### Todo: 人間のGoogle ChromeでAvatar Framingを確認
+
+- Owner: Human or Codex with Chrome extension
+- Needed by: OBS画角調整前
+- Why: 配信用の顔位置、体の入り方、角度は人間の見た目判断が必要なため
+- What to check:
+  - VRMを読み込む
+  - `Avatar Framing` の X / Y / Scale / Rotate Y を動かす
+  - 顔が中央ちょい上、上半身が見やすい位置に調整できる
+  - `Reset framing` で初期値に戻る
+  - VRMA再生やMediaPipe中に大きく破綻しない
+
+Notes:
+
+- 現時点ではブラウザlocalStorage保存は未実装。ページリロードで初期値に戻る
+
 ### Todo: 人間のGoogle ChromeでMediaPipeのVRM反映を確認
 
 - Owner: Human or Codex with Chrome extension

@@ -22,6 +22,9 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#vrma-file-input')).toHaveAttribute('accept', '.vrma');
   await expect(page.getByText('Load a VRM before playing VRMA.')).toBeVisible();
   await expect(page.locator('#vrma-play-button')).toBeDisabled();
+  await expect(page.getByText('Avatar Framing')).toBeVisible();
+  await expect(page.locator('#avatar-offset-x-input')).toHaveValue('0');
+  await expect(page.locator('#avatar-scale-input')).toHaveValue('1');
   await expect(page.getByText('Mic Reactive Mouth')).toBeVisible();
   await expect(page.getByText('Microphone idle.')).toBeVisible();
   await expect(page.locator('#mic-start-button')).toBeEnabled();

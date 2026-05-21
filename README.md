@@ -97,6 +97,7 @@ MediaPipe Pose Debug can request camera access in Setup Mode and show upper-body
 Mocap input can be mirrored in Setup Mode so the avatar response can match the user's camera intuition.
 Face tracking can drive VRM blink, mouth, and simple emotion expressions from MediaPipe face blendshapes. Hand tracking currently draws a skeleton overlay for verification.
 When a VRM is loaded, the default camera frames the avatar around the upper body for OBS-friendly VTuber use.
+Setup Mode also includes Avatar Framing sliders for X/Y position, scale, and Y-axis rotation.
 
 ## Documentation
 

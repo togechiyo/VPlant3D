@@ -41,6 +41,10 @@ describe('createAppStore', () => {
       handTrackingStatus: 'idle',
       handTrackingSummary: 'Hand tracking idle.',
       handTrackingError: null,
+      avatarOffsetX: 0,
+      avatarOffsetY: 0,
+      avatarScale: 1,
+      avatarRotationY: 0,
     });
   });
 
@@ -255,6 +259,34 @@ describe('createAppStore', () => {
       faceTrackingSummary: 'Face tracking idle.',
       handTrackingStatus: 'idle',
       handTrackingSummary: 'Hand tracking idle.',
+    });
+  });
+
+  it('tracks avatar transform controls', () => {
+    const store = createAppStore({
+      obsMode: false,
+      transparent: false,
+    });
+
+    store.getState().setAvatarOffsetX(0.25);
+    store.getState().setAvatarOffsetY(-0.1);
+    store.getState().setAvatarScale(1.2);
+    store.getState().setAvatarRotationY(30);
+
+    expect(store.getState()).toMatchObject({
+      avatarOffsetX: 0.25,
+      avatarOffsetY: -0.1,
+      avatarScale: 1.2,
+      avatarRotationY: 30,
+    });
+
+    store.getState().resetAvatarTransform();
+
+    expect(store.getState()).toMatchObject({
+      avatarOffsetX: 0,
+      avatarOffsetY: 0,
+      avatarScale: 1,
+      avatarRotationY: 0,
     });
   });
 });
