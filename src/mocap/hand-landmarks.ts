@@ -14,9 +14,16 @@ export interface HandFingerCurl {
   little: number;
 }
 
+export interface HandRetargetTarget {
+  fingers: HandFingerCurl;
+  wristPitch: number;
+  wristYaw: number;
+  wristRoll: number;
+}
+
 export interface HandRetargetPose {
-  left: HandFingerCurl | null;
-  right: HandFingerCurl | null;
+  left: HandRetargetTarget | null;
+  right: HandRetargetTarget | null;
 }
 
 export interface HandRetargetOptions {
@@ -77,7 +84,7 @@ export function createHandRetargetPose(
     }
 
     const targetSide = options.mirrorInput ? getOppositeHandSide(sourceSide) : sourceSide;
-    pose[targetSide] = createFingerCurl(hand);
+    pose[targetSide] = createHandTarget(hand, options);
   }
 
   return pose;
@@ -89,19 +96,21 @@ export function smoothHandRetargetPose(
   smoothing = 0.38,
 ): HandRetargetPose {
   return {
-    left: smoothFingerCurl(previous.left, next.left, smoothing),
-    right: smoothFingerCurl(previous.right, next.right, smoothing),
+    left: smoothHandTarget(previous.left, next.left, smoothing),
+    right: smoothHandTarget(previous.right, next.right, smoothing),
   };
 }
 
 export function getHandPoseGripAmount(pose: HandRetargetPose): number {
-  const curls = [pose.left, pose.right].filter((curl): curl is HandFingerCurl => curl !== null);
-  const values = curls.flatMap((curl) => [
-    curl.thumb,
-    curl.index,
-    curl.middle,
-    curl.ring,
-    curl.little,
+  const targets = [pose.left, pose.right].filter(
+    (target): target is HandRetargetTarget => target !== null,
+  );
+  const values = targets.flatMap((target) => [
+    target.fingers.thumb,
+    target.fingers.index,
+    target.fingers.middle,
+    target.fingers.ring,
+    target.fingers.little,
   ]);
 
   if (values.length === 0) {
@@ -109,6 +118,17 @@ export function getHandPoseGripAmount(pose: HandRetargetPose): number {
   }
 
   return values.reduce((total, value) => total + value, 0) / values.length;
+}
+
+function createHandTarget(
+  hand: NormalizedLandmark[],
+  options: HandRetargetOptions,
+): HandRetargetTarget {
+  const motionHand = options.mirrorInput ? mirrorHandX(hand) : hand;
+  return {
+    fingers: createFingerCurl(hand),
+    ...createWristRotation(motionHand),
+  };
 }
 
 function createFingerCurl(hand: NormalizedLandmark[]): HandFingerCurl {
@@ -167,26 +187,96 @@ function calculateJointAngle(
   return Math.acos(clamp(dot / (aLength * bLength), -1, 1));
 }
 
-function smoothFingerCurl(
-  previous: HandFingerCurl | null,
-  next: HandFingerCurl | null,
+function createWristRotation(hand: NormalizedLandmark[]): Pick<
+  HandRetargetTarget,
+  'wristPitch' | 'wristYaw' | 'wristRoll'
+> {
+  const wrist = hand[0];
+  const middleMcp = hand[9];
+  const middleTip = hand[12];
+  const indexMcp = hand[5];
+  const littleMcp = hand[17];
+
+  if (!wrist || !middleMcp || !middleTip || !indexMcp || !littleMcp) {
+    return {
+      wristPitch: 0,
+      wristYaw: 0,
+      wristRoll: 0,
+    };
+  }
+
+  const fingerDirectionX = middleMcp.x - wrist.x;
+  const fingerDirectionY = middleMcp.y - wrist.y;
+  const fingerAngle = Math.atan2(fingerDirectionY, fingerDirectionX);
+  const wristRoll = clamp(normalizeAngle(fingerAngle + Math.PI / 2), -0.95, 0.95);
+  const palmCenterX = (indexMcp.x + middleMcp.x + littleMcp.x) / 3;
+  const palmCenterZ = ((indexMcp.z ?? 0) + (middleMcp.z ?? 0) + (littleMcp.z ?? 0)) / 3;
+  const wristYaw = clamp((palmCenterX - wrist.x) * 3.2 + palmCenterZ * 0.8, -0.55, 0.55);
+  const fingerLength = Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y);
+  const wristPitch = clamp((0.42 - fingerLength) * 1.6, -0.42, 0.42);
+
+  return {
+    wristPitch,
+    wristYaw,
+    wristRoll,
+  };
+}
+
+function smoothHandTarget(
+  previous: HandRetargetTarget | null,
+  next: HandRetargetTarget | null,
   smoothing: number,
-): HandFingerCurl | null {
-  const from = previous ?? neutralFingerCurl;
-  const to = next ?? neutralFingerCurl;
-  const result = {
-    thumb: lerp(from.thumb, to.thumb, smoothing),
-    index: lerp(from.index, to.index, smoothing),
-    middle: lerp(from.middle, to.middle, smoothing),
-    ring: lerp(from.ring, to.ring, smoothing),
-    little: lerp(from.little, to.little, smoothing),
+): HandRetargetTarget | null {
+  const fromFingers = previous?.fingers ?? neutralFingerCurl;
+  const toFingers = next?.fingers ?? neutralFingerCurl;
+  const result: HandRetargetTarget = {
+    fingers: {
+      thumb: lerp(fromFingers.thumb, toFingers.thumb, smoothing),
+      index: lerp(fromFingers.index, toFingers.index, smoothing),
+      middle: lerp(fromFingers.middle, toFingers.middle, smoothing),
+      ring: lerp(fromFingers.ring, toFingers.ring, smoothing),
+      little: lerp(fromFingers.little, toFingers.little, smoothing),
+    },
+    wristPitch: lerp(previous?.wristPitch ?? 0, next?.wristPitch ?? 0, smoothing),
+    wristYaw: lerp(previous?.wristYaw ?? 0, next?.wristYaw ?? 0, smoothing),
+    wristRoll: lerp(previous?.wristRoll ?? 0, next?.wristRoll ?? 0, smoothing),
   };
 
-  if (!next && getFingerCurlAverage(result) < 0.015) {
+  if (!next && getHandTargetMotionAmount(result) < 0.015) {
     return null;
   }
 
   return result;
+}
+
+function getHandTargetMotionAmount(target: HandRetargetTarget): number {
+  return (
+    getFingerCurlAverage(target.fingers) +
+    Math.abs(target.wristPitch) +
+    Math.abs(target.wristYaw) +
+    Math.abs(target.wristRoll)
+  );
+}
+
+function mirrorHandX(hand: NormalizedLandmark[]): NormalizedLandmark[] {
+  return hand.map((landmark) => ({
+    ...landmark,
+    x: 1 - landmark.x,
+  }));
+}
+
+function normalizeAngle(value: number): number {
+  let nextValue = value;
+
+  while (nextValue > Math.PI) {
+    nextValue -= Math.PI * 2;
+  }
+
+  while (nextValue < -Math.PI) {
+    nextValue += Math.PI * 2;
+  }
+
+  return nextValue;
 }
 
 function parseHandSide(categoryName: string | undefined): 'left' | 'right' | null {

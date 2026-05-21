@@ -40,8 +40,8 @@ describe('createHandRetargetPose', () => {
       mirrorInput: false,
     });
 
-    expect(pose.right?.index).toBeLessThan(0.05);
-    expect(pose.right?.middle).toBeLessThan(0.05);
+    expect(pose.right?.fingers.index).toBeLessThan(0.05);
+    expect(pose.right?.fingers.middle).toBeLessThan(0.05);
     expect(getHandPoseGripAmount(pose)).toBeLessThan(0.05);
   });
 
@@ -50,9 +50,21 @@ describe('createHandRetargetPose', () => {
       mirrorInput: false,
     });
 
-    expect(pose.right?.index).toBeGreaterThan(0.55);
-    expect(pose.right?.middle).toBeGreaterThan(0.55);
+    expect(pose.right?.fingers.index).toBeGreaterThan(0.55);
+    expect(pose.right?.fingers.middle).toBeGreaterThan(0.55);
     expect(getHandPoseGripAmount(pose)).toBeGreaterThan(0.45);
+  });
+
+  it('creates wrist rotation from hand direction', () => {
+    const tilted = openHand();
+    tilted[9] = point(0.2, 0.4, 0);
+    tilted[12] = point(0.32, 0.72, 0);
+
+    const pose = createHandRetargetPose([tilted], [[category('Right')]], {
+      mirrorInput: false,
+    });
+
+    expect(Math.abs(pose.right?.wristRoll ?? 0)).toBeGreaterThan(0.2);
   });
 
   it('mirrors handedness when requested', () => {
@@ -72,8 +84,8 @@ describe('smoothHandRetargetPose', () => {
     });
     const smoothed = smoothHandRetargetPose(previous, { left: null, right: null }, 0.5);
 
-    expect(smoothed.right?.index).toBeLessThan(previous.right?.index ?? 0);
-    expect(smoothed.right?.index).toBeGreaterThan(0);
+    expect(smoothed.right?.fingers.index).toBeLessThan(previous.right?.fingers.index ?? 0);
+    expect(smoothed.right?.fingers.index).toBeGreaterThan(0);
   });
 });
 

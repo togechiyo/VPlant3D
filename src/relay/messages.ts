@@ -44,8 +44,8 @@ export interface RelayPoseState {
     rightUpperArmRoll: number;
   };
   hands?: {
-    left: RelayFingerCurl | null;
-    right: RelayFingerCurl | null;
+    left: RelayHandTarget | null;
+    right: RelayHandTarget | null;
   };
 }
 
@@ -55,6 +55,13 @@ export interface RelayFingerCurl {
   middle: number;
   ring: number;
   little: number;
+}
+
+export interface RelayHandTarget {
+  fingers: RelayFingerCurl;
+  wristPitch: number;
+  wristYaw: number;
+  wristRoll: number;
 }
 
 export interface RelayRenderState {

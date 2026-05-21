@@ -41,7 +41,11 @@ import {
 import type { MediaPipePoseDebug } from './mocap/mediapipe-pose-debug';
 import type { MediaPipeFaceTracker, MediaPipeHandTracker } from './mocap/mediapipe-face-hand';
 import type { VrmFaceExpressionWeights } from './mocap/face-expression-retarget';
-import type { HandFingerCurl, HandRetargetPose } from './mocap/hand-landmarks';
+import type {
+  HandFingerCurl,
+  HandRetargetPose,
+  HandRetargetTarget,
+} from './mocap/hand-landmarks';
 import type { HeadRetargetPose } from './mocap/head-retarget';
 import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
@@ -1983,19 +1987,44 @@ function applyHandRetarget(): void {
     return;
   }
 
-  applyFingerCurl('left', handRetargetPose.left);
-  applyFingerCurl('right', handRetargetPose.right);
+  applyHandTarget('left', handRetargetPose.left);
+  applyHandTarget('right', handRetargetPose.right);
   currentVrm.humanoid.update();
   handRetargetWasActive = true;
 }
 
-function applyFingerCurl(side: 'left' | 'right', curl: HandFingerCurl | null): void {
+function applyHandTarget(side: 'left' | 'right', target: HandRetargetTarget | null): void {
   if (!currentVrm) {
     return;
   }
 
-  if (!curl) {
-    restoreFingerBones(side);
+  if (!target) {
+    restoreHandSideBones(side);
+    return;
+  }
+
+  const sideSign = side === 'left' ? 1 : -1;
+  const lowerArmBoneName =
+    side === 'left' ? VRMHumanBoneName.LeftLowerArm : VRMHumanBoneName.RightLowerArm;
+  const handBoneName = side === 'left' ? VRMHumanBoneName.LeftHand : VRMHumanBoneName.RightHand;
+
+  applyTrackedHandBone(
+    lowerArmBoneName,
+    target.wristPitch * 0.16,
+    sideSign * target.wristYaw * 0.32,
+    target.wristRoll * 0.38,
+  );
+  applyTrackedHandBone(
+    handBoneName,
+    target.wristPitch * 0.58,
+    sideSign * target.wristYaw * 0.72,
+    target.wristRoll * 0.95,
+  );
+  applyFingerCurl(side, target.fingers);
+}
+
+function applyFingerCurl(side: 'left' | 'right', curl: HandFingerCurl): void {
+  if (!currentVrm) {
     return;
   }
 
@@ -2009,6 +2038,28 @@ function applyFingerCurl(side: 'left' | 'right', curl: HandFingerCurl | null): v
   applyThreeSegmentFinger(prefix, 'Middle', curl.middle, 0.62, 0.82, 0.5);
   applyThreeSegmentFinger(prefix, 'Ring', curl.ring, 0.58, 0.78, 0.46);
   applyThreeSegmentFinger(prefix, 'Little', curl.little, 0.52, 0.72, 0.42);
+}
+
+function applyTrackedHandBone(
+  boneName: VRMHumanBoneName,
+  x: number,
+  y: number,
+  z: number,
+): void {
+  if (!currentVrm) {
+    return;
+  }
+
+  const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
+  const restQuaternion = restBoneQuaternions.get(boneName);
+
+  if (!bone || !restQuaternion) {
+    return;
+  }
+
+  const delta = new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, 'XYZ'));
+  bone.quaternion.copy(restQuaternion).multiply(delta);
+  bone.userData.vplant3dHandMocapActive = true;
 }
 
 function applyThreeSegmentFinger(
@@ -2053,16 +2104,30 @@ function resetHandRetarget(): void {
 }
 
 function restoreHandBones(): void {
-  restoreFingerBones('left');
-  restoreFingerBones('right');
+  restoreHandSideBones('left');
+  restoreHandSideBones('right');
 }
 
-function restoreFingerBones(side: 'left' | 'right'): void {
+function restoreHandSideBones(side: 'left' | 'right'): void {
   if (!currentVrm) {
     return;
   }
 
   const prefix = side === 'left' ? 'left' : 'right';
+  const armBoneNames =
+    side === 'left'
+      ? [VRMHumanBoneName.LeftLowerArm, VRMHumanBoneName.LeftHand]
+      : [VRMHumanBoneName.RightLowerArm, VRMHumanBoneName.RightHand];
+
+  for (const boneName of armBoneNames) {
+    const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
+    const restQuaternion = restBoneQuaternions.get(boneName);
+
+    if (bone && restQuaternion) {
+      bone.quaternion.copy(restQuaternion);
+      bone.userData.vplant3dHandMocapActive = false;
+    }
+  }
 
   for (const boneName of fingerBoneNames) {
     if (!boneName.startsWith(prefix)) {
