@@ -220,6 +220,10 @@ let idleSwayEnabled = true;
 let faceTracker: MediaPipeFaceTracker | null = null;
 let handTracker: MediaPipeHandTracker | null = null;
 let relayMotionActive = false;
+let relayHeadTarget: HeadRetargetPose = createNeutralHeadRetargetPose(false);
+let relayUpperBodyTarget: UpperBodyRetargetPose = createNeutralRetargetPose(false);
+let relayHandTarget: HandRetargetPose = createNeutralHandRetargetPose();
+let relayExpressionTarget: VrmFaceExpressionWeights = createNeutralFaceExpressionWeights();
 let relayStatePublishTime = 0;
 let loadingRelayVrmAssetId: string | null = null;
 let loadingRelayVrmaAssetSignature: string | null = null;
@@ -627,6 +631,7 @@ function animate(frameTime = performance.now()): void {
   cube.rotation.x = elapsed * 0.32;
   cube.rotation.y = elapsed * 0.52;
   currentVrmaMixer?.update(delta);
+  updateRelayRenderMotion(delta);
   applyUpperBodyRetarget();
   applyHandRetarget();
   if (!isRenderPage) {
@@ -741,25 +746,55 @@ function applyRelayRenderState(nextState: RelayRenderState): void {
   applyAvatarTransform();
   syncVrmaLoopMode(nextState.vrmaLoop);
 
-  relayMotionActive = Boolean(
-    nextState.pose.head?.enabled ||
-      nextState.pose.upperBody?.enabled ||
-      nextState.pose.hands?.left ||
-      nextState.pose.hands?.right,
-  );
-  headRetargetPose = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
-  upperBodyRetargetPose = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
-  handRetargetPose = nextState.pose.hands ?? createNeutralHandRetargetPose();
-  applyHeadRetarget();
-  applyRelayExpressions(nextState.expressions);
+  relayMotionActive = true;
+  relayHeadTarget = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
+  relayUpperBodyTarget = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
+  relayHandTarget = nextState.pose.hands ?? createNeutralHandRetargetPose();
+  relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
 }
 
-function applyRelayExpressions(expressions: RelayRenderState['expressions']): void {
+function updateRelayRenderMotion(delta: number): void {
+  if (!isRenderPage) {
+    return;
+  }
+
+  const motionSmoothing = getFrameSmoothing(delta, 26);
+  const expressionSmoothing = getFrameSmoothing(delta, 34);
+  headRetargetPose = smoothHeadRetargetPose(headRetargetPose, relayHeadTarget, motionSmoothing);
+  upperBodyRetargetPose = smoothUpperBodyRetargetPose(
+    upperBodyRetargetPose,
+    relayUpperBodyTarget,
+    motionSmoothing,
+  );
+  handRetargetPose = smoothHandRetargetPose(handRetargetPose, relayHandTarget, motionSmoothing);
+  faceExpressionWeights = smoothFaceExpressionWeights(
+    faceExpressionWeights,
+    relayExpressionTarget,
+    expressionSmoothing,
+  );
+  applyHeadRetarget();
+  applyRelayExpressions(faceExpressionWeights);
+}
+
+function createRelayExpressionTarget(
+  expressions: RelayRenderState['expressions'],
+): VrmFaceExpressionWeights {
+  return {
+    ...createNeutralFaceExpressionWeights(),
+    ...expressions,
+  };
+}
+
+function applyRelayExpressions(expressions: Partial<VrmFaceExpressionWeights>): void {
   for (const [name, value] of Object.entries(expressions)) {
     if (typeof value === 'number') {
       currentVrm?.expressionManager?.setValue(name, value);
     }
   }
+}
+
+function getFrameSmoothing(delta: number, speed: number): number {
+  return 1 - Math.exp(-speed * delta);
 }
 
 function publishRelayState(frameTime: number): void {

@@ -39,7 +39,7 @@ describe('createAppStore', () => {
       faceTrackingStatus: 'idle',
       faceTrackingSummary: '顔: 待機',
       faceTrackingError: null,
-      handTrackingEnabled: true,
+      handTrackingEnabled: false,
       handTrackingStatus: 'idle',
       handTrackingSummary: '手: 待機',
       handTrackingError: null,

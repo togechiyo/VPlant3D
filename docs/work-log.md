@@ -1845,3 +1845,35 @@
 ### Next
 
 - Chromeでモデルプレビューが横伸びせず、自然な比率で表示されるか確認する
+
+## 2026-05-21 Render Motion Smoothing And Hand Default Off
+
+### Goal
+
+- OBS Render Pageでモデルがカクつく/ピクピクする問題を軽減する
+- 手トラックをデフォルトOFFにして、必要な時だけ使う運用にする
+
+### Did
+
+- Controlから受信したrelay pose/expressionをRender側では直接適用せず、目標値として保持するようにした
+- Render側のanimation frameごとに頭、上半身、手、表情を補間して適用するようにした
+- relay更新間隔による段差が、そのままモデルへ出ないようにした
+- `handTrackingEnabled` の初期値を `false` に変更した
+- E2Eとstore testの期待値を、手トラック初期OFFへ更新した
+
+### Worked
+
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- OBS実機でのカクつき改善は人間確認が必要
+- まだMediaPipe検出自体のノイズは残る可能性があるため、必要ならControl側にもdeadzoneや低域通過フィルタを追加する
+
+### Next
+
+- OBSで同じ動作を確認し、フレーム落ちっぽい段差が減ったか見る
+- まだピクつく場合は、relay送信頻度、補間係数、MediaPipe入力側の安定化を調整する

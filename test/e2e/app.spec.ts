@@ -55,7 +55,7 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
   await expect(page.getByText('ミラー')).toBeVisible();
   await expect(page.locator('#pose-mirror-input')).toBeChecked();
-  await expect(page.locator('#hand-tracking-input')).toBeChecked();
+  await expect(page.locator('#hand-tracking-input')).not.toBeChecked();
   await expect(page.getByText('手', { exact: true })).toBeVisible();
   await expect(page.getByText('手 / 指')).toBeVisible();
   await expect(page.getByText('指トラック')).toBeVisible();
