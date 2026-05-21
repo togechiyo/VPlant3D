@@ -75,6 +75,11 @@ Local development server:
 http://127.0.0.1:5173/
 ```
 
+`npm run dev` starts the VPlant3D local relay server. It wraps Vite and adds:
+
+- `ws://127.0.0.1:5173/relay/ws` for Control-to-Render state sync
+- `/relay/assets` for temporary local VRM / VRMA asset handoff
+
 Useful checks:
 
 ```bash
@@ -89,11 +94,12 @@ OBS-style URL examples:
 ```text
 http://127.0.0.1:5173/?obs=1
 http://127.0.0.1:5173/?obs=1&transparent=1
+http://127.0.0.1:5173/?control=1
 ```
 
 Setup Mode includes local `.vrm` and `.vrma` file inputs. Local model and motion files are loaded from the user's machine and are not committed to this repository. Multiple `.vrma` files can be loaded into motion slots, then replayed with one button from the Setup Dock.
 
-OBS Browser Source is treated as the render-only output target. Camera, microphone, MediaPipe, and setup controls should move toward a separate Control / Capture page running in Chrome, with a local relay sending avatar state to OBS.
+OBS Browser Source is treated as the render-only output target. Camera, microphone, MediaPipe, and setup controls live on the Control / Capture page in Chrome, with the local relay sending avatar state and selected local assets to the OBS Render page.
 
 Mic Reactive Mouth can request microphone access in Setup Mode and drive the loaded VRM's `aa` expression from microphone volume. It is simple RMS-based mouth movement, not phoneme lip sync.
 For users who do not want camera-based mocap, Setup Mode also provides camera-free Auto Blink, Idle Sway, and one-button VRM expression presets.

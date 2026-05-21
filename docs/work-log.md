@@ -1335,3 +1335,41 @@
 - `/?obs=1&transparent=1` をRender Page、`/?control=1` をControl Pageとして明確に分離する
 - 最小のLocal Relayを追加し、Chrome ControlからOBS Renderへavatar framingや表情値を送る
 - VRM/VRMAファイルはControlからRelayへ渡し、OBS RenderがRelay URLから読む方式をMVP候補にする
+
+## 2026-05-21 Control / Render Split MVP
+
+### Goal
+
+- 今の一体型画面を、Chrome操作用Control PageとOBS表示用Render Pageへ分離する
+- Chromeで選んだVRM/VRMAとavatar stateをLocal Relay経由でOBS Render Pageへ渡す
+
+### Did
+
+- `npm run dev` をVite単体ではなく `server/vplant-relay.mjs` 起動に変更した
+- Local RelayにWebSocket `/relay/ws` と一時asset HTTP endpoint `/relay/assets` を追加した
+- `src/relay/messages.ts` と `src/relay/client.ts` を追加し、Control/Render間のmessageとasset uploadを整理した
+- `/?control=1` をControl Pageとして扱い、`/?obs=1&transparent=1` はUIなしRender Pageとして維持した
+- Control Pageで読み込んだVRM/VRMAをRelayへuploadし、Render PageがRelay URLから読み込むようにした
+- avatar transform、表情値、head/upper body pose、VRMA loop/play/stop/select commandをWebSocketでRender Pageへ送るようにした
+- PlaywrightにControl URL確認と、ControlからRenderへのVRM relay確認を追加した
+
+### Worked
+
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+- Codex in-app browserで `/?control=1` に操作UIがあり、`/?obs=1&transparent=1` には操作UIがないことを確認した
+
+### Failed / Blocked
+
+- 最初に `npm run test -- --runInBand` を実行したが、Vitestでは未対応optionだったため失敗。通常の `npm run test` で成功
+- OBS Browser Source実機でWebSocketと `/relay/assets` が通るかは人間確認が必要
+- Render Page側でVRMA commandがasset loadより先に来るケースの厳密なqueue処理はまだ薄い
+
+### Next
+
+- OBSでChrome ControlからRenderへVRM表示が反映されるか確認する
+- Relay接続状態をControl Pageに短いbadgeで表示する
+- VRMA asset load完了前にplay commandが来た場合のpending command処理を追加する
+- Control/Render間の同期対象を整理し、送信頻度やmessageサイズを調整する

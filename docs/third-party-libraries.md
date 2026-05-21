@@ -2,7 +2,7 @@
 
 This document lists the third-party libraries and platform APIs for VPlant3D for OBS.
 
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 
 Versions and licenses below were verified from installed package metadata in `node_modules`.
 
@@ -12,12 +12,14 @@ Versions and licenses below were verified from installed package metadata in `no
 | --- | ---: | --- | --- |
 | `typescript` | `6.0.3` | Apache-2.0 | Main implementation language. Used to keep rendering, VRM integration, and UI logic typed and maintainable. |
 | `vite` | `8.0.13` | MIT | Development server and frontend build tool. Used for fast local iteration and browser-based delivery. |
+| `ws` | `8.20.1` | MIT | Local WebSocket relay server for Control Page to OBS Render Page state sync. |
 | `vitest` | `4.1.7` | MIT | Unit test runner for TypeScript modules. |
 | `@playwright/test` | `1.60.0` | Apache-2.0 | End-to-end browser test runner. Used for local Chromium checks of Setup Mode, OBS Mode, local VRM file input, and local VRMA playback controls. |
 | `eslint` | `10.4.0` | MIT | Linting. |
 | `typescript-eslint` | `8.59.4` | MIT | TypeScript-aware ESLint rules. |
 | `@eslint/js` | `10.0.1` | MIT | ESLint JavaScript recommended config. |
 | `@types/node` | `25.9.1` | MIT | Node.js type declarations for tooling config. |
+| `@types/ws` | `8.18.1` | MIT | Type declarations for `ws`. |
 | `tailwindcss` | `4.3.0` | MIT | Utility-first CSS framework for Setup Mode UI. |
 | `@tailwindcss/vite` | `4.3.0` | MIT | Tailwind CSS v4 Vite plugin. |
 | `zustand` | `5.0.13` | MIT | Lightweight state store. Used through `zustand/vanilla` so the app can stay framework-free. |
@@ -51,7 +53,8 @@ Versions and licenses below were verified from installed package metadata in `no
 | Platform | Role |
 | --- | --- |
 | OBS Browser Source | Target runtime surface. VPlant3D should run as a browser source with transparent background support. |
-| URL query parameters | Planned control surface for OBS mode, transparent mode, and preset selection. Example: `?obs=1&transparent=1`. |
+| URL query parameters | Control surface for OBS render mode, transparent mode, and Chrome control mode. Examples: `?obs=1&transparent=1`, `?control=1`. |
+| Local Relay | Node/Vite dev server wrapper with WebSocket state sync and temporary HTTP asset handoff for VRM / VRMA files. |
 | localStorage | Lightweight local configuration persistence for MVP. |
 | JSON config | Future portable configuration format for sharing presets and setups. |
 

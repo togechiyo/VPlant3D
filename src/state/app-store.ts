@@ -12,6 +12,7 @@ export type TrackingStatus = 'idle' | 'loading' | 'active' | 'error';
 
 export interface AppState {
   obsMode: boolean;
+  controlMode: boolean;
   transparent: boolean;
   rendererName: string;
   vrmStatus: VrmLoadStatus;
@@ -97,6 +98,7 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
 
   return createStore<AppState>()((set) => ({
     obsMode: initialOptions.obsMode,
+    controlMode: initialOptions.controlMode,
     transparent: initialOptions.transparent,
     rendererName: 'Three.js WebGL',
     vrmStatus: 'idle',

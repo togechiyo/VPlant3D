@@ -1,5 +1,6 @@
 export interface ObsQueryOptions {
   obsMode: boolean;
+  controlMode: boolean;
   transparent: boolean;
 }
 
@@ -32,6 +33,7 @@ export function parseObsQuery(input: string | URLSearchParams): ObsQueryOptions 
 
   return {
     obsMode: parseBooleanParam(params.get('obs')),
+    controlMode: parseBooleanParam(params.get('control')),
     transparent: parseBooleanParam(params.get('transparent')),
   };
 }

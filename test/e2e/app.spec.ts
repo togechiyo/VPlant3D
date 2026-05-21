@@ -52,6 +52,19 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   expect(errors()).toEqual([]);
 });
 
+test('Control page keeps setup controls outside the OBS render URL', async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto('/?control=1');
+
+  await expect(page.locator('canvas.scene-canvas')).toBeVisible();
+  await expect(page.getByText('VRMを読み込む', { exact: true })).toBeVisible();
+  await expect(page.getByText('顔 / 口')).toBeVisible();
+  await expect(page.getByText('体トラック')).toBeVisible();
+  await expect(page.getByText('設定')).toBeVisible();
+  expect(errors()).toEqual([]);
+});
+
 test('OBS transparent mode hides Setup UI but keeps the scene canvas', async ({ page }) => {
   const errors = collectPageErrors(page);
 
@@ -80,6 +93,36 @@ test('loads the local Alicia VRM candidate when it exists', async ({ page }) => 
   await expect(page.getByText('AliciaSolid.vrm')).toBeVisible();
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
   expect(errors()).toEqual([]);
+});
+
+test('relays a local VRM from Control page to OBS render page when local assets exist', async ({
+  browser,
+}) => {
+  test.skip(!existsSync(aliciaVrmPath), 'local Alicia VRM is not available in this workspace');
+
+  const context = await browser.newContext({
+    viewport: {
+      width: 1920,
+      height: 1080,
+    },
+  });
+  const renderPage = await context.newPage();
+  const controlPage = await context.newPage();
+  const renderErrors = collectPageErrors(renderPage);
+  const controlErrors = collectPageErrors(controlPage);
+  const renderAssetResponse = renderPage.waitForResponse((response) =>
+    response.url().includes('/relay/assets/') && response.status() === 200,
+  );
+
+  await renderPage.goto('/?obs=1&transparent=1');
+  await controlPage.goto('/?control=1');
+  await controlPage.locator('#vrm-file-input').setInputFiles(aliciaVrmPath);
+
+  await renderAssetResponse;
+  await expect(controlPage.getByText('VRM読み込み済み')).toBeVisible({ timeout: 30_000 });
+  await expect(renderPage.locator('canvas.scene-canvas')).toBeVisible();
+  expect([...renderErrors(), ...controlErrors()]).toEqual([]);
+  await context.close();
 });
 
 test('loads the local VRMA candidate and toggles playback when local assets exist', async ({

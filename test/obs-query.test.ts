@@ -23,6 +23,15 @@ describe('parseObsQuery', () => {
   it('enables OBS mode with ?obs=1', () => {
     expect(parseObsQuery('?obs=1')).toEqual({
       obsMode: true,
+      controlMode: false,
+      transparent: false,
+    });
+  });
+
+  it('enables control mode with ?control=1', () => {
+    expect(parseObsQuery('?control=1')).toEqual({
+      obsMode: false,
+      controlMode: true,
       transparent: false,
     });
   });
@@ -30,15 +39,17 @@ describe('parseObsQuery', () => {
   it('enables transparent mode with ?transparent=1', () => {
     expect(parseObsQuery('?transparent=1')).toEqual({
       obsMode: false,
+      controlMode: false,
       transparent: true,
     });
   });
 
   it('supports URLSearchParams input', () => {
-    const params = new URLSearchParams('obs=true&transparent=true');
+    const params = new URLSearchParams('obs=true&control=true&transparent=true');
 
     expect(parseObsQuery(params)).toEqual({
       obsMode: true,
+      controlMode: true,
       transparent: true,
     });
   });
@@ -46,6 +57,7 @@ describe('parseObsQuery', () => {
   it('ignores unknown parameters', () => {
     expect(parseObsQuery('?obs=1&foo=bar')).toEqual({
       obsMode: true,
+      controlMode: false,
       transparent: false,
     });
   });

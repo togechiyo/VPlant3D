@@ -258,6 +258,24 @@ Notes:
 - 開発中の通常確認はGoogle Chromeを優先する
 - 最終提出前にOBS本体で必ず確認する
 
+### Todo: Control / Render分離後のOBS実機確認
+
+- Owner: Human
+- Needed by: Relay実装後
+- Why: Playwright ChromiumではControl PageからOBS Render Page相当へのVRM relayは確認済みだが、OBS Browser Source内CEFでWebSocketと `/relay/assets` 取得が通るかは実機確認が必要なため
+- What to check:
+  - `npm run dev` を起動する
+  - Chromeで `http://127.0.0.1:5173/?control=1` を開く
+  - OBS Browser Sourceで `http://127.0.0.1:5173/?obs=1&transparent=1` を開く
+  - Chrome側でVRMを読み込むとOBS側にも同じVRMが表示される
+  - Chrome側の位置調整、表情、マイク口パク、カメラモーキャプがOBS側へ反映される
+  - 背景が透明のままになる
+
+Notes:
+
+- OBS側ではカメラ/マイクを取らない設計に変更済み
+- まずはVRM表示と位置調整の同期だけ通れば良い
+
 ### Todo: MediaPipeモーションキャプチャーの人力確認
 
 - Owner: Human

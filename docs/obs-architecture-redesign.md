@@ -223,11 +223,15 @@ Chrome操作用。Setup Dockを表示し、カメラ/マイク/ファイル選�
 - Renderが状態JSONを受け取る
 - まずはavatar transformとexpressionだけ同期する
 
+Status: implemented as `server/vplant-relay.mjs` and `src/relay/*`.
+
 ### Step 3: VRMファイル共有
 
 - Controlで選択したVRMをRelayへアップロードする
 - Relayが一時URLまたはArrayBuffer配信を提供する
 - RenderがRelayからVRMを読み込む
+
+Status: implemented for VRM and VRMA temporary assets through `/relay/assets`.
 
 ### Step 4: Motion / Mocap同期
 

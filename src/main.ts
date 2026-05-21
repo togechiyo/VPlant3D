@@ -43,6 +43,12 @@ import {
   vrmExpressionPresets,
   type VrmExpressionPresetId,
 } from './vrm/expression-presets';
+import { VPlantRelayClient } from './relay/client';
+import type {
+  RelayAssetDescriptor,
+  RelayMessage,
+  RelayRenderState,
+} from './relay/messages';
 import {
   getUnknownVrmLoadErrorMessage,
   getVrmFileValidationMessage,
@@ -65,6 +71,8 @@ if (!app) {
 const options = parseObsQuery(window.location.search);
 const appStore = createAppStore(options);
 const state = appStore.getState();
+const isRenderPage = state.obsMode;
+const isControlPage = !state.obsMode;
 
 const viewport = document.createElement('section');
 viewport.className = state.transparent
@@ -186,6 +194,14 @@ let lipSyncMode: LipSyncMode = 'mic';
 let idleSwayEnabled = true;
 let faceTracker: MediaPipeFaceTracker | null = null;
 let handTracker: MediaPipeHandTracker | null = null;
+let relayMotionActive = false;
+let relayStatePublishTime = 0;
+let loadingRelayVrmAssetId: string | null = null;
+let loadingRelayVrmaAssetSignature: string | null = null;
+const relayClient = new VPlantRelayClient(
+  isRenderPage ? 'render' : 'control',
+  handleRelayMessage,
+);
 const restBoneQuaternions = new Map<string, THREE.Quaternion>();
 const avatarBasePosition = new THREE.Vector3();
 const avatarBaseScale = new THREE.Vector3(1, 1, 1);
@@ -199,7 +215,9 @@ const idleArmBoneNames = [
   VRMHumanBoneName.RightHand,
 ];
 
-if (!state.obsMode) {
+relayClient.connect();
+
+if (isControlPage) {
   const panel = document.createElement('aside');
   panel.className =
     'absolute inset-x-6 bottom-6 grid max-h-[34vh] gap-3 overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-3 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
@@ -445,6 +463,7 @@ if (!state.obsMode) {
     const loop = vrmaLoopInput?.checked ?? true;
     appStore.getState().setVrmaLoop(loop);
     syncVrmaLoopMode(loop);
+    publishVrmaCommand('select');
   });
   micStartButton?.addEventListener('click', () => {
     void startMicReactiveMouth();
@@ -532,16 +551,170 @@ function animate(frameTime = performance.now()): void {
   cube.rotation.y = elapsed * 0.52;
   currentVrmaMixer?.update(delta);
   applyUpperBodyRetarget();
-  applyCameraLessIdle(elapsed);
+  if (!isRenderPage) {
+    applyCameraLessIdle(elapsed);
+  }
   updateLookAtCameraTarget();
-  sampleCameraLessExpressions(elapsed);
-  sampleMicReactiveMouth();
+  if (!isRenderPage) {
+    sampleCameraLessExpressions(elapsed);
+    sampleMicReactiveMouth();
+    publishRelayState(frameTime);
+  }
   currentVrm?.update(delta);
   renderer.render(scene, camera);
   window.requestAnimationFrame(animate);
 }
 
 animate();
+
+function handleRelayMessage(message: RelayMessage): void {
+  if (!isRenderPage) {
+    return;
+  }
+
+  switch (message.type) {
+    case 'asset':
+      if (message.asset.kind === 'vrm') {
+        void loadRelayVrmAsset(message.asset);
+      }
+      break;
+    case 'vrmaSlots':
+      void loadRelayVrmaAssets(message.assets, message.selectedIndex);
+      break;
+    case 'state':
+      applyRelayRenderState(message.state);
+      break;
+    case 'vrmaCommand':
+      applyRelayVrmaCommand(message.command, message.selectedIndex, message.loop);
+      break;
+    case 'hello':
+      break;
+  }
+}
+
+async function loadRelayVrmAsset(asset: RelayAssetDescriptor): Promise<void> {
+  if (loadingRelayVrmAssetId === asset.id) {
+    return;
+  }
+
+  loadingRelayVrmAssetId = asset.id;
+  const file = await fileFromRelayAsset(asset);
+  await handleVrmFileSelection(file);
+}
+
+async function loadRelayVrmaAssets(
+  assets: RelayAssetDescriptor[],
+  selectedIndex: number,
+): Promise<void> {
+  const signature = assets.map((asset) => asset.id).join(':');
+  if (loadingRelayVrmaAssetSignature === signature) {
+    return;
+  }
+
+  loadingRelayVrmaAssetSignature = signature;
+  const files = await Promise.all(assets.map((asset) => fileFromRelayAsset(asset)));
+  await handleVrmaFileSelection(files);
+
+  if (selectedIndex >= 0) {
+    selectVrmaSlot(selectedIndex);
+  }
+}
+
+async function fileFromRelayAsset(asset: RelayAssetDescriptor): Promise<File> {
+  const response = await fetch(asset.url, {
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Relay asset fetch failed: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  return new File([blob], asset.name, {
+    type: blob.type || 'application/octet-stream',
+  });
+}
+
+function applyRelayVrmaCommand(
+  command: 'play' | 'stop' | 'select',
+  selectedIndex: number,
+  loop: boolean,
+): void {
+  appStore.getState().setVrmaLoop(loop);
+  syncVrmaLoopMode(loop);
+
+  if (selectedIndex >= 0 && selectedIndex !== selectedVrmaSlotIndex) {
+    selectVrmaSlot(selectedIndex);
+  }
+
+  if (command === 'play') {
+    startVrmaPlayback();
+  } else if (command === 'stop') {
+    stopVrmaPlayback();
+  }
+}
+
+function applyRelayRenderState(nextState: RelayRenderState): void {
+  appStore.getState().setAvatarOffsetX(nextState.avatarTransform.offsetX);
+  appStore.getState().setAvatarOffsetY(nextState.avatarTransform.offsetY);
+  appStore.getState().setAvatarScale(nextState.avatarTransform.scale);
+  appStore.getState().setAvatarRotationY(nextState.avatarTransform.rotationY);
+  appStore.getState().setVrmaLoop(nextState.vrmaLoop);
+  applyAvatarTransform();
+  syncVrmaLoopMode(nextState.vrmaLoop);
+
+  relayMotionActive = Boolean(
+    nextState.pose.head?.enabled || nextState.pose.upperBody?.enabled,
+  );
+  headRetargetPose = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
+  upperBodyRetargetPose = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
+  applyHeadRetarget();
+  applyRelayExpressions(nextState.expressions);
+}
+
+function applyRelayExpressions(expressions: RelayRenderState['expressions']): void {
+  for (const [name, value] of Object.entries(expressions)) {
+    if (typeof value === 'number') {
+      currentVrm?.expressionManager?.setValue(name, value);
+    }
+  }
+}
+
+function publishRelayState(frameTime: number): void {
+  if (!isControlPage || frameTime - relayStatePublishTime < 33) {
+    return;
+  }
+
+  relayStatePublishTime = frameTime;
+  const nextState = appStore.getState();
+  relayClient.send({
+    type: 'state',
+    state: {
+      avatarTransform: {
+        offsetX: nextState.avatarOffsetX,
+        offsetY: nextState.avatarOffsetY,
+        scale: nextState.avatarScale,
+        rotationY: nextState.avatarRotationY,
+      },
+      expressions: {
+        blinkLeft: faceExpressionWeights.blinkLeft,
+        blinkRight: faceExpressionWeights.blinkRight,
+        aa: faceExpressionWeights.aa,
+        ih: faceExpressionWeights.ih,
+        ou: faceExpressionWeights.ou,
+        ee: faceExpressionWeights.ee,
+        oh: faceExpressionWeights.oh,
+        happy: faceExpressionWeights.happy,
+        surprised: faceExpressionWeights.surprised,
+      },
+      pose: {
+        head: headRetargetPose,
+        upperBody: upperBodyRetargetPose,
+      },
+      vrmaLoop: nextState.vrmaLoop,
+    },
+  });
+}
 
 async function handleVrmFileSelection(file: File | null): Promise<void> {
   const validation = validateVrmFile(file);
@@ -562,6 +735,9 @@ async function handleVrmFileSelection(file: File | null): Promise<void> {
     const nextVrm = await loadVrmFromFile(file);
     replaceCurrentVrm(nextVrm);
     appStore.getState().setVrmReady(file.name);
+    if (isControlPage) {
+      void publishVrmAsset(file);
+    }
   } catch (error) {
     const message =
       error instanceof VrmLoadError ? error.message : getUnknownVrmLoadErrorMessage(error);
@@ -601,6 +777,7 @@ async function handleVrmaFileSelection(files: File[] | File | null): Promise<voi
   );
 
   try {
+    const relayAssets: RelayAssetDescriptor[] = [];
     for (const file of selectedFiles) {
       const fileValidation = validateVrmaFile(file);
       if (!fileValidation.ok) {
@@ -613,6 +790,13 @@ async function handleVrmaFileSelection(files: File[] | File | null): Promise<voi
         duration: animation.duration,
         animation,
       });
+      if (isControlPage) {
+        const asset = await relayClient.uploadAsset('vrma', file);
+        relayAssets.push({
+          ...asset,
+          duration: animation.duration,
+        });
+      }
     }
 
     selectedVrmaSlotIndex = 0;
@@ -624,6 +808,13 @@ async function handleVrmaFileSelection(files: File[] | File | null): Promise<voi
     }
     appStore.getState().setVrmaReady(selectedSlot.name, selectedSlot.duration);
     renderVrmaSlotList();
+    if (isControlPage) {
+      relayClient.send({
+        type: 'vrmaSlots',
+        assets: relayAssets,
+        selectedIndex: selectedVrmaSlotIndex,
+      });
+    }
   } catch (error) {
     currentVrma = null;
     selectedVrmaSlotIndex = -1;
@@ -632,6 +823,33 @@ async function handleVrmaFileSelection(files: File[] | File | null): Promise<voi
     appStore.getState().setVrmaError(message);
     renderVrmaSlotList();
   }
+}
+
+async function publishVrmAsset(file: File): Promise<void> {
+  try {
+    const asset = await relayClient.uploadAsset('vrm', file);
+    relayClient.send({
+      type: 'asset',
+      asset,
+    });
+  } catch (error) {
+    appStore
+      .getState()
+      .setVrmError(error instanceof Error ? error.message : 'RelayへのVRM送信に失敗しました');
+  }
+}
+
+function publishVrmaCommand(command: 'play' | 'stop' | 'select'): void {
+  if (!isControlPage) {
+    return;
+  }
+
+  relayClient.send({
+    type: 'vrmaCommand',
+    command,
+    selectedIndex: selectedVrmaSlotIndex,
+    loop: appStore.getState().vrmaLoop,
+  });
 }
 
 function replaceCurrentVrm(nextVrm: VRM): void {
@@ -890,12 +1108,14 @@ function startVrmaPlayback(): void {
 
   currentVrmaAction?.reset().play();
   appStore.getState().setVrmaPlaybackStatus('playing');
+  publishVrmaCommand('play');
 }
 
 function stopVrmaPlayback(): void {
   currentVrmaAction?.stop();
   currentVrmaMixer?.setTime(0);
   appStore.getState().setVrmaPlaybackStatus('stopped');
+  publishVrmaCommand('stop');
 }
 
 function syncVrmaLoopMode(loop: boolean): void {
@@ -1017,6 +1237,7 @@ function selectVrmaSlot(index: number): void {
   resetVrmaMixer();
   appStore.getState().setVrmaReady(slot.name, slot.duration);
   renderVrmaSlotList();
+  publishVrmaCommand('select');
 }
 
 async function startMicReactiveMouth(): Promise<void> {
@@ -1060,6 +1281,10 @@ function sampleMicReactiveMouth(): void {
 }
 
 function applyMouthOpen(value: number): void {
+  faceExpressionWeights = {
+    ...faceExpressionWeights,
+    aa: value,
+  };
   currentVrm?.expressionManager?.setValue('aa', value);
 }
 
@@ -1117,11 +1342,21 @@ function sampleCameraLessExpressions(elapsedSeconds: number): void {
 
   const result = sampleAutoBlink(autoBlinkState, elapsedSeconds);
   autoBlinkState = result.state;
+  faceExpressionWeights = {
+    ...faceExpressionWeights,
+    blinkLeft: result.weight,
+    blinkRight: result.weight,
+  };
   currentVrm.expressionManager?.setValue('blinkLeft', result.weight);
   currentVrm.expressionManager?.setValue('blinkRight', result.weight);
 }
 
 function applyBlinkOpen(): void {
+  faceExpressionWeights = {
+    ...faceExpressionWeights,
+    blinkLeft: 0,
+    blinkRight: 0,
+  };
   currentVrm?.expressionManager?.setValue('blinkLeft', 0);
   currentVrm?.expressionManager?.setValue('blinkRight', 0);
 }
@@ -1132,6 +1367,12 @@ function applyExpressionPreset(): void {
   for (const [name, value] of Object.entries(weights)) {
     currentVrm?.expressionManager?.setValue(name, value ?? 0);
   }
+
+  faceExpressionWeights = {
+    ...faceExpressionWeights,
+    happy: weights.happy ?? 0,
+    surprised: weights.surprised ?? 0,
+  };
 }
 
 function updateExpressionPresetUi(): void {
@@ -1616,7 +1857,7 @@ function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
 
 function applyUpperBodyRetarget(): void {
   const nextState = appStore.getState();
-  if (!currentVrm || nextState.poseStatus !== 'active') {
+  if (!currentVrm || (!relayMotionActive && nextState.poseStatus !== 'active')) {
     return;
   }
 

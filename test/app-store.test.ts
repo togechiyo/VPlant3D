@@ -6,11 +6,13 @@ describe('createAppStore', () => {
   it('initializes OBS display options from parsed query values', () => {
     const store = createAppStore({
       obsMode: true,
+      controlMode: false,
       transparent: true,
     });
 
     expect(store.getState()).toMatchObject({
       obsMode: true,
+      controlMode: false,
       transparent: true,
       rendererName: 'Three.js WebGL',
       vrmStatus: 'idle',
@@ -51,6 +53,7 @@ describe('createAppStore', () => {
   it('tracks VRM loading, ready, and error states', () => {
     const store = createAppStore({
       obsMode: false,
+      controlMode: false,
       transparent: false,
     });
 
@@ -82,6 +85,7 @@ describe('createAppStore', () => {
   it('tracks VRMA loading, ready, playback, loop, and error states', () => {
     const store = createAppStore({
       obsMode: false,
+      controlMode: false,
       transparent: false,
     });
 
@@ -121,6 +125,7 @@ describe('createAppStore', () => {
   it('tracks microphone reactive mouth state', () => {
     const store = createAppStore({
       obsMode: false,
+      controlMode: false,
       transparent: false,
     });
 
@@ -162,6 +167,7 @@ describe('createAppStore', () => {
   it('tracks MediaPipe pose debug state', () => {
     const store = createAppStore({
       obsMode: false,
+      controlMode: false,
       transparent: false,
     });
 
@@ -214,6 +220,7 @@ describe('createAppStore', () => {
   it('tracks face and hand tracking options and status', () => {
     const store = createAppStore({
       obsMode: false,
+      controlMode: false,
       transparent: false,
     });
 
@@ -265,6 +272,7 @@ describe('createAppStore', () => {
   it('tracks avatar transform controls', () => {
     const store = createAppStore({
       obsMode: false,
+      controlMode: false,
       transparent: false,
     });
 

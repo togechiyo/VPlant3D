@@ -10,6 +10,7 @@ export default tseslint.config(
       'test-results/',
       'node_modules/',
       'local-assets/',
+      'server/',
     ],
   },
   js.configs.recommended,
