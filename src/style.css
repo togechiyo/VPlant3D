@@ -60,7 +60,18 @@ body.is-transparent-render {
 }
 
 .viewport--control .scene-canvas {
-  width: calc(100% - min(444px, 44vw));
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  pointer-events: none;
+  width: min(420px, 42vw);
+  height: 236px;
+  border: 1px solid rgba(113, 255, 191, 0.22);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 55% 28%, rgba(56, 213, 255, 0.08), transparent 34%),
+    #0b0f10;
 }
 
 .scene-canvas {

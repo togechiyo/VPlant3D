@@ -1533,3 +1533,35 @@
 
 - Chromeで縦操作パネルのスクロール量と見やすさを確認する
 - 必要ならカード順をVRM/顔/体/手/位置/VRMAから、配信中操作頻度順に再配置する
+
+## 2026-05-21 Compact Control Preview Card
+
+### Goal
+
+- 画面分割時にControl Pageがきれいに見えるよう、モデルプレビューを小さな簡易ビューとして扱う
+- 操作パネルを簡易プレビューの下に縦配置する
+
+### Did
+
+- Control Pageのscene canvasを右上の小さなプレビュー枠へ変更した
+- 操作パネルをプレビュー枠の下へ移動した
+- Control Page用カメラを簡易プレビュー向けに調整した
+- プレビューcanvasが操作ボタンのクリックを遮らないよう `pointer-events: none` にした
+- OBS確認用dev serverを簡易プレビュー版で再起動した
+
+### Worked
+
+- `npm run test:e2e` は成功
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+
+### Failed / Blocked
+
+- 初回E2EではプレビューcanvasがVRMA再生ボタンのクリックを遮ったため、Control側canvasのpointer eventsを無効化した
+- 実際の画面分割時の見た目は人間確認待ち
+
+### Next
+
+- Chromeで、右上の簡易プレビューと縦操作パネルが狭い画面でも破綻しないか確認する
+- 必要なら簡易プレビューの高さ、パネル幅、カード順を調整する

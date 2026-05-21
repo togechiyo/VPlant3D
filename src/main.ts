@@ -232,7 +232,7 @@ relayClient.connect();
 if (isControlPage) {
   const panel = document.createElement('aside');
   panel.className =
-    'absolute right-4 top-4 bottom-4 w-[min(420px,42vw)] overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-2 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
+    'absolute right-4 top-[270px] bottom-4 w-[min(420px,42vw)] overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-2 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
   panel.innerHTML = `
     <div class="grid h-full content-start gap-2 overflow-y-auto pr-1">
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/35 bg-black/20 p-2">
@@ -932,8 +932,8 @@ function configureUpperBodyCamera(): void {
 }
 
 function configureControlPreviewCamera(): void {
-  camera.position.set(-0.1, 1.35, 6.4);
-  camera.lookAt(-0.1, 1.15, 0);
+  camera.position.set(0, 1.42, 5.2);
+  camera.lookAt(0, 1.18, 0);
   camera.updateProjectionMatrix();
 }
 
