@@ -13,25 +13,24 @@ describe('createHeadRetargetPose', () => {
     expect(createHeadRetargetPose(null)).toEqual(createNeutralHeadRetargetPose(false));
   });
 
-  it('maps a face transform matrix to conservative head rotation', () => {
+  it('maps a face transform matrix to stronger mirrored head rotation by default', () => {
+    const pose = createHeadRetargetPose(matrixFromEuler(0.2, 0.3, -0.1));
+
+    expect(pose.enabled).toBe(true);
+    expect(pose.pitch).toBeCloseTo(0.11);
+    expect(pose.yaw).toBeCloseTo(0.225);
+    expect(pose.roll).toBeCloseTo(-0.065);
+  });
+
+  it('inverts yaw and roll when mocap input is not mirrored', () => {
     const pose = createHeadRetargetPose(matrixFromEuler(0.2, 0.3, -0.1), {
       mirrorInput: false,
     });
 
     expect(pose.enabled).toBe(true);
-    expect(pose.pitch).toBeCloseTo(0.07);
-    expect(pose.yaw).toBeCloseTo(0.12);
-    expect(pose.roll).toBeCloseTo(-0.045);
-  });
-
-  it('mirrors yaw and roll when mocap input is mirrored', () => {
-    const pose = createHeadRetargetPose(matrixFromEuler(0.2, 0.3, -0.1), {
-      mirrorInput: true,
-    });
-
-    expect(pose.pitch).toBeCloseTo(0.07);
-    expect(pose.yaw).toBeCloseTo(-0.12);
-    expect(pose.roll).toBeCloseTo(0.045);
+    expect(pose.pitch).toBeCloseTo(0.11);
+    expect(pose.yaw).toBeCloseTo(-0.225);
+    expect(pose.roll).toBeCloseTo(0.065);
   });
 
   it('clamps large rotations', () => {
@@ -39,9 +38,9 @@ describe('createHeadRetargetPose', () => {
       mirrorInput: false,
     });
 
-    expect(pose.pitch).toBeCloseTo(0.18);
-    expect(pose.yaw).toBeCloseTo(0.22);
-    expect(pose.roll).toBeCloseTo(0.2);
+    expect(pose.pitch).toBeCloseTo(0.26);
+    expect(pose.yaw).toBeCloseTo(-0.38);
+    expect(pose.roll).toBeCloseTo(-0.3);
   });
 });
 

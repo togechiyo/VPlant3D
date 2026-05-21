@@ -770,3 +770,31 @@
 
 - 人間のChromeでblink反応、head yaw/pitch/rollの向き、照明の見た目を確認する
 - 必要ならSetup Modeにblink sensitivity、head tracking strength、lighting exposureを追加する
+
+## 2026-05-21 Head Mirror Direction Tune
+
+### Goal
+
+- 人間確認で、頭回転が弱く、mirror時の回転方向が直感と逆に見える問題を直す
+
+### Did
+
+- Head retargetのpitch/yaw/roll gainと最大回転を上げた
+- Head retargetのデフォルト平滑化を少し上げ、反応量を出しつつ急な揺れを抑える方向にした
+- `mirrorInput` のyaw/roll符号を反転し、mirror ON時の体感に合わせた
+- `test/head-retarget.test.ts` を更新し、mirror ON/OFFの符号と強めたgainを固定した
+
+### Worked
+
+- `npm run test -- head-retarget` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 実カメラでの最終体感は人間確認が必要
+
+### Next
+
+- Chromeで頭を左右/上下/傾きに動かして、mirror ON時の方向と強さを確認する
+- まだ強弱が合わなければSetup Modeにhead tracking strength sliderを追加する
