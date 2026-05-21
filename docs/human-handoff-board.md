@@ -46,7 +46,7 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 Notes:
 
-- 現時点の手は骨格表示のみ。VRM指ボーンへの反映は未実装
+- 現時点の手は骨格表示と初期の指カール反映まで実装済み。指の曲がる向きと強さは人間確認が必要
 - Face tracking active中は、Mic Reactive Mouthはメーター表示は続けるがVRM `aa` への書き込みを止める
 
 ### Todo: 人間のGoogle ChromeでAvatar Framingを確認

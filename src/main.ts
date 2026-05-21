@@ -19,7 +19,13 @@ import {
   createVrmFaceExpressionWeights,
   smoothFaceExpressionWeights,
 } from './mocap/face-expression-retarget';
-import { summarizeHandTracking } from './mocap/hand-landmarks';
+import {
+  createHandRetargetPose,
+  createNeutralHandRetargetPose,
+  getHandPoseGripAmount,
+  smoothHandRetargetPose,
+  summarizeHandTracking,
+} from './mocap/hand-landmarks';
 import {
   createHeadRetargetPose,
   createNeutralHeadRetargetPose,
@@ -35,6 +41,7 @@ import {
 import type { MediaPipePoseDebug } from './mocap/mediapipe-pose-debug';
 import type { MediaPipeFaceTracker, MediaPipeHandTracker } from './mocap/mediapipe-face-hand';
 import type { VrmFaceExpressionWeights } from './mocap/face-expression-retarget';
+import type { HandFingerCurl, HandRetargetPose } from './mocap/hand-landmarks';
 import type { HeadRetargetPose } from './mocap/head-retarget';
 import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
@@ -197,6 +204,8 @@ let lastPoseVideoTime = -1;
 let upperBodyRetargetPose = createNeutralRetargetPose(false);
 let faceExpressionWeights = createNeutralFaceExpressionWeights();
 let headRetargetPose: HeadRetargetPose = createNeutralHeadRetargetPose(false);
+let handRetargetPose: HandRetargetPose = createNeutralHandRetargetPose();
+let handRetargetWasActive = false;
 let autoBlinkState: AutoBlinkState = createAutoBlinkState(performance.now() / 1000);
 let selectedExpressionPreset: VrmExpressionPresetId = 'neutral';
 type BlinkMode = 'mocap' | 'auto' | 'off';
@@ -225,6 +234,38 @@ const idleArmBoneNames = [
   VRMHumanBoneName.RightLowerArm,
   VRMHumanBoneName.LeftHand,
   VRMHumanBoneName.RightHand,
+];
+const fingerBoneNames = [
+  VRMHumanBoneName.LeftThumbMetacarpal,
+  VRMHumanBoneName.LeftThumbProximal,
+  VRMHumanBoneName.LeftThumbDistal,
+  VRMHumanBoneName.LeftIndexProximal,
+  VRMHumanBoneName.LeftIndexIntermediate,
+  VRMHumanBoneName.LeftIndexDistal,
+  VRMHumanBoneName.LeftMiddleProximal,
+  VRMHumanBoneName.LeftMiddleIntermediate,
+  VRMHumanBoneName.LeftMiddleDistal,
+  VRMHumanBoneName.LeftRingProximal,
+  VRMHumanBoneName.LeftRingIntermediate,
+  VRMHumanBoneName.LeftRingDistal,
+  VRMHumanBoneName.LeftLittleProximal,
+  VRMHumanBoneName.LeftLittleIntermediate,
+  VRMHumanBoneName.LeftLittleDistal,
+  VRMHumanBoneName.RightThumbMetacarpal,
+  VRMHumanBoneName.RightThumbProximal,
+  VRMHumanBoneName.RightThumbDistal,
+  VRMHumanBoneName.RightIndexProximal,
+  VRMHumanBoneName.RightIndexIntermediate,
+  VRMHumanBoneName.RightIndexDistal,
+  VRMHumanBoneName.RightMiddleProximal,
+  VRMHumanBoneName.RightMiddleIntermediate,
+  VRMHumanBoneName.RightMiddleDistal,
+  VRMHumanBoneName.RightRingProximal,
+  VRMHumanBoneName.RightRingIntermediate,
+  VRMHumanBoneName.RightRingDistal,
+  VRMHumanBoneName.RightLittleProximal,
+  VRMHumanBoneName.RightLittleIntermediate,
+  VRMHumanBoneName.RightLittleDistal,
 ];
 
 relayClient.connect();
@@ -336,12 +377,12 @@ if (isControlPage) {
     <div class="grid content-start gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">手</span>
-        <strong class="text-sm font-bold text-[#eef4f2]">骨格表示</strong>
+        <strong class="text-sm font-bold text-[#eef4f2]">指トラック</strong>
         <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">手: 待機</span>
       </div>
       <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
         <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        手の骨格
+        手 / 指
       </label>
     </div>
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/25 bg-black/20 p-2">
@@ -491,6 +532,7 @@ if (isControlPage) {
     const enabled = handTrackingInput?.checked ?? true;
     appStore.getState().setHandTrackingEnabled(enabled);
     if (!enabled) {
+      resetHandRetarget();
       appStore.getState().setHandTrackingStopped();
     } else if (handTracker && appStore.getState().poseStatus === 'active') {
       appStore.getState().setHandTrackingActive();
@@ -562,6 +604,7 @@ function animate(frameTime = performance.now()): void {
   cube.rotation.y = elapsed * 0.52;
   currentVrmaMixer?.update(delta);
   applyUpperBodyRetarget();
+  applyHandRetarget();
   if (!isRenderPage) {
     applyCameraLessIdle(elapsed);
   }
@@ -675,10 +718,14 @@ function applyRelayRenderState(nextState: RelayRenderState): void {
   syncVrmaLoopMode(nextState.vrmaLoop);
 
   relayMotionActive = Boolean(
-    nextState.pose.head?.enabled || nextState.pose.upperBody?.enabled,
+    nextState.pose.head?.enabled ||
+      nextState.pose.upperBody?.enabled ||
+      nextState.pose.hands?.left ||
+      nextState.pose.hands?.right,
   );
   headRetargetPose = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
   upperBodyRetargetPose = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
+  handRetargetPose = nextState.pose.hands ?? createNeutralHandRetargetPose();
   applyHeadRetarget();
   applyRelayExpressions(nextState.expressions);
 }
@@ -721,6 +768,7 @@ function publishRelayState(frameTime: number): void {
       pose: {
         head: headRetargetPose,
         upperBody: upperBodyRetargetPose,
+        hands: handRetargetPose,
       },
       vrmaLoop: nextState.vrmaLoop,
     },
@@ -985,6 +1033,7 @@ function captureRestBoneQuaternions(vrm: VRM): void {
     VRMHumanBoneName.Neck,
     VRMHumanBoneName.Head,
     ...idleArmBoneNames,
+    ...fingerBoneNames,
   ]) {
     const bone = vrm.humanoid.getNormalizedBoneNode(boneName);
 
@@ -1601,6 +1650,7 @@ function stopPoseDebug(): void {
   clearPoseCanvas();
   resetUpperBodyRetarget();
   resetFaceExpressions();
+  resetHandRetarget();
   appStore.getState().setPoseStopped();
   appStore.getState().setFaceTrackingStopped();
   appStore.getState().setHandTrackingStopped();
@@ -1754,13 +1804,18 @@ function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
 
   const result = handTracker.detect(videoFrame, frameTime);
   const summary = summarizeHandTracking(result.landmarks, result.handedness);
+  const nextHandPose = createHandRetargetPose(result.landmarks, result.handedness, {
+    mirrorInput: appStore.getState().poseMirrorInput,
+  });
+  handRetargetPose = smoothHandRetargetPose(handRetargetPose, nextHandPose);
   drawHandDebugLandmarks(result.landmarks);
+  const gripAmount = getHandPoseGripAmount(handRetargetPose);
   appStore
     .getState()
     .setHandTrackingFrame(
       summary.handCount === 0
         ? '手: 未検出'
-        : `手: ${summary.handCount}`,
+        : `手: ${summary.handCount} / 握り ${gripAmount.toFixed(2)}`,
     );
 }
 
@@ -1912,6 +1967,116 @@ function applyUpperBodyRetarget(): void {
     VRMHumanBoneName.RightUpperArm,
     upperBodyRetargetPose.rightUpperArmRoll,
   );
+}
+
+function applyHandRetarget(): void {
+  if (!currentVrm) {
+    return;
+  }
+
+  const hasHandPose = Boolean(handRetargetPose.left || handRetargetPose.right);
+  if (!hasHandPose) {
+    if (handRetargetWasActive) {
+      restoreHandBones();
+      handRetargetWasActive = false;
+    }
+    return;
+  }
+
+  applyFingerCurl('left', handRetargetPose.left);
+  applyFingerCurl('right', handRetargetPose.right);
+  currentVrm.humanoid.update();
+  handRetargetWasActive = true;
+}
+
+function applyFingerCurl(side: 'left' | 'right', curl: HandFingerCurl | null): void {
+  if (!currentVrm) {
+    return;
+  }
+
+  if (!curl) {
+    restoreFingerBones(side);
+    return;
+  }
+
+  const prefix = side;
+  const thumbSign = side === 'left' ? 1 : -1;
+
+  applyFingerBone(`${prefix}ThumbMetacarpal`, 0, thumbSign * 0.16 * curl.thumb, -0.25 * curl.thumb);
+  applyFingerBone(`${prefix}ThumbProximal`, -0.35 * curl.thumb, thumbSign * 0.08 * curl.thumb, 0);
+  applyFingerBone(`${prefix}ThumbDistal`, -0.42 * curl.thumb, 0, 0);
+  applyThreeSegmentFinger(prefix, 'Index', curl.index, 0.58, 0.78, 0.46);
+  applyThreeSegmentFinger(prefix, 'Middle', curl.middle, 0.62, 0.82, 0.5);
+  applyThreeSegmentFinger(prefix, 'Ring', curl.ring, 0.58, 0.78, 0.46);
+  applyThreeSegmentFinger(prefix, 'Little', curl.little, 0.52, 0.72, 0.42);
+}
+
+function applyThreeSegmentFinger(
+  prefix: 'left' | 'right',
+  finger: 'Index' | 'Middle' | 'Ring' | 'Little',
+  curl: number,
+  proximalAmount: number,
+  intermediateAmount: number,
+  distalAmount: number,
+): void {
+  applyFingerBone(`${prefix}${finger}Proximal`, -proximalAmount * curl, 0, 0);
+  applyFingerBone(`${prefix}${finger}Intermediate`, -intermediateAmount * curl, 0, 0);
+  applyFingerBone(`${prefix}${finger}Distal`, -distalAmount * curl, 0, 0);
+}
+
+function applyFingerBone(
+  boneName: string,
+  x: number,
+  y: number,
+  z: number,
+): void {
+  if (!currentVrm) {
+    return;
+  }
+
+  const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName as VRMHumanBoneName);
+  const restQuaternion = restBoneQuaternions.get(boneName);
+
+  if (!bone || !restQuaternion) {
+    return;
+  }
+
+  const delta = new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, 'XYZ'));
+  bone.quaternion.copy(restQuaternion).multiply(delta);
+  bone.userData.vplant3dHandMocapActive = true;
+}
+
+function resetHandRetarget(): void {
+  handRetargetPose = createNeutralHandRetargetPose();
+  restoreHandBones();
+  handRetargetWasActive = false;
+}
+
+function restoreHandBones(): void {
+  restoreFingerBones('left');
+  restoreFingerBones('right');
+}
+
+function restoreFingerBones(side: 'left' | 'right'): void {
+  if (!currentVrm) {
+    return;
+  }
+
+  const prefix = side === 'left' ? 'left' : 'right';
+
+  for (const boneName of fingerBoneNames) {
+    if (!boneName.startsWith(prefix)) {
+      continue;
+    }
+
+    const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
+    const restQuaternion = restBoneQuaternions.get(boneName);
+
+    if (bone && restQuaternion) {
+      bone.quaternion.copy(restQuaternion);
+      bone.userData.vplant3dHandMocapActive = false;
+    }
+  }
 }
 
 function applyCameraLessIdle(elapsedSeconds: number): void {

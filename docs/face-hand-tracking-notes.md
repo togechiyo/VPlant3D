@@ -10,8 +10,8 @@ The goal is to add expressive input while preserving VTuber privacy:
 
 - no raw camera image is shown
 - face tracking drives VRM expressions
-- hand tracking is displayed as a skeleton overlay first
-- hand-to-VRM finger retargeting is deferred until the tracking quality is confirmed
+- hand tracking is displayed as a skeleton overlay
+- hand tracking drives a first-pass VRM finger curl retarget
 
 ## References
 
@@ -69,20 +69,24 @@ Current behavior:
 
 - detect up to two hands
 - draw a green hand skeleton over the black debug panel
-- show detected handedness labels in Setup Mode
+- estimate per-finger curl from MediaPipe hand joints
+- mirror handedness with the same `ミラー` setting used by body/head tracking
+- apply thumb/index/middle/ring/little curl to VRM normalized finger bones
+- relay the finger curl state from Control Page to OBS Render Page
 
-Not implemented yet:
+Current limitations:
 
-- VRM finger bone retargeting
+- finger curl axis is a conservative first pass and may need per-model tuning
 - hand gestures mapped to avatar reactions
 - wrist/arm IK
+- individual finger spread/splay
 
 ## UI
 
 Inside `MediaPipe Pose Debug`:
 
 - `Face expressions / lip sync`
-- `Hand skeleton`
+- `Hand / finger`
 - `Mirror mocap input`
 
 Face and hand options are chosen before `Start camera`. They are disabled while the camera pipeline is active so model startup/teardown remains predictable.
@@ -91,11 +95,11 @@ Face and hand options are chosen before `Start camera`. They are disabled while 
 
 - The face and hand models add more CPU work. If frame rate drops, add separate start/stop controls or lower detection frequency.
 - Face expression quality depends heavily on lighting, camera angle, and whether the user's face is visible enough to MediaPipe.
-- Hand skeleton display is useful for confirmation, but hand-to-VRM retargeting needs more care to avoid uncanny finger motion.
+- Hand-to-VRM retargeting currently focuses on finger curl only. It intentionally avoids wrist IK and finger spread until the base curl direction is verified on multiple VRM models.
 
 ## Next Steps
 
 - Human verifies face expression/lip sync behavior in Chrome.
-- Human verifies hand skeleton detection in Chrome.
+- Human verifies hand skeleton detection and VRM finger curl direction in Chrome/OBS.
 - Tune face expression gains if blink or mouth is too strong/weak.
-- Add hand gesture reactions before full finger retargeting if time is tight.
+- Add hand gesture reactions after finger curl direction is stable.

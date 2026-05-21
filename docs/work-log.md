@@ -1624,3 +1624,40 @@
 
 - OBS Browser Sourceを再読み込みし、顔が画面中央付近に来るか確認する
 - 必要ならRender専用の「顔位置/上半身/全身」framing presetを追加する
+
+## 2026-05-21 First Hand Tracking Retarget
+
+### Goal
+
+- MediaPipe Hand Landmarkerの手骨格からVRM指ボーンへ最低限の指カールを流し込む
+- Control PageだけでなくOBS Render Pageにも指状態を同期する
+
+### Did
+
+- `src/mocap/hand-landmarks.ts` に手ランドマークから親指/人差し指/中指/薬指/小指のカール量を作る純粋ロジックを追加した
+- `test/hand-landmarks.test.ts` に開いた手、握った手、ミラー、検出ロスト時の減衰テストを追加した
+- VRM標準のnormalized finger bonesへカール量を適用する処理を追加した
+- relay stateにhand poseを追加し、Control PageからOBS Render Pageへ指カールを送るようにした
+- 手UIを「骨格表示」から「指トラック」寄りの表記に変更した
+- `docs/face-hand-tracking-notes.md` と `docs/third-party-libraries.md` を更新した
+
+### Worked
+
+- `npm run test -- test/hand-landmarks.test.ts` は成功
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- 初回 `npm run test:e2e` はUI文言変更で失敗したが、E2E期待値を「指トラック」「手 / 指」に更新後は成功
+- Browserで `http://127.0.0.1:5173/?control=1` と `?obs=1&transparent=1` を確認し、Control UIとOBS Render canvasが表示されることを確認した
+
+### Failed / Blocked
+
+- 初回E2Eでは旧文言「手の骨格」「骨格表示」を探して失敗した
+- 指ボーンの曲がる軸と強さはモデル差が出やすいため、人間のChrome/OBS確認が必要
+- 手首IKや指の開き、ジェスチャー反応は未実装
+
+### Next
+
+- Chromeで手を開閉し、指が自然な向きに曲がるか確認する
+- OBS Render Page側でも同じ指カールが反映されるか確認する
+- 必要なら指ごとのカール符号・強さを調整する

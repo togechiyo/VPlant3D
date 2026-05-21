@@ -43,6 +43,18 @@ export interface RelayPoseState {
     leftUpperArmRoll: number;
     rightUpperArmRoll: number;
   };
+  hands?: {
+    left: RelayFingerCurl | null;
+    right: RelayFingerCurl | null;
+  };
+}
+
+export interface RelayFingerCurl {
+  thumb: number;
+  index: number;
+  middle: number;
+  ring: number;
+  little: number;
 }
 
 export interface RelayRenderState {
