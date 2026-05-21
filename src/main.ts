@@ -102,7 +102,7 @@ const renderer = new THREE.WebGLRenderer({
   premultipliedAlpha: false,
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(window.innerWidth, window.innerHeight, !isControlPage);
 renderer.setClearColor(state.transparent ? 0x000000 : 0x101314, state.transparent ? 0 : 1);
 renderer.setClearAlpha(state.transparent ? 0 : 1);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -588,11 +588,31 @@ app.append(viewport);
 syncFaceTrackingEnabledFromModes();
 appStore.subscribe(updateVrmStatusUi);
 updateVrmStatusUi(appStore.getState());
+resize();
 
 function resize(): void {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  const { width, height } = getRenderSize();
+  camera.aspect = width / height;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(width, height, !isControlPage);
+}
+
+function getRenderSize(): { width: number; height: number } {
+  if (!isControlPage) {
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  }
+
+  const canvasBox = renderer.domElement.getBoundingClientRect();
+  const width = Math.max(1, Math.round(canvasBox.width || window.innerWidth));
+  const height = Math.max(1, Math.round(canvasBox.height || width * 9 / 16));
+
+  return {
+    width,
+    height,
+  };
 }
 
 window.addEventListener('resize', resize);

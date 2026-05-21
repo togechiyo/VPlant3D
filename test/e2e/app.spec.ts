@@ -22,6 +22,11 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   expect((canvasBox?.width ?? 0) / (canvasBox?.height ?? 1)).toBeCloseTo(16 / 9, 1);
   expect(panelBox?.y ?? 0).toBeGreaterThan((canvasBox?.y ?? 0) + (canvasBox?.height ?? 0));
   expect(panelBox?.width).toBeCloseTo(canvasBox?.width ?? 0, 0);
+  const drawingBufferSize = await page.locator('canvas.scene-canvas').evaluate((canvas) => ({
+    width: (canvas as HTMLCanvasElement).width,
+    height: (canvas as HTMLCanvasElement).height,
+  }));
+  expect(drawingBufferSize.width / drawingBufferSize.height).toBeCloseTo(16 / 9, 1);
   await expect(page.getByText('設定')).toBeVisible();
   await expect(page.getByText('VRMを読み込む', { exact: true })).toBeVisible();
   await expect(page.getByText('VRMAを読み込む', { exact: true })).toBeVisible();

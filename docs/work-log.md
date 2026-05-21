@@ -1816,3 +1816,32 @@
 
 - Chromeで、縦長ウィンドウにした時にプレビューと操作パネルの密度が意図通りか確認する
 - 必要なら最大幅720px、低画面高時560pxの値を調整する
+
+## 2026-05-21 Control Preview Aspect Fix
+
+### Goal
+
+- コントローラーのモデルプレビューが横伸びして見える問題を修正する
+
+### Did
+
+- Control PageではcanvasのCSSサイズだけでなく、Three.js rendererの描画バッファもプレビュー枠の実寸に合わせるようにした
+- Control Pageのcamera aspectもプレビューcanvasの実寸から計算するようにした
+- Render/OBS Pageはこれまで通りwindow全体サイズを使う
+- E2Eでcanvas CSS比率だけでなくdrawing buffer比率も16:9に近いことを確認するようにした
+
+### Worked
+
+- `npm run test:e2e -- test/e2e/app.spec.ts:11` は成功
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- 前回はCSSの枠だけ16:9で、Three.js内部はwindow全体aspectのままだったため横伸びした
+
+### Next
+
+- Chromeでモデルプレビューが横伸びせず、自然な比率で表示されるか確認する
