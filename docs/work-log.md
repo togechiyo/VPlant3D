@@ -1565,3 +1565,32 @@
 
 - Chromeで、右上の簡易プレビューと縦操作パネルが狭い画面でも破綻しないか確認する
 - 必要なら簡易プレビューの高さ、パネル幅、カード順を調整する
+
+## 2026-05-21 Restore Visible Control Panel
+
+### Goal
+
+- Compact preview変更後にControl Pageの操作パネルが見えなくなった問題を修正する
+
+### Did
+
+- Control panelの位置指定をTailwind utilityから `.control-panel` CSSへ移した
+- Control preview canvasとControl panelのz-indexを明示した
+- `.control-panel` をpreview canvasより前面に出すようにした
+- 小さい画面高向けにpreview heightとpanel topのmedia queryを追加した
+- OBS確認用dev serverを修正版で再起動した
+
+### Worked
+
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run lint` は成功
+- `npm run test` は成功
+
+### Failed / Blocked
+
+- 人間のChrome画面で操作パネルが戻ったかは確認待ち
+
+### Next
+
+- Chrome側をリロードし、右上previewと右下control panelが見えるか確認する

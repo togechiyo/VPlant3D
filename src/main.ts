@@ -231,8 +231,7 @@ relayClient.connect();
 
 if (isControlPage) {
   const panel = document.createElement('aside');
-  panel.className =
-    'absolute right-4 top-[270px] bottom-4 w-[min(420px,42vw)] overflow-hidden rounded-lg border border-[rgba(113,255,191,0.22)] bg-[rgba(20,24,26,0.9)] p-2 text-[#eef4f2] shadow-[0_0_32px_rgba(56,213,255,0.08)] backdrop-blur-md';
+  panel.className = 'control-panel';
   panel.innerHTML = `
     <div class="grid h-full content-start gap-2 overflow-y-auto pr-1">
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/35 bg-black/20 p-2">
