@@ -44,7 +44,7 @@ export function createUpperBodyRetargetPose(
   const shoulderTilt = (summary.shoulderTilt ?? 0) * inputDirection;
   const torsoTurn = (summary.torsoTurn ?? 0) * torsoTurnDirection;
   const chestYaw = clamp(
-    -torsoLean * 2.4 + torsoTurn * 0.18,
+    -torsoLean * 2.4 + torsoTurn * 0.34,
     -options.maxChestYaw,
     options.maxChestYaw,
   );

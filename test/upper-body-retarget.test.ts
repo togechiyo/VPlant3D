@@ -75,8 +75,8 @@ describe('createUpperBodyRetargetPose', () => {
       }),
     );
 
-    expect(pose.chestYaw).toBeCloseTo(0.09);
-    expect(pose.neckYaw).toBeCloseTo(0.0405);
+    expect(pose.chestYaw).toBeCloseTo(0.17);
+    expect(pose.neckYaw).toBeCloseTo(0.0765);
   });
 
   it('mirrors elbow lift before mapping upper arm roll deltas by default', () => {

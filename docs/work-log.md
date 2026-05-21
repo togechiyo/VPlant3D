@@ -930,3 +930,37 @@
 
 - Chromeで目線が常にカメラ寄りに見えるか確認する
 - 体を横回転したときと肘を上げたとき、mirror ONの直感に合うか確認する
+
+## 2026-05-21 Head Yaw and Torso Turn Gain Tune
+
+### Goal
+
+- 人間確認で、肘trackingは良いので維持する
+- 体の横回転をもう少し強める
+- 頭の傾きrollは少し抑える
+- 頭の横回転yawは真横近くまで向けるように上限を広げる
+
+### Did
+
+- Head retargetのyaw gainを上げ、max yawを大きく広げた
+- 真横近い顔向きのyaw上限をテストで固定した
+- Head retargetのroll gainとmax rollを下げ、傾きが出すぎないようにした
+- 肩奥行き由来のtorso turn weightを上げ、chest yawへより見える形で混ぜた
+- `test/head-retarget.test.ts` と `test/upper-body-retarget.test.ts` を更新
+
+### Worked
+
+- `npm run test -- head-retarget upper-body-retarget` は成功
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+
+### Failed / Blocked
+
+- 真横近くの頭yawと体の横回転量は実カメラで人間確認が必要
+
+### Next
+
+- Chromeで頭を横に大きく振ったとき、上限に当たりすぎず自然に真横寄りまで向くか確認する
+- 体を横に回したとき、胸の追従が十分か確認する

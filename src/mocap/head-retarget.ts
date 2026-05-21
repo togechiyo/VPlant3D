@@ -21,11 +21,11 @@ export interface HeadRetargetOptions {
 export const defaultHeadRetargetOptions: HeadRetargetOptions = {
   mirrorInput: true,
   pitchGain: 0.95,
-  yawGain: 0.75,
-  rollGain: 0.9,
+  yawGain: 1.05,
+  rollGain: 0.6,
   maxPitch: 0.42,
-  maxYaw: 0.38,
-  maxRoll: 0.4,
+  maxYaw: 1.25,
+  maxRoll: 0.24,
 };
 
 export function createNeutralHeadRetargetPose(enabled = false): HeadRetargetPose {

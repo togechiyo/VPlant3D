@@ -18,8 +18,8 @@ describe('createHeadRetargetPose', () => {
 
     expect(pose.enabled).toBe(true);
     expect(pose.pitch).toBeCloseTo(0.19);
-    expect(pose.yaw).toBeCloseTo(0.225);
-    expect(pose.roll).toBeCloseTo(0.09);
+    expect(pose.yaw).toBeCloseTo(0.315);
+    expect(pose.roll).toBeCloseTo(0.06);
   });
 
   it('inverts yaw while keeping roll natural when mocap input is not mirrored', () => {
@@ -29,8 +29,8 @@ describe('createHeadRetargetPose', () => {
 
     expect(pose.enabled).toBe(true);
     expect(pose.pitch).toBeCloseTo(0.19);
-    expect(pose.yaw).toBeCloseTo(-0.225);
-    expect(pose.roll).toBeCloseTo(-0.09);
+    expect(pose.yaw).toBeCloseTo(-0.315);
+    expect(pose.roll).toBeCloseTo(-0.06);
   });
 
   it('clamps large rotations', () => {
@@ -39,8 +39,14 @@ describe('createHeadRetargetPose', () => {
     });
 
     expect(pose.pitch).toBeCloseTo(0.42);
-    expect(pose.yaw).toBeCloseTo(-0.38);
-    expect(pose.roll).toBeCloseTo(0.4);
+    expect(pose.yaw).toBeCloseTo(-1.05);
+    expect(pose.roll).toBeCloseTo(0.24);
+  });
+
+  it('allows near side-facing yaw for large face turns', () => {
+    const pose = createHeadRetargetPose(matrixFromEuler(0, Math.PI / 2, 0));
+
+    expect(pose.yaw).toBeCloseTo(1.25);
   });
 });
 
