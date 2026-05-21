@@ -12,6 +12,7 @@ import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
 import {
   createNeutralRetargetPose,
   createUpperBodyRetargetPose,
+  defaultUpperBodyRetargetOptions,
   smoothUpperBodyRetargetPose,
 } from './mocap/upper-body-retarget';
 import type { MediaPipePoseDebug } from './mocap/mediapipe-pose-debug';
@@ -122,6 +123,7 @@ let poseSummaryText: HTMLElement | null = null;
 let poseVisibilityBar: HTMLElement | null = null;
 let poseStartButton: HTMLButtonElement | null = null;
 let poseStopButton: HTMLButtonElement | null = null;
+let poseMirrorInput: HTMLInputElement | null = null;
 let poseAnimationFrameId: number | null = null;
 let lastPoseVideoTime = -1;
 let upperBodyRetargetPose = createNeutralRetargetPose(false);
@@ -204,6 +206,10 @@ if (!state.obsMode) {
         </div>
         <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="pose-visibility-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
       </div>
+      <label class="inline-flex items-center gap-2 text-sm font-bold text-[#9fa9aa]">
+        <input id="pose-mirror-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+        Mirror mocap input
+      </label>
       <div class="grid grid-cols-2 gap-2">
         <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-[#6dff9a]/10 disabled:cursor-not-allowed disabled:opacity-40" type="button">Start camera</button>
         <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">Stop camera</button>
@@ -241,6 +247,7 @@ if (!state.obsMode) {
   poseVisibilityBar = panel.querySelector<HTMLElement>('#pose-visibility-bar');
   poseStartButton = panel.querySelector<HTMLButtonElement>('#pose-start-button');
   poseStopButton = panel.querySelector<HTMLButtonElement>('#pose-stop-button');
+  poseMirrorInput = panel.querySelector<HTMLInputElement>('#pose-mirror-input');
 
   vrmFileInput?.addEventListener('change', () => {
     const file = vrmFileInput.files?.[0] ?? null;
@@ -266,6 +273,9 @@ if (!state.obsMode) {
     void startPoseDebug();
   });
   poseStopButton?.addEventListener('click', stopPoseDebug);
+  poseMirrorInput?.addEventListener('change', () => {
+    appStore.getState().setPoseMirrorInput(poseMirrorInput?.checked ?? true);
+  });
 
   viewport.append(panel);
 } else {
@@ -414,8 +424,8 @@ function fitObjectToDefaultView(object: THREE.Object3D): void {
 }
 
 function configureUpperBodyCamera(): void {
-  camera.position.set(0, 1.35, 3.25);
-  camera.lookAt(0, 1.22, 0);
+  camera.position.set(0, 1.58, 2.55);
+  camera.lookAt(0, 1.38, 0);
   camera.updateProjectionMatrix();
 }
 
@@ -872,7 +882,10 @@ function clearPoseCanvas(): void {
 function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
   upperBodyRetargetPose = smoothUpperBodyRetargetPose(
     upperBodyRetargetPose,
-    createUpperBodyRetargetPose(summary),
+    createUpperBodyRetargetPose(summary, {
+      ...defaultUpperBodyRetargetOptions,
+      mirrorInput: appStore.getState().poseMirrorInput,
+    }),
   );
 }
 
@@ -981,6 +994,10 @@ function updatePoseStatusUi(nextState: AppState): void {
 
   if (poseVisibilityBar) {
     poseVisibilityBar.style.width = `${(nextState.poseAverageVisibility * 100).toFixed(1)}%`;
+  }
+
+  if (poseMirrorInput) {
+    poseMirrorInput.checked = nextState.poseMirrorInput;
   }
 
   if (poseStartButton) {

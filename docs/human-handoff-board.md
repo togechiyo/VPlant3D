@@ -37,16 +37,19 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
   - `npm run dev` で `http://127.0.0.1:5173/` を開く
   - VRMを読み込む
   - `MediaPipe Pose Debug` の `Start camera` を押す
+  - `Mirror mocap input` がon/offで直感に合う方向を選べる
   - 肩を左右に傾ける、体を左右に少し寄せる
   - VRMの胸または首が控えめに追従する
+  - 中央へ戻る補正が強すぎず、小さめの傾きでも反映される
   - 追従が強すぎない、弱すぎない、ガタガタしすぎない
+  - VRMロード後の画角で顔が中央ちょい上に来る
   - `Stop camera` で姿勢が戻る
   - VRMA再生だけを使う時にMediaPipe停止状態で動きが壊れない
 
 Notes:
 
 - 現在は胸/upperChestと首のyaw/rollのみ。腕や頭位置の本格トラッキングは未実装
-- 反応が弱い場合はgainを上げる。強い場合はmax rotationとsmoothingを下げる
+- 反応が弱い場合はgainをさらに上げる。強い場合はmax rotationとsmoothingを下げる
 
 ### Done: 人間のGoogle ChromeでMediaPipe Pose Debugを確認
 

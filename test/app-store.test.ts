@@ -32,6 +32,7 @@ describe('createAppStore', () => {
       poseUpperBodyVisibleCount: 0,
       poseAverageVisibility: 0,
       poseSummaryText: 'Camera idle.',
+      poseMirrorInput: true,
     });
   });
 
@@ -188,11 +189,13 @@ describe('createAppStore', () => {
     });
 
     store.getState().setPoseStopped();
+    store.getState().setPoseMirrorInput(false);
 
     expect(store.getState()).toMatchObject({
       poseStatus: 'idle',
       poseError: null,
       poseSummaryText: 'Camera idle.',
+      poseMirrorInput: false,
     });
   });
 });

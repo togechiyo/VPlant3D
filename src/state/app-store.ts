@@ -32,6 +32,7 @@ export interface AppState {
   poseUpperBodyVisibleCount: number;
   poseAverageVisibility: number;
   poseSummaryText: string;
+  poseMirrorInput: boolean;
   setVrmLoading: (fileName: string) => void;
   setVrmReady: (fileName: string) => void;
   setVrmError: (message: string) => void;
@@ -56,6 +57,7 @@ export interface AppState {
     averageVisibility: number,
     summaryText: string,
   ) => void;
+  setPoseMirrorInput: (mirrorInput: boolean) => void;
 }
 
 export type AppStore = ReturnType<typeof createAppStore>;
@@ -86,6 +88,7 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     poseUpperBodyVisibleCount: 0,
     poseAverageVisibility: 0,
     poseSummaryText: 'Camera idle.',
+    poseMirrorInput: true,
     setVrmLoading: (fileName) =>
       set({
         vrmStatus: 'loading',
@@ -206,6 +209,10 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
         poseUpperBodyVisibleCount: upperBodyVisibleCount,
         poseAverageVisibility: averageVisibility,
         poseSummaryText: summaryText,
+      }),
+    setPoseMirrorInput: (mirrorInput) =>
+      set({
+        poseMirrorInput: mirrorInput,
       }),
   }));
 }

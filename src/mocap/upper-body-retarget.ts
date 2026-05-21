@@ -10,6 +10,7 @@ export interface UpperBodyRetargetPose {
 
 export interface UpperBodyRetargetOptions {
   minVisibility: number;
+  mirrorInput: boolean;
   maxChestYaw: number;
   maxChestRoll: number;
   maxNeckYaw: number;
@@ -17,11 +18,12 @@ export interface UpperBodyRetargetOptions {
 }
 
 export const defaultUpperBodyRetargetOptions: UpperBodyRetargetOptions = {
-  minVisibility: 0.45,
-  maxChestYaw: 0.18,
-  maxChestRoll: 0.22,
-  maxNeckYaw: 0.08,
-  maxNeckRoll: 0.1,
+  minVisibility: 0.32,
+  mirrorInput: true,
+  maxChestYaw: 0.26,
+  maxChestRoll: 0.34,
+  maxNeckYaw: 0.12,
+  maxNeckRoll: 0.15,
 };
 
 export function createUpperBodyRetargetPose(
@@ -32,10 +34,11 @@ export function createUpperBodyRetargetPose(
     return createNeutralRetargetPose(false);
   }
 
-  const torsoLean = summary.torsoLean ?? 0;
-  const shoulderTilt = summary.shoulderTilt ?? 0;
-  const chestYaw = clamp(-torsoLean * 1.6, -options.maxChestYaw, options.maxChestYaw);
-  const chestRoll = clamp(-shoulderTilt * 1.7, -options.maxChestRoll, options.maxChestRoll);
+  const inputDirection = options.mirrorInput ? -1 : 1;
+  const torsoLean = (summary.torsoLean ?? 0) * inputDirection;
+  const shoulderTilt = (summary.shoulderTilt ?? 0) * inputDirection;
+  const chestYaw = clamp(-torsoLean * 2.6, -options.maxChestYaw, options.maxChestYaw);
+  const chestRoll = clamp(-shoulderTilt * 2.8, -options.maxChestRoll, options.maxChestRoll);
 
   return {
     enabled: true,
@@ -49,7 +52,7 @@ export function createUpperBodyRetargetPose(
 export function smoothUpperBodyRetargetPose(
   previous: UpperBodyRetargetPose,
   next: UpperBodyRetargetPose,
-  smoothing = 0.22,
+  smoothing = 0.34,
 ): UpperBodyRetargetPose {
   const amount = clamp(smoothing, 0, 1);
 

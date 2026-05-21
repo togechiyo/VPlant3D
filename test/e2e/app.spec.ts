@@ -30,6 +30,8 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('Start camera to inspect upper-body landmarks.')).toBeVisible();
   await expect(page.getByText('Camera image hidden. Skeleton only.')).toBeVisible();
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
+  await expect(page.getByText('Mirror mocap input')).toBeVisible();
+  await expect(page.locator('#pose-mirror-input')).toBeChecked();
   await expect(page.locator('#pose-start-button')).toBeEnabled();
   await expect(page.locator('#pose-stop-button')).toBeDisabled();
   expect(errors()).toEqual([]);

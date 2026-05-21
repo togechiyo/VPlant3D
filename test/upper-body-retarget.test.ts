@@ -26,7 +26,7 @@ describe('createUpperBodyRetargetPose', () => {
     expect(pose).toEqual(createNeutralRetargetPose(false));
   });
 
-  it('maps torso lean and shoulder tilt to conservative chest and neck motion', () => {
+  it('maps mirrored torso lean and shoulder tilt to responsive chest and neck motion', () => {
     const pose = createUpperBodyRetargetPose(
       createSummary({
         averageUpperBodyVisibility: 0.8,
@@ -36,10 +36,31 @@ describe('createUpperBodyRetargetPose', () => {
     );
 
     expect(pose.enabled).toBe(true);
-    expect(pose.chestYaw).toBeCloseTo(0.08);
-    expect(pose.chestRoll).toBeCloseTo(-0.102);
-    expect(pose.neckYaw).toBeCloseTo(0.036);
-    expect(pose.neckRoll).toBeCloseTo(-0.0459);
+    expect(pose.chestYaw).toBeCloseTo(-0.13);
+    expect(pose.chestRoll).toBeCloseTo(0.168);
+    expect(pose.neckYaw).toBeCloseTo(-0.0585);
+    expect(pose.neckRoll).toBeCloseTo(0.0756);
+  });
+
+  it('can map motion without mirroring', () => {
+    const pose = createUpperBodyRetargetPose(
+      createSummary({
+        averageUpperBodyVisibility: 0.8,
+        shoulderTilt: 0.06,
+        torsoLean: -0.05,
+      }),
+      {
+        minVisibility: 0.32,
+        mirrorInput: false,
+        maxChestYaw: 0.26,
+        maxChestRoll: 0.34,
+        maxNeckYaw: 0.12,
+        maxNeckRoll: 0.15,
+      },
+    );
+
+    expect(pose.chestYaw).toBeCloseTo(0.13);
+    expect(pose.chestRoll).toBeCloseTo(-0.168);
   });
 
   it('clamps large movements', () => {
@@ -51,10 +72,10 @@ describe('createUpperBodyRetargetPose', () => {
       }),
     );
 
-    expect(pose.chestYaw).toBeCloseTo(-0.18);
-    expect(pose.chestRoll).toBeCloseTo(-0.22);
-    expect(pose.neckYaw).toBeCloseTo(-0.08);
-    expect(pose.neckRoll).toBeCloseTo(-0.099);
+    expect(pose.chestYaw).toBeCloseTo(0.26);
+    expect(pose.chestRoll).toBeCloseTo(0.34);
+    expect(pose.neckYaw).toBeCloseTo(0.117);
+    expect(pose.neckRoll).toBeCloseTo(0.15);
   });
 });
 

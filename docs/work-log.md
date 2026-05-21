@@ -560,3 +560,43 @@
 - 人間のChromeで、肩傾きと左右leanがVRMへ反映されるか確認する
 - 追従が弱ければgainを上げる。強い/揺れるならmax rotationやsmoothingを調整する
 - 操作UIとしてMocap enable、sensitivity、reset poseを追加するか検討する
+
+## 2026-05-21 Mocap Mirror and Camera Framing
+
+### Goal
+
+- MediaPipe retargetの左右反転を選べるようにする
+- 中央へ戻る補正が強すぎる問題を緩め、小さめの傾きでも反映されるようにする
+- VRMロード後の画角をさらに上半身アップにし、顔が中央ちょい上に来るよう寄せる
+
+### Did
+
+- `Mirror mocap input` checkboxをSetup Modeへ追加し、初期値をonにした
+- `poseMirrorInput` をZustand storeへ追加
+- `createUpperBodyRetargetPose` に `mirrorInput` optionを追加
+- MediaPipe retargetの `minVisibility` を下げ、yaw/roll gainとmax rotationを上げ、smoothingを速くした
+- VRMロード後カメラを `position: (0, 1.58, 2.55)`、lookAtを `(0, 1.38, 0)` に変更
+- Playwright E2Eへmirror checkbox表示と初期checked確認を追加
+- README / MediaPipe notes / Human Handoff Boardを更新
+
+### Worked
+
+- `npm run test` は成功
+- `npm run test:e2e` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+- Codex in-app browserで `Mirror mocap input` 表示とconsole errorなしを確認
+
+### Failed / Blocked
+
+- 実際の左右反転の直感性、補正量、顔位置は人間の目視確認が必要
+
+### Decisions
+
+- 反転ありを初期値にする。カメラ鏡像の直感に寄せるため
+- sensitivity sliderはまだ作らず、まずはon/off反転と固定gain調整で確認する
+
+### Next
+
+- 人間のChromeでMirror on/off、補正量、上半身画角を確認する
+- まだ弱い場合はsensitivity sliderを追加する

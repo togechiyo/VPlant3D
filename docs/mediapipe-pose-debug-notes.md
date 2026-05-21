@@ -70,10 +70,11 @@ Implemented behavior:
 - chest or upperChest yaw from shoulder-vs-hip horizontal lean
 - chest or upperChest roll from shoulder tilt
 - neck yaw/roll as a smaller follow-through
+- selectable mirrored/non-mirrored mocap input. Mirrored is the default because it feels closer to looking into a camera mirror
 - smoothing to reduce jitter
 - automatic reset when Pose Debug stops or landmark visibility drops
 
-This is intentionally small. It is meant to prove that the pipeline can move the avatar from camera landmarks without making the model look broken.
+The retargeting gain was increased after human feedback because the first pass pulled too strongly toward center and required a large body tilt before visible movement.
 
 ## Pure Logic
 
@@ -105,6 +106,6 @@ Tests live in `test/pose-landmarks.test.ts`.
 ## Next Steps
 
 - Human verifies camera permission and landmark stability in Chrome.
-- Human checks whether the subtle avatar sway feels useful or needs stronger/weaker gain.
+- Human checks whether mirrored input and the stronger avatar sway feel useful or need weaker gain.
 - If stable, add user-facing sensitivity controls and an on/off toggle separate from the debug panel.
 - Add a toggle so motion capture can be enabled independently from the debug preview.
