@@ -22,10 +22,10 @@ export const defaultHeadRetargetOptions: HeadRetargetOptions = {
   mirrorInput: true,
   pitchGain: 0.55,
   yawGain: 0.75,
-  rollGain: 0.65,
+  rollGain: 1,
   maxPitch: 0.26,
   maxYaw: 0.38,
-  maxRoll: 0.3,
+  maxRoll: 0.45,
 };
 
 export function createNeutralHeadRetargetPose(enabled = false): HeadRetargetPose {

@@ -798,3 +798,33 @@
 
 - Chromeで頭を左右/上下/傾きに動かして、mirror ON時の方向と強さを確認する
 - まだ強弱が合わなければSetup Modeにhead tracking strength sliderを追加する
+
+## 2026-05-21 Front Lighting and Head Tilt Tune
+
+### Goal
+
+- 人間確認で、モデルがまだ少し暗いこと、照明を正面やや上からにしたいこと、頭の傾きももう少し欲しいことに対応する
+
+### Did
+
+- `toneMappingExposure` を少し上げた
+- key lightをカメラ正面側のやや上へ移動し、強度を上げた
+- rim lightは少し弱め、全体fillのhemisphere lightを少し上げた
+- Head retargetのroll gainとmax rollを上げ、傾きが見えやすいようにした
+- `test/head-retarget.test.ts` の期待値を更新
+
+### Worked
+
+- `npm run test -- head-retarget` は成功
+- `npm run build` は成功。ただしbundle size warningは継続
+- `npm run lint` は成功
+- Playwrightでlocal Alicia VRMを読み込み、正面上寄り照明と明るさをスクリーンショット確認した
+
+### Failed / Blocked
+
+- Head rollの実カメラ体感は人間確認が必要
+
+### Next
+
+- Chromeで頭の傾きが十分か確認する
+- 照明がモデルごとに合わない場合は、Setup Modeにlighting exposure / presetを追加する

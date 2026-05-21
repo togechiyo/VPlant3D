@@ -19,7 +19,7 @@ describe('createHeadRetargetPose', () => {
     expect(pose.enabled).toBe(true);
     expect(pose.pitch).toBeCloseTo(0.11);
     expect(pose.yaw).toBeCloseTo(0.225);
-    expect(pose.roll).toBeCloseTo(-0.065);
+    expect(pose.roll).toBeCloseTo(-0.1);
   });
 
   it('inverts yaw and roll when mocap input is not mirrored', () => {
@@ -30,7 +30,7 @@ describe('createHeadRetargetPose', () => {
     expect(pose.enabled).toBe(true);
     expect(pose.pitch).toBeCloseTo(0.11);
     expect(pose.yaw).toBeCloseTo(-0.225);
-    expect(pose.roll).toBeCloseTo(0.065);
+    expect(pose.roll).toBeCloseTo(0.1);
   });
 
   it('clamps large rotations', () => {
@@ -40,7 +40,7 @@ describe('createHeadRetargetPose', () => {
 
     expect(pose.pitch).toBeCloseTo(0.26);
     expect(pose.yaw).toBeCloseTo(-0.38);
-    expect(pose.roll).toBeCloseTo(-0.3);
+    expect(pose.roll).toBeCloseTo(-0.45);
   });
 });
 

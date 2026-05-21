@@ -70,7 +70,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x101314, state.transparent ? 0 : 1);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.72;
+renderer.toneMappingExposure = 0.86;
 renderer.domElement.className = 'scene-canvas';
 viewport.append(renderer.domElement);
 
@@ -84,15 +84,15 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 1.35, 4.2);
 camera.lookAt(0, 1.25, 0);
 
-const keyLight = new THREE.DirectionalLight(0xf4fbff, 1.35);
-keyLight.position.set(2.5, 3.2, 4);
+const keyLight = new THREE.DirectionalLight(0xf4fbff, 1.75);
+keyLight.position.set(0.35, 3.4, 4.2);
 scene.add(keyLight);
 
-const rimLight = new THREE.DirectionalLight(0x38d5ff, 0.85);
+const rimLight = new THREE.DirectionalLight(0x38d5ff, 0.65);
 rimLight.position.set(-3, 2, -2);
 scene.add(rimLight);
 
-const fillLight = new THREE.HemisphereLight(0xdfefff, 0x101314, 0.42);
+const fillLight = new THREE.HemisphereLight(0xf2f7ff, 0x101314, 0.54);
 scene.add(fillLight);
 
 const geometry = new THREE.BoxGeometry(1.4, 1.4, 1.4);
