@@ -2148,3 +2148,29 @@
 
 - OBSでモデル位置、回転、ライトプリセット、リム設定を動かし、震えや明滅が減ったか確認する
 - まだ残る場合は、Controlから送る静的状態を変更時だけ送信するか、Render側の補間速度をさらに下げる
+
+## 2026-05-22 Three Light Direction Separation
+
+### Goal
+
+- 3灯ライトが同じように照らして見える問題を減らし、Key / Fill / Rim の役割差を画面上で分かりやすくする
+- OBS側で影や遮蔽設定由来のちらつきを増やさない
+
+### Did
+
+- `look-presets` に Key / Fill / Rim それぞれの照射先 target を追加した
+- Key は斜め上前、Fill は反対側の低め弱め、Rim は背面側から顔/肩へ向ける構成に見直した
+- Fill の強度を下げ、Rim の距離と強度を上げて輪郭側の差が出やすい値にした
+- `DirectionalLight.target` を明示して、全ライトが原点付近へ向いて似た照り方になる状態を避けた
+- `renderer.shadowMap.enabled = false` を明示した。現時点ではOBS Browser Sourceでの安定性を優先し、リアルタイム影による遮蔽は使わない
+- Render側のライト補間で light target も補間するようにした
+
+### Worked
+
+- unit testでライト方向、Rim方向、target補間を検証できるようにした
+
+### Next
+
+- Chrome/OBSで標準、正面上、ネオン、輪郭強調を見比べる
+- まだ似て見える場合は、Fillをさらに弱めるか、Rimを疑似アウトライン寄りに強める
+- 影による遮蔽は、OBSでちらつきや負荷が出にくい見通しが立ってから別途検討する

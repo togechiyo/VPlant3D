@@ -28,12 +28,15 @@ export function smoothResolvedLookLights(
     keyColor: lerpHexColor(previous.keyColor, target.keyColor, nextAmount),
     keyIntensity: lerp(previous.keyIntensity, target.keyIntensity, nextAmount),
     keyPosition: lerpTuple(previous.keyPosition, target.keyPosition, nextAmount),
+    keyTarget: lerpTuple(previous.keyTarget, target.keyTarget, nextAmount),
     fillColor: lerpHexColor(previous.fillColor, target.fillColor, nextAmount),
     fillIntensity: lerp(previous.fillIntensity, target.fillIntensity, nextAmount),
     fillPosition: lerpTuple(previous.fillPosition, target.fillPosition, nextAmount),
+    fillTarget: lerpTuple(previous.fillTarget, target.fillTarget, nextAmount),
     rimColor: lerpHexColor(previous.rimColor, target.rimColor, nextAmount),
     rimIntensity: lerp(previous.rimIntensity, target.rimIntensity, nextAmount),
     rimPosition: lerpTuple(previous.rimPosition, target.rimPosition, nextAmount),
+    rimTarget: lerpTuple(previous.rimTarget, target.rimTarget, nextAmount),
     exposure: lerp(previous.exposure, target.exposure, nextAmount),
   };
 }

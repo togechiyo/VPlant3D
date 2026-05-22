@@ -18,12 +18,15 @@ export interface LookLightPreset {
   keyColor: number;
   keyIntensity: number;
   keyPosition: [number, number, number];
+  keyTarget: [number, number, number];
   fillColor: number;
   fillIntensity: number;
   fillPosition: [number, number, number];
+  fillTarget: [number, number, number];
   rimColor: number;
   rimIntensity: number;
   rimPosition: [number, number, number];
+  rimTarget: [number, number, number];
   exposure: number;
 }
 
@@ -40,71 +43,86 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     id: 'standard',
     label: '標準',
     keyColor: 0xf4fbff,
-    keyIntensity: 1.75,
-    keyPosition: [0.35, 3.4, 4.2],
-    fillColor: 0xf2f7ff,
-    fillIntensity: 0.5,
-    fillPosition: [-2.6, 2.1, 3],
+    keyIntensity: 1.65,
+    keyPosition: [-2.4, 3.35, 3.35],
+    keyTarget: [0, 1.34, 0],
+    fillColor: 0xb8d7ff,
+    fillIntensity: 0.26,
+    fillPosition: [2.6, 1.9, 2.25],
+    fillTarget: [0, 1.12, 0],
     rimColor: 0x38d5ff,
-    rimIntensity: 0.65,
-    rimPosition: [3, 2.4, -2.2],
-    exposure: 0.86,
+    rimIntensity: 0.82,
+    rimPosition: [2.9, 2.65, -3.4],
+    rimTarget: [0, 1.42, 0],
+    exposure: 0.88,
   },
   bright: {
     id: 'bright',
     label: '明るめ',
     keyColor: 0xffffff,
-    keyIntensity: 2.15,
-    keyPosition: [0.15, 3.4, 4.2],
-    fillColor: 0xf4fbff,
-    fillIntensity: 0.8,
-    fillPosition: [-2.2, 2.2, 3.3],
+    keyIntensity: 1.95,
+    keyPosition: [-2.2, 3.4, 3.45],
+    keyTarget: [0, 1.34, 0],
+    fillColor: 0xcfe8ff,
+    fillIntensity: 0.42,
+    fillPosition: [2.5, 1.95, 2.45],
+    fillTarget: [0, 1.12, 0],
     rimColor: 0xf4fbff,
-    rimIntensity: 0.75,
-    rimPosition: [3, 2.5, -2.1],
-    exposure: 0.92,
+    rimIntensity: 0.78,
+    rimPosition: [2.9, 2.7, -3.35],
+    rimTarget: [0, 1.42, 0],
+    exposure: 0.9,
   },
   'front-top': {
     id: 'front-top',
     label: '正面上',
     keyColor: 0xf4fbff,
-    keyIntensity: 1.95,
-    keyPosition: [0, 4, 3.3],
-    fillColor: 0xdff8ff,
-    fillIntensity: 0.55,
-    fillPosition: [-1.4, 2, 3.2],
+    keyIntensity: 1.82,
+    keyPosition: [0, 4.2, 3.25],
+    keyTarget: [0, 1.36, 0],
+    fillColor: 0xcfe8ff,
+    fillIntensity: 0.28,
+    fillPosition: [2.35, 1.85, 2.25],
+    fillTarget: [0, 1.1, 0],
     rimColor: 0x38d5ff,
-    rimIntensity: 0.55,
-    rimPosition: [2.8, 2.4, -2.2],
+    rimIntensity: 0.72,
+    rimPosition: [2.8, 2.65, -3.35],
+    rimTarget: [0, 1.42, 0],
     exposure: 0.88,
   },
   neon: {
     id: 'neon',
     label: 'ネオン',
     keyColor: 0xf4fbff,
-    keyIntensity: 1.62,
-    keyPosition: [0.2, 3.2, 4],
+    keyIntensity: 1.46,
+    keyPosition: [-2.35, 3.25, 3.15],
+    keyTarget: [0, 1.34, 0],
     fillColor: 0x38d5ff,
-    fillIntensity: 0.62,
-    fillPosition: [-2.8, 2.1, 2.8],
+    fillIntensity: 0.34,
+    fillPosition: [2.85, 1.9, 2.1],
+    fillTarget: [0, 1.08, 0],
     rimColor: 0x6dff9a,
-    rimIntensity: 1.25,
-    rimPosition: [3.2, 2.5, -2.3],
+    rimIntensity: 1.65,
+    rimPosition: [3.2, 2.65, -3.55],
+    rimTarget: [0, 1.42, 0],
     exposure: 0.84,
   },
   edge: {
     id: 'edge',
     label: '輪郭強調',
     keyColor: 0xf4fbff,
-    keyIntensity: 1.32,
-    keyPosition: [0.25, 3.2, 4],
-    fillColor: 0xdff8ff,
-    fillIntensity: 0.28,
-    fillPosition: [-2.6, 2, 3],
+    keyIntensity: 1.26,
+    keyPosition: [-2.45, 3.2, 3.1],
+    keyTarget: [0, 1.34, 0],
+    fillColor: 0xaecfff,
+    fillIntensity: 0.12,
+    fillPosition: [2.7, 1.85, 2.05],
+    fillTarget: [0, 1.08, 0],
     rimColor: 0x38d5ff,
-    rimIntensity: 1.55,
-    rimPosition: [3.3, 2.6, -2.2],
-    exposure: 0.82,
+    rimIntensity: 1.95,
+    rimPosition: [3.35, 2.75, -3.6],
+    rimTarget: [0, 1.44, 0],
+    exposure: 0.84,
   },
 };
 
@@ -182,11 +200,11 @@ function getRimPosition(
 ): [number, number, number] {
   switch (direction) {
     case 'left-back':
-      return [-3, 2.4, -2.2];
+      return [-3.2, 2.65, -3.55];
     case 'right-back':
-      return [3, 2.4, -2.2];
+      return [3.2, 2.65, -3.55];
     case 'top-back':
-      return [0, 3.2, -2.4];
+      return [0, 3.65, -3.35];
     default:
       return fallback;
   }

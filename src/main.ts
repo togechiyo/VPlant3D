@@ -130,6 +130,7 @@ renderer.setClearAlpha(state.transparent ? 0 : 1);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.86;
+renderer.shadowMap.enabled = false;
 renderer.domElement.className = 'scene-canvas';
 viewport.append(renderer.domElement);
 
@@ -149,14 +150,26 @@ if (isControlPage) {
 const keyLight = new THREE.DirectionalLight(0xf4fbff, 1.75);
 keyLight.position.set(0.35, 3.4, 4.2);
 scene.add(keyLight);
+const keyLightTarget = new THREE.Object3D();
+keyLightTarget.position.set(0, 1.34, 0);
+keyLight.target = keyLightTarget;
+scene.add(keyLightTarget);
 
 const rimLight = new THREE.DirectionalLight(0x38d5ff, 0.65);
 rimLight.position.set(-3, 2, -2);
 scene.add(rimLight);
+const rimLightTarget = new THREE.Object3D();
+rimLightTarget.position.set(0, 1.42, 0);
+rimLight.target = rimLightTarget;
+scene.add(rimLightTarget);
 
 const fillLight = new THREE.DirectionalLight(0xf2f7ff, 0.5);
 fillLight.position.set(-2.6, 2.1, 3);
 scene.add(fillLight);
+const fillLightTarget = new THREE.Object3D();
+fillLightTarget.position.set(0, 1.12, 0);
+fillLight.target = fillLightTarget;
+scene.add(fillLightTarget);
 const lookAtCameraTarget = new THREE.Object3D();
 lookAtCameraTarget.name = 'VPlant3DLookAtCameraTarget';
 scene.add(lookAtCameraTarget);
@@ -783,12 +796,15 @@ function applyResolvedLookLights(lights: ResolvedLookLights): void {
   keyLight.color.setHex(lights.keyColor);
   keyLight.intensity = lights.keyIntensity;
   keyLight.position.set(...lights.keyPosition);
+  keyLightTarget.position.set(...lights.keyTarget);
   fillLight.color.setHex(lights.fillColor);
   fillLight.intensity = lights.fillIntensity;
   fillLight.position.set(...lights.fillPosition);
+  fillLightTarget.position.set(...lights.fillTarget);
   rimLight.color.setHex(lights.rimColor);
   rimLight.intensity = lights.rimIntensity;
   rimLight.position.set(...lights.rimPosition);
+  rimLightTarget.position.set(...lights.rimTarget);
   renderer.toneMappingExposure = lights.exposure;
 }
 
