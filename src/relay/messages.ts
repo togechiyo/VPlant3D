@@ -15,6 +15,15 @@ export interface RelayAvatarTransform {
   rotationY: number;
 }
 
+export interface RelayLookSettings {
+  preset: 'standard' | 'bright' | 'front-top' | 'neon' | 'edge';
+  keyIntensityScale: number;
+  fillIntensityScale: number;
+  rimStrength: 'off' | 'soft' | 'medium' | 'strong';
+  rimColor: 'white' | 'blue' | 'green';
+  rimDirection: 'left-back' | 'right-back' | 'top-back';
+}
+
 export interface RelayExpressionState {
   blinkLeft?: number;
   blinkRight?: number;
@@ -68,6 +77,7 @@ export interface RelayHandTarget {
 
 export interface RelayRenderState {
   avatarTransform: RelayAvatarTransform;
+  look: RelayLookSettings;
   expressions: RelayExpressionState;
   pose: RelayPoseState;
   vrmaLoop: boolean;

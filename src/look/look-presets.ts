@@ -1,0 +1,223 @@
+export type LookPresetId = 'standard' | 'bright' | 'front-top' | 'neon' | 'edge';
+export type RimLightStrength = 'off' | 'soft' | 'medium' | 'strong';
+export type RimLightColor = 'white' | 'blue' | 'green';
+export type RimLightDirection = 'left-back' | 'right-back' | 'top-back';
+
+export interface LookSettings {
+  preset: LookPresetId;
+  keyIntensityScale: number;
+  fillIntensityScale: number;
+  rimStrength: RimLightStrength;
+  rimColor: RimLightColor;
+  rimDirection: RimLightDirection;
+}
+
+export interface LookLightPreset {
+  id: LookPresetId;
+  label: string;
+  keyColor: number;
+  keyIntensity: number;
+  keyPosition: [number, number, number];
+  fillColor: number;
+  fillIntensity: number;
+  fillPosition: [number, number, number];
+  rimColor: number;
+  rimIntensity: number;
+  rimPosition: [number, number, number];
+  exposure: number;
+}
+
+export interface ResolvedLookLights extends LookLightPreset {
+  keyIntensity: number;
+  fillIntensity: number;
+  rimColor: number;
+  rimIntensity: number;
+  rimPosition: [number, number, number];
+}
+
+export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
+  standard: {
+    id: 'standard',
+    label: '標準',
+    keyColor: 0xf4fbff,
+    keyIntensity: 1.75,
+    keyPosition: [0.35, 3.4, 4.2],
+    fillColor: 0xf2f7ff,
+    fillIntensity: 0.5,
+    fillPosition: [-2.6, 2.1, 3],
+    rimColor: 0x38d5ff,
+    rimIntensity: 0.65,
+    rimPosition: [3, 2.4, -2.2],
+    exposure: 0.86,
+  },
+  bright: {
+    id: 'bright',
+    label: '明るめ',
+    keyColor: 0xffffff,
+    keyIntensity: 2.15,
+    keyPosition: [0.15, 3.4, 4.2],
+    fillColor: 0xf4fbff,
+    fillIntensity: 0.8,
+    fillPosition: [-2.2, 2.2, 3.3],
+    rimColor: 0xf4fbff,
+    rimIntensity: 0.75,
+    rimPosition: [3, 2.5, -2.1],
+    exposure: 0.92,
+  },
+  'front-top': {
+    id: 'front-top',
+    label: '正面上',
+    keyColor: 0xf4fbff,
+    keyIntensity: 1.95,
+    keyPosition: [0, 4, 3.3],
+    fillColor: 0xdff8ff,
+    fillIntensity: 0.55,
+    fillPosition: [-1.4, 2, 3.2],
+    rimColor: 0x38d5ff,
+    rimIntensity: 0.55,
+    rimPosition: [2.8, 2.4, -2.2],
+    exposure: 0.88,
+  },
+  neon: {
+    id: 'neon',
+    label: 'ネオン',
+    keyColor: 0xf4fbff,
+    keyIntensity: 1.62,
+    keyPosition: [0.2, 3.2, 4],
+    fillColor: 0x38d5ff,
+    fillIntensity: 0.62,
+    fillPosition: [-2.8, 2.1, 2.8],
+    rimColor: 0x6dff9a,
+    rimIntensity: 1.25,
+    rimPosition: [3.2, 2.5, -2.3],
+    exposure: 0.84,
+  },
+  edge: {
+    id: 'edge',
+    label: '輪郭強調',
+    keyColor: 0xf4fbff,
+    keyIntensity: 1.32,
+    keyPosition: [0.25, 3.2, 4],
+    fillColor: 0xdff8ff,
+    fillIntensity: 0.28,
+    fillPosition: [-2.6, 2, 3],
+    rimColor: 0x38d5ff,
+    rimIntensity: 1.55,
+    rimPosition: [3.3, 2.6, -2.2],
+    exposure: 0.82,
+  },
+};
+
+export function createDefaultLookSettings(): LookSettings {
+  return {
+    preset: 'standard',
+    keyIntensityScale: 1,
+    fillIntensityScale: 1,
+    rimStrength: 'soft',
+    rimColor: 'blue',
+    rimDirection: 'right-back',
+  };
+}
+
+export function resolveLookLights(settings: LookSettings): ResolvedLookLights {
+  const preset = lookLightPresets[settings.preset] ?? lookLightPresets.standard;
+  const rimIntensity = getRimIntensity(settings.rimStrength, preset.rimIntensity);
+
+  return {
+    ...preset,
+    keyIntensity: preset.keyIntensity * clampScale(settings.keyIntensityScale),
+    fillIntensity: preset.fillIntensity * clampScale(settings.fillIntensityScale),
+    rimColor: getRimColor(settings.rimColor, preset.rimColor),
+    rimIntensity,
+    rimPosition: getRimPosition(settings.rimDirection, preset.rimPosition),
+  };
+}
+
+export function normalizeLookSettings(settings: Partial<LookSettings>): LookSettings {
+  const defaults = createDefaultLookSettings();
+
+  return {
+    preset: isLookPresetId(settings.preset) ? settings.preset : defaults.preset,
+    keyIntensityScale: clampScale(settings.keyIntensityScale ?? defaults.keyIntensityScale),
+    fillIntensityScale: clampScale(settings.fillIntensityScale ?? defaults.fillIntensityScale),
+    rimStrength: isRimLightStrength(settings.rimStrength)
+      ? settings.rimStrength
+      : defaults.rimStrength,
+    rimColor: isRimLightColor(settings.rimColor) ? settings.rimColor : defaults.rimColor,
+    rimDirection: isRimLightDirection(settings.rimDirection)
+      ? settings.rimDirection
+      : defaults.rimDirection,
+  };
+}
+
+function getRimIntensity(strength: RimLightStrength, presetIntensity: number): number {
+  switch (strength) {
+    case 'off':
+      return 0;
+    case 'soft':
+      return Math.min(presetIntensity, 0.65);
+    case 'medium':
+      return Math.max(presetIntensity, 1);
+    case 'strong':
+      return Math.max(presetIntensity, 1.8);
+  }
+}
+
+function getRimColor(color: RimLightColor, fallback: number): number {
+  switch (color) {
+    case 'white':
+      return 0xf4fbff;
+    case 'blue':
+      return 0x38d5ff;
+    case 'green':
+      return 0x6dff9a;
+    default:
+      return fallback;
+  }
+}
+
+function getRimPosition(
+  direction: RimLightDirection,
+  fallback: [number, number, number],
+): [number, number, number] {
+  switch (direction) {
+    case 'left-back':
+      return [-3, 2.4, -2.2];
+    case 'right-back':
+      return [3, 2.4, -2.2];
+    case 'top-back':
+      return [0, 3.2, -2.4];
+    default:
+      return fallback;
+  }
+}
+
+function clampScale(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 1;
+  }
+
+  return Math.min(Math.max(value, 0), 2);
+}
+
+function isLookPresetId(value: unknown): value is LookPresetId {
+  return (
+    value === 'standard' ||
+    value === 'bright' ||
+    value === 'front-top' ||
+    value === 'neon' ||
+    value === 'edge'
+  );
+}
+
+function isRimLightStrength(value: unknown): value is RimLightStrength {
+  return value === 'off' || value === 'soft' || value === 'medium' || value === 'strong';
+}
+
+function isRimLightColor(value: unknown): value is RimLightColor {
+  return value === 'white' || value === 'blue' || value === 'green';
+}
+
+function isRimLightDirection(value: unknown): value is RimLightDirection {
+  return value === 'left-back' || value === 'right-back' || value === 'top-back';
+}

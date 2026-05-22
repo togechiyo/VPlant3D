@@ -39,6 +39,13 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#manual-control-input')).toBeChecked();
   await expect(page.locator('#manual-mouse-input')).toBeChecked();
   await expect(page.locator('#manual-control-status-text')).toHaveText('未操作');
+  await expect(page.getByText('3灯ライト')).toBeVisible();
+  await expect(page.locator('#look-preset-select')).toHaveValue('standard');
+  await expect(page.locator('#key-light-scale-input')).toHaveValue('1');
+  await expect(page.locator('#fill-light-scale-input')).toHaveValue('1');
+  await expect(page.locator('#rim-light-strength-select')).toHaveValue('soft');
+  await expect(page.locator('#rim-light-color-select')).toHaveValue('blue');
+  await expect(page.locator('#rim-light-direction-select')).toHaveValue('right-back');
   await expect(page.getByText('位置調整')).toBeVisible();
   await expect(page.locator('#avatar-offset-x-input')).toHaveValue('0');
   await expect(page.locator('#avatar-scale-input')).toHaveValue('1');
@@ -90,11 +97,33 @@ test('OBS transparent mode hides Setup UI but keeps the scene canvas', async ({ 
   await expect(page.getByText('VRMを読み込む', { exact: true })).toHaveCount(0);
   await expect(page.getByText('VRMAを読み込む', { exact: true })).toHaveCount(0);
   await expect(page.getByText('手動操作', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('3灯ライト')).toHaveCount(0);
   await expect(page.getByText('顔 / 口')).toHaveCount(0);
   await expect(page.getByText('まばたき')).toHaveCount(0);
   await expect(page.getByText('表情')).toHaveCount(0);
   await expect(page.getByText('体トラック')).toHaveCount(0);
   await expect(page.getByText('設定')).toHaveCount(0);
+  expect(errors()).toEqual([]);
+});
+
+test('Control page updates three-light look controls', async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto('/?control=1');
+
+  await page.locator('#look-preset-select').selectOption('neon');
+  await page.locator('#key-light-scale-input').fill('1.5');
+  await page.locator('#fill-light-scale-input').fill('0.5');
+  await page.locator('#rim-light-strength-select').selectOption('strong');
+  await page.locator('#rim-light-color-select').selectOption('green');
+  await page.locator('#rim-light-direction-select').selectOption('left-back');
+
+  await expect(page.locator('#look-preset-select')).toHaveValue('neon');
+  await expect(page.locator('#key-light-scale-text')).toHaveText('150%');
+  await expect(page.locator('#fill-light-scale-text')).toHaveText('50%');
+  await expect(page.locator('#rim-light-strength-select')).toHaveValue('strong');
+  await expect(page.locator('#rim-light-color-select')).toHaveValue('green');
+  await expect(page.locator('#rim-light-direction-select')).toHaveValue('left-back');
   expect(errors()).toEqual([]);
 });
 

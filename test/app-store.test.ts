@@ -46,6 +46,14 @@ describe('createAppStore', () => {
       manualControlEnabled: true,
       manualMouseEnabled: true,
       manualControlStatus: '未操作',
+      lookSettings: {
+        preset: 'standard',
+        keyIntensityScale: 1,
+        fillIntensityScale: 1,
+        rimStrength: 'soft',
+        rimColor: 'blue',
+        rimDirection: 'right-back',
+      },
       avatarOffsetX: 0,
       avatarOffsetY: 0,
       avatarScale: 1,
@@ -325,6 +333,40 @@ describe('createAppStore', () => {
       manualControlEnabled: true,
       manualMouseEnabled: true,
       manualControlStatus: '未操作',
+    });
+  });
+
+  it('tracks look control settings', () => {
+    const store = createAppStore({
+      obsMode: false,
+      controlMode: false,
+      transparent: false,
+    });
+
+    store.getState().setLookPreset('neon');
+    store.getState().setKeyLightScale(1.5);
+    store.getState().setFillLightScale(0.5);
+    store.getState().setRimLightStrength('strong');
+    store.getState().setRimLightColor('green');
+    store.getState().setRimLightDirection('left-back');
+
+    expect(store.getState().lookSettings).toEqual({
+      preset: 'neon',
+      keyIntensityScale: 1.5,
+      fillIntensityScale: 0.5,
+      rimStrength: 'strong',
+      rimColor: 'green',
+      rimDirection: 'left-back',
+    });
+
+    store.getState().setLookSettings({
+      keyIntensityScale: 99,
+      rimStrength: 'off',
+    });
+
+    expect(store.getState().lookSettings).toMatchObject({
+      keyIntensityScale: 2,
+      rimStrength: 'off',
     });
   });
 });

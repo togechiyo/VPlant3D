@@ -1,6 +1,15 @@
 import { createStore } from 'zustand/vanilla';
 
 import type { ObsQueryOptions } from '../obs/query';
+import {
+  createDefaultLookSettings,
+  normalizeLookSettings,
+  type LookPresetId,
+  type LookSettings,
+  type RimLightColor,
+  type RimLightDirection,
+  type RimLightStrength,
+} from '../look/look-presets';
 import type { VrmaPlaybackStatus } from '../vrma/playback-state';
 import { createInitialVrmaPlaybackState } from '../vrma/playback-state';
 
@@ -46,6 +55,7 @@ export interface AppState {
   manualControlEnabled: boolean;
   manualMouseEnabled: boolean;
   manualControlStatus: string;
+  lookSettings: LookSettings;
   avatarOffsetX: number;
   avatarOffsetY: number;
   avatarScale: number;
@@ -90,6 +100,13 @@ export interface AppState {
   setManualControlEnabled: (enabled: boolean) => void;
   setManualMouseEnabled: (enabled: boolean) => void;
   setManualControlStatus: (status: string) => void;
+  setLookPreset: (preset: LookPresetId) => void;
+  setKeyLightScale: (scale: number) => void;
+  setFillLightScale: (scale: number) => void;
+  setRimLightStrength: (strength: RimLightStrength) => void;
+  setRimLightColor: (color: RimLightColor) => void;
+  setRimLightDirection: (direction: RimLightDirection) => void;
+  setLookSettings: (settings: Partial<LookSettings>) => void;
   setAvatarOffsetX: (offsetX: number) => void;
   setAvatarOffsetY: (offsetY: number) => void;
   setAvatarScale: (scale: number) => void;
@@ -101,6 +118,7 @@ export type AppStore = ReturnType<typeof createAppStore>;
 
 export function createAppStore(initialOptions: ObsQueryOptions) {
   const initialVrmaPlayback = createInitialVrmaPlaybackState();
+  const initialLookSettings = createDefaultLookSettings();
 
   return createStore<AppState>()((set) => ({
     obsMode: initialOptions.obsMode,
@@ -138,6 +156,7 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     manualControlEnabled: true,
     manualMouseEnabled: true,
     manualControlStatus: '未操作',
+    lookSettings: initialLookSettings,
     avatarOffsetX: 0,
     avatarOffsetY: 0,
     avatarScale: 1,
@@ -341,6 +360,55 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
       set({
         manualControlStatus: status,
       }),
+    setLookPreset: (preset) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          preset,
+        }),
+      })),
+    setKeyLightScale: (scale) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          keyIntensityScale: scale,
+        }),
+      })),
+    setFillLightScale: (scale) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          fillIntensityScale: scale,
+        }),
+      })),
+    setRimLightStrength: (strength) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          rimStrength: strength,
+        }),
+      })),
+    setRimLightColor: (color) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          rimColor: color,
+        }),
+      })),
+    setRimLightDirection: (direction) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          rimDirection: direction,
+        }),
+      })),
+    setLookSettings: (settings) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          ...settings,
+        }),
+      })),
     setAvatarOffsetX: (offsetX) =>
       set({
         avatarOffsetX: offsetX,

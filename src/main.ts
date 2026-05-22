@@ -21,6 +21,14 @@ import {
   type ManualPointerButton,
   type ManualPoseState,
 } from './input/manual-control';
+import {
+  resolveLookLights,
+  type LookPresetId,
+  type LookSettings,
+  type RimLightColor,
+  type RimLightDirection,
+  type RimLightStrength,
+} from './look/look-presets';
 import { sampleIdleSway } from './idle/idle-sway';
 import {
   createNeutralFaceExpressionWeights,
@@ -140,7 +148,8 @@ const rimLight = new THREE.DirectionalLight(0x38d5ff, 0.65);
 rimLight.position.set(-3, 2, -2);
 scene.add(rimLight);
 
-const fillLight = new THREE.HemisphereLight(0xf2f7ff, 0x101314, 0.54);
+const fillLight = new THREE.DirectionalLight(0xf2f7ff, 0.5);
+fillLight.position.set(-2.6, 2.1, 3);
 scene.add(fillLight);
 const lookAtCameraTarget = new THREE.Object3D();
 lookAtCameraTarget.name = 'VPlant3DLookAtCameraTarget';
@@ -214,6 +223,14 @@ let handTrackingText: HTMLElement | null = null;
 let manualControlInput: HTMLInputElement | null = null;
 let manualMouseInput: HTMLInputElement | null = null;
 let manualControlStatusText: HTMLElement | null = null;
+let lookPresetSelect: HTMLSelectElement | null = null;
+let keyLightScaleInput: HTMLInputElement | null = null;
+let fillLightScaleInput: HTMLInputElement | null = null;
+let rimLightStrengthSelect: HTMLSelectElement | null = null;
+let rimLightColorSelect: HTMLSelectElement | null = null;
+let rimLightDirectionSelect: HTMLSelectElement | null = null;
+let keyLightScaleText: HTMLElement | null = null;
+let fillLightScaleText: HTMLElement | null = null;
 let manualPose: ManualPoseState = createNeutralManualPoseState(false);
 let manualPointerSession: {
   pointerId: number;
@@ -332,6 +349,57 @@ if (isControlPage) {
       </div>
       <button id="manual-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">顔向きリセット</button>
       <span class="text-xs font-bold text-[#9fa9aa]">プレビュー上で 左: 顔 / 中: 位置 / 右: 回転 / Wheel: 拡大</span>
+    </div>
+    <div class="grid gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">ルック</span>
+        <strong class="text-sm font-bold text-[#eef4f2]">3灯ライト</strong>
+      </div>
+      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+        <span>プリセット</span>
+        <select id="look-preset-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+          <option value="standard" selected>標準</option>
+          <option value="bright">明るめ</option>
+          <option value="front-top">正面上</option>
+          <option value="neon">ネオン</option>
+          <option value="edge">輪郭強調</option>
+        </select>
+      </label>
+      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+        <span class="flex justify-between"><span>Key</span><span id="key-light-scale-text">100%</span></span>
+        <input id="key-light-scale-input" class="accent-[#38d5ff]" type="range" min="0" max="2" step="0.05" value="1" />
+      </label>
+      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+        <span class="flex justify-between"><span>Fill</span><span id="fill-light-scale-text">100%</span></span>
+        <input id="fill-light-scale-input" class="accent-[#6dff9a]" type="range" min="0" max="2" step="0.05" value="1" />
+      </label>
+      <div class="grid grid-cols-3 gap-2">
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span>Rim</span>
+          <select id="rim-light-strength-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+            <option value="off">OFF</option>
+            <option value="soft" selected>弱</option>
+            <option value="medium">中</option>
+            <option value="strong">強</option>
+          </select>
+        </label>
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span>色</span>
+          <select id="rim-light-color-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+            <option value="white">白</option>
+            <option value="blue" selected>青</option>
+            <option value="green">緑</option>
+          </select>
+        </label>
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span>方向</span>
+          <select id="rim-light-direction-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+            <option value="left-back">左後</option>
+            <option value="right-back" selected>右後</option>
+            <option value="top-back">上後</option>
+          </select>
+        </label>
+      </div>
     </div>
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/25 bg-black/20 p-2">
       <div class="grid gap-1">
@@ -530,6 +598,14 @@ if (isControlPage) {
   manualMouseInput = panel.querySelector<HTMLInputElement>('#manual-mouse-input');
   manualControlStatusText = panel.querySelector<HTMLElement>('#manual-control-status-text');
   const manualResetButton = panel.querySelector<HTMLButtonElement>('#manual-reset-button');
+  lookPresetSelect = panel.querySelector<HTMLSelectElement>('#look-preset-select');
+  keyLightScaleInput = panel.querySelector<HTMLInputElement>('#key-light-scale-input');
+  fillLightScaleInput = panel.querySelector<HTMLInputElement>('#fill-light-scale-input');
+  rimLightStrengthSelect = panel.querySelector<HTMLSelectElement>('#rim-light-strength-select');
+  rimLightColorSelect = panel.querySelector<HTMLSelectElement>('#rim-light-color-select');
+  rimLightDirectionSelect = panel.querySelector<HTMLSelectElement>('#rim-light-direction-select');
+  keyLightScaleText = panel.querySelector<HTMLElement>('#key-light-scale-text');
+  fillLightScaleText = panel.querySelector<HTMLElement>('#fill-light-scale-text');
 
   vrmFileInput?.addEventListener('change', () => {
     const file = vrmFileInput.files?.[0] ?? null;
@@ -571,6 +647,30 @@ if (isControlPage) {
     appStore.getState().setManualMouseEnabled(manualMouseInput?.checked ?? true);
   });
   manualResetButton?.addEventListener('click', resetManualControlPose);
+  lookPresetSelect?.addEventListener('change', () => {
+    appStore.getState().setLookPreset(getLookPresetFromSelect());
+    applyLookSettings(appStore.getState().lookSettings);
+  });
+  keyLightScaleInput?.addEventListener('input', () => {
+    appStore.getState().setKeyLightScale(Number(keyLightScaleInput?.value ?? 1));
+    applyLookSettings(appStore.getState().lookSettings);
+  });
+  fillLightScaleInput?.addEventListener('input', () => {
+    appStore.getState().setFillLightScale(Number(fillLightScaleInput?.value ?? 1));
+    applyLookSettings(appStore.getState().lookSettings);
+  });
+  rimLightStrengthSelect?.addEventListener('change', () => {
+    appStore.getState().setRimLightStrength(getRimLightStrengthFromSelect());
+    applyLookSettings(appStore.getState().lookSettings);
+  });
+  rimLightColorSelect?.addEventListener('change', () => {
+    appStore.getState().setRimLightColor(getRimLightColorFromSelect());
+    applyLookSettings(appStore.getState().lookSettings);
+  });
+  rimLightDirectionSelect?.addEventListener('change', () => {
+    appStore.getState().setRimLightDirection(getRimLightDirectionFromSelect());
+    applyLookSettings(appStore.getState().lookSettings);
+  });
   vrmaPlayButton?.addEventListener('click', startVrmaPlayback);
   vrmaStopButton?.addEventListener('click', stopVrmaPlayback);
   vrmaLoopInput?.addEventListener('change', () => {
@@ -644,6 +744,7 @@ if (isControlPage) {
 
 app.append(viewport);
 
+applyLookSettings(appStore.getState().lookSettings);
 syncFaceTrackingEnabledFromModes();
 appStore.subscribe(updateVrmStatusUi);
 updateVrmStatusUi(appStore.getState());
@@ -654,6 +755,21 @@ function resize(): void {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height, !isControlPage);
+}
+
+function applyLookSettings(settings: LookSettings): void {
+  const lights = resolveLookLights(settings);
+
+  keyLight.color.setHex(lights.keyColor);
+  keyLight.intensity = lights.keyIntensity;
+  keyLight.position.set(...lights.keyPosition);
+  fillLight.color.setHex(lights.fillColor);
+  fillLight.intensity = lights.fillIntensity;
+  fillLight.position.set(...lights.fillPosition);
+  rimLight.color.setHex(lights.rimColor);
+  rimLight.intensity = lights.rimIntensity;
+  rimLight.position.set(...lights.rimPosition);
+  renderer.toneMappingExposure = lights.exposure;
 }
 
 function setupManualControlEvents(): void {
@@ -825,6 +941,35 @@ function getManualPointerButton(button: number): ManualPointerButton | null {
   }
 }
 
+function getLookPresetFromSelect(): LookPresetId {
+  const value = lookPresetSelect?.value;
+
+  return value === 'bright' ||
+    value === 'front-top' ||
+    value === 'neon' ||
+    value === 'edge'
+    ? value
+    : 'standard';
+}
+
+function getRimLightStrengthFromSelect(): RimLightStrength {
+  const value = rimLightStrengthSelect?.value;
+
+  return value === 'off' || value === 'medium' || value === 'strong' ? value : 'soft';
+}
+
+function getRimLightColorFromSelect(): RimLightColor {
+  const value = rimLightColorSelect?.value;
+
+  return value === 'white' || value === 'green' ? value : 'blue';
+}
+
+function getRimLightDirectionFromSelect(): RimLightDirection {
+  const value = rimLightDirectionSelect?.value;
+
+  return value === 'left-back' || value === 'top-back' ? value : 'right-back';
+}
+
 function getRenderSize(): { width: number; height: number } {
   if (!isControlPage) {
     return {
@@ -967,8 +1112,10 @@ function applyRelayRenderState(nextState: RelayRenderState): void {
   appStore.getState().setAvatarOffsetY(nextState.avatarTransform.offsetY);
   appStore.getState().setAvatarScale(nextState.avatarTransform.scale);
   appStore.getState().setAvatarRotationY(nextState.avatarTransform.rotationY);
+  appStore.getState().setLookSettings(nextState.look);
   appStore.getState().setVrmaLoop(nextState.vrmaLoop);
   applyAvatarTransform();
+  applyLookSettings(appStore.getState().lookSettings);
   syncVrmaLoopMode(nextState.vrmaLoop);
 
   relayMotionActive = true;
@@ -1050,6 +1197,7 @@ function publishRelayState(frameTime: number): void {
         scale: nextState.avatarScale,
         rotationY: nextState.avatarRotationY,
       },
+      look: nextState.lookSettings,
       expressions: {
         blinkLeft: faceExpressionWeights.blinkLeft,
         blinkRight: faceExpressionWeights.blinkRight,
@@ -1372,6 +1520,7 @@ function updateVrmStatusUi(nextState: AppState): void {
   updatePoseStatusUi(nextState);
   updateAvatarTransformUi(nextState);
   updateManualControlUi(nextState);
+  updateLookSettingsUi(nextState);
 }
 
 function getVrmStatusText(nextState: AppState): string {
@@ -1432,6 +1581,42 @@ function updateManualControlUi(nextState: AppState): void {
 
   if (manualControlStatusText) {
     manualControlStatusText.textContent = nextState.manualControlStatus;
+  }
+}
+
+function updateLookSettingsUi(nextState: AppState): void {
+  const settings = nextState.lookSettings;
+
+  if (lookPresetSelect) {
+    lookPresetSelect.value = settings.preset;
+  }
+
+  if (keyLightScaleInput) {
+    keyLightScaleInput.value = settings.keyIntensityScale.toString();
+  }
+
+  if (fillLightScaleInput) {
+    fillLightScaleInput.value = settings.fillIntensityScale.toString();
+  }
+
+  if (rimLightStrengthSelect) {
+    rimLightStrengthSelect.value = settings.rimStrength;
+  }
+
+  if (rimLightColorSelect) {
+    rimLightColorSelect.value = settings.rimColor;
+  }
+
+  if (rimLightDirectionSelect) {
+    rimLightDirectionSelect.value = settings.rimDirection;
+  }
+
+  if (keyLightScaleText) {
+    keyLightScaleText.textContent = `${Math.round(settings.keyIntensityScale * 100)}%`;
+  }
+
+  if (fillLightScaleText) {
+    fillLightScaleText.textContent = `${Math.round(settings.fillIntensityScale * 100)}%`;
   }
 }
 

@@ -2083,3 +2083,37 @@
 
 - 実装するなら `src/look/look-presets.ts` とstore/relayのlook設定追加から始める
 - 最初は3灯UIだけにし、アウトラインは別タスクとして残す
+
+## 2026-05-22 Three Light Look Controls MVP
+
+### Goal
+
+- Key / Fill / RimをすべてDirectionalLightにそろえ、Control Pageから3灯ルックを操作できるようにする
+
+### Did
+
+- `src/look/look-presets.ts` を追加し、標準/明るめ/正面上/ネオン/輪郭強調プリセットを実装した
+- `fillLight` を `HemisphereLight` から `DirectionalLight` に置き換えた
+- storeにlook設定を追加し、プリセット、Key倍率、Fill倍率、Rim強度/色/方向を管理できるようにした
+- `RelayRenderState` にlook設定を追加し、Control PageからOBS Render Pageへ3灯設定を同期するようにした
+- Control Pageに「ルック / 3灯ライト」カードを追加した
+- look presetのunit test、store test、E2Eを追加した
+
+### Worked
+
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+- E2Eで3灯UIの表示、操作、OBS Render PageでUIが隠れることを確認できた
+
+### Failed / Blocked
+
+- 実際の見た目の良し悪しはモデル依存なので、Chrome/OBSで人間確認が必要
+- buildのbundle size warningは既存通り継続
+
+### Next
+
+- Aliciaと別モデルで、標準/明るめ/正面上/ネオン/輪郭強調の見え方を確認する
+- 必要ならKey/Fill/Rimの初期値、プリセット強度、露出を調整する
+- アウトライン/モデル線は別タスクとして検討を続ける

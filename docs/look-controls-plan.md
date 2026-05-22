@@ -1,6 +1,7 @@
 # ルック調整機能 実装案
 
 作成日: 2026-05-22
+更新日: 2026-05-22
 
 ## 目的
 
@@ -25,6 +26,8 @@ VPlant3Dの次の見栄え強化として、モデル表示の印象をOBS向け
 5. 2段アウトライン、黒縁+白ふち/ネオンふち
 
 ライトとリムライトは既存のThree.jsライトを調整UI化するだけで始められる。今後はKey / Fill / Rimの3灯をすべて `DirectionalLight` に統一する。VRM内蔵アウトラインは、モデル作者の意図を活かしたまま全体倍率だけ触る。追加アウトラインは映えるが、透明背景、OBS Browser Source、VRMスキニングとの相性確認が必要なので別フェーズにする。
+
+2026-05-22時点で、Phase 1の3灯ライトUIは実装済み。Control Pageからプリセット、Key倍率、Fill倍率、Rim強度/色/方向を操作でき、OBS Render Pageへrelay同期される。
 
 ## 現状
 
@@ -297,6 +300,8 @@ UI:
 ## 実装ステップ
 
 ### Phase 1: ライト/リムライトUI
+
+Status: 実装済み。
 
 - `src/look/look-presets.ts`
 - `LookSettings` をstoreに追加
