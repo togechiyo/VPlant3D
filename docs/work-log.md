@@ -1935,3 +1935,32 @@
 - 実装するなら、まず `server/external-tracking/` に正規化型とiFacialMocap文字列parserを追加する
 - 人間側でiFacialMocapまたはVMC送信元アプリを使う予定があるか確認する
 - VMCは最初から全身ボーンを扱わず、表情とhead/chestだけに絞る
+
+## 2026-05-22 Manual Control Research
+
+### Goal
+
+- マウス操作やゲームコントローラーでモデルを手動操作する方向性を検討し、VPlant3Dへ入れる場合の設計を整理する
+
+### Did
+
+- Pointer Events、Pointer Capture、Gamepad APIの公式情報を確認した
+- `docs/manual-control-research.md` を作成した
+- マウス左ドラッグで顔向き、Shift+ドラッグで上半身、ゲームパッド右スティックで顔向きという入力案を整理した
+- 手動操作はトラッキングの代替ではなく、演出用の上書き/ブレンドレイヤーとして扱う方針にした
+
+### Worked
+
+- マウス手動操作はブラウザ標準APIだけで実装でき、外部UDP/OSC連携より軽い
+- 今のControl Pageで入力を受け、OBS Render Pageへrelayする構成と相性がよい
+
+### Failed / Blocked
+
+- ゲームパッドはOS/ブラウザ/機種差があり、実機入力確認が必要
+- 自動復帰を強くしすぎると、現在問題になっている「棒立ちへ戻ろうとしてピクつく」挙動を再発させる可能性がある
+
+### Next
+
+- 実装するなら、まず `src/input/manual-control.ts` にドラッグ量から正規化poseを作る純粋関数を追加する
+- Control Page preview canvasにpointer操作を接続し、顔yaw/pitchだけ最小実装する
+- ゲームパッドはマウス操作の正規化レイヤーができた後に右スティック顔向きから追加する
