@@ -109,26 +109,33 @@ export function smoothHeadRetargetPose(
   const amount = clamp(smoothing, 0, 1);
 
   if (!next.enabled) {
-    const releaseAmount = amount * 0.18;
-
     return {
       enabled: hasVisibleMotion(previous, 0.01),
-      pitch: lerp(previous.pitch, 0, releaseAmount),
-      yaw: lerp(previous.yaw, 0, releaseAmount),
-      roll: lerp(previous.roll, 0, releaseAmount),
+      pitch: previous.pitch,
+      yaw: previous.yaw,
+      roll: previous.roll,
     };
   }
 
   return {
     enabled: true,
-    pitch: lerp(previous.pitch, next.pitch, amount),
-    yaw: lerp(previous.yaw, next.yaw, amount),
-    roll: lerp(previous.roll, next.roll, amount),
+    pitch: lerpWithDeadband(previous.pitch, next.pitch, amount, 0.004),
+    yaw: lerpWithDeadband(previous.yaw, next.yaw, amount, 0.005),
+    roll: lerpWithDeadband(previous.roll, next.roll, amount, 0.004),
   };
 }
 
 function lerp(previous: number, next: number, amount: number): number {
   return previous + (next - previous) * amount;
+}
+
+function lerpWithDeadband(
+  previous: number,
+  next: number,
+  amount: number,
+  deadband: number,
+): number {
+  return Math.abs(next - previous) < deadband ? previous : lerp(previous, next, amount);
 }
 
 function clamp(value: number, min: number, max: number): number {

@@ -78,14 +78,13 @@ describe('createHandRetargetPose', () => {
 });
 
 describe('smoothHandRetargetPose', () => {
-  it('releases toward neutral when detection is lost', () => {
+  it('holds the last hand pose when detection is lost', () => {
     const previous = createHandRetargetPose([closedHand()], [[category('Right')]], {
       mirrorInput: false,
     });
     const smoothed = smoothHandRetargetPose(previous, { left: null, right: null }, 0.5);
 
-    expect(smoothed.right?.fingers.index).toBeLessThan(previous.right?.fingers.index ?? 0);
-    expect(smoothed.right?.fingers.index).toBeGreaterThan(0);
+    expect(smoothed).toEqual(previous);
   });
 });
 

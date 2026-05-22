@@ -49,22 +49,20 @@ describe('createHeadRetargetPose', () => {
     expect(pose.yaw).toBeCloseTo(1.256, 3);
   });
 
-  it('releases slowly when tracking is lost', () => {
+  it('holds the previous pose when tracking is lost', () => {
+    const previous = {
+      enabled: true,
+      pitch: 0.2,
+      yaw: 0.4,
+      roll: -0.1,
+    };
     const pose = smoothHeadRetargetPose(
-      {
-        enabled: true,
-        pitch: 0.2,
-        yaw: 0.4,
-        roll: -0.1,
-      },
+      previous,
       createNeutralHeadRetargetPose(false),
       0.5,
     );
 
-    expect(pose.enabled).toBe(true);
-    expect(pose.pitch).toBeCloseTo(0.182);
-    expect(pose.yaw).toBeCloseTo(0.364);
-    expect(pose.roll).toBeCloseTo(-0.091);
+    expect(pose).toEqual(previous);
   });
 });
 
@@ -85,6 +83,39 @@ describe('smoothHeadRetargetPose', () => {
     expect(pose.pitch).toBeCloseTo(0.05);
     expect(pose.yaw).toBeCloseTo(0.1);
     expect(pose.roll).toBeCloseTo(-0.05);
+  });
+
+  it('holds the last visible pose when tracking is lost', () => {
+    const previous = {
+      enabled: true,
+      pitch: 0.08,
+      yaw: -0.14,
+      roll: 0.05,
+    };
+    const pose = smoothHeadRetargetPose(previous, createNeutralHeadRetargetPose(false), 0.5);
+
+    expect(pose).toEqual(previous);
+  });
+
+  it('ignores tiny head jitter', () => {
+    const previous = {
+      enabled: true,
+      pitch: 0.08,
+      yaw: -0.14,
+      roll: 0.05,
+    };
+    const pose = smoothHeadRetargetPose(
+      previous,
+      {
+        enabled: true,
+        pitch: 0.082,
+        yaw: -0.136,
+        roll: 0.053,
+      },
+      0.5,
+    );
+
+    expect(pose).toEqual(previous);
   });
 });
 

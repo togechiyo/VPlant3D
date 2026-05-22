@@ -2195,3 +2195,23 @@
 
 - OBSで移動/拡大/回転/ライトを触り、復帰力っぽい揺れが減ったか確認する
 - まだカクつく場合は、relay messageを「motion」と「static」に型レベルで分離し、staticはUI操作イベントだけで送る
+
+## 2026-05-22 Mocap Hold And Deadband
+
+### Goal
+
+- MediaPipe検出が一瞬外れた時に、頭/体/手がneutralへ戻ってプルプルする問題を減らす
+- 小さなランドマーク揺れがそのまま骨へ入って細かく震える問題を減らす
+
+### Did
+
+- head retargetは未検出フレームではneutralへ戻さず、最後の可視ポーズを保持するようにした
+- upper body retargetも未検出フレームでは最後の可視ポーズを保持するようにした
+- hand retargetも手が一瞬消えた時に指/手首をneutralへ戻さず保持するようにした
+- head/body/handの平滑化に小さな差分を無視するdeadbandを追加した
+- 既存テストを「復帰」から「保持」前提へ更新し、deadbandのテストを追加した
+
+### Next
+
+- OBSでカメラトラック中に一瞬検出が外れる動きを試し、プルプル復帰が減ったか確認する
+- まだ残る場合は、relay stateを生の検出状態と平滑済みposeに分け、OBS側で保持時間を明示的に管理する

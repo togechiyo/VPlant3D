@@ -227,35 +227,26 @@ function smoothHandTarget(
   next: HandRetargetTarget | null,
   smoothing: number,
 ): HandRetargetTarget | null {
-  const fromFingers = previous?.fingers ?? neutralFingerCurl;
-  const toFingers = next?.fingers ?? neutralFingerCurl;
-  const result: HandRetargetTarget = {
-    fingers: {
-      thumb: lerp(fromFingers.thumb, toFingers.thumb, smoothing),
-      index: lerp(fromFingers.index, toFingers.index, smoothing),
-      middle: lerp(fromFingers.middle, toFingers.middle, smoothing),
-      ring: lerp(fromFingers.ring, toFingers.ring, smoothing),
-      little: lerp(fromFingers.little, toFingers.little, smoothing),
-    },
-    wristPitch: lerp(previous?.wristPitch ?? 0, next?.wristPitch ?? 0, smoothing),
-    wristYaw: lerp(previous?.wristYaw ?? 0, next?.wristYaw ?? 0, smoothing),
-    wristRoll: lerp(previous?.wristRoll ?? 0, next?.wristRoll ?? 0, smoothing),
-  };
-
-  if (!next && getHandTargetMotionAmount(result) < 0.015) {
-    return null;
+  if (!next) {
+    return previous;
   }
 
-  return result;
-}
+  const fromFingers = previous?.fingers ?? neutralFingerCurl;
+  const toFingers = next.fingers;
+  const result: HandRetargetTarget = {
+    fingers: {
+      thumb: lerpWithDeadband(fromFingers.thumb, toFingers.thumb, smoothing, 0.015),
+      index: lerpWithDeadband(fromFingers.index, toFingers.index, smoothing, 0.015),
+      middle: lerpWithDeadband(fromFingers.middle, toFingers.middle, smoothing, 0.015),
+      ring: lerpWithDeadband(fromFingers.ring, toFingers.ring, smoothing, 0.015),
+      little: lerpWithDeadband(fromFingers.little, toFingers.little, smoothing, 0.015),
+    },
+    wristPitch: lerpWithDeadband(previous?.wristPitch ?? 0, next.wristPitch, smoothing, 0.008),
+    wristYaw: lerpWithDeadband(previous?.wristYaw ?? 0, next.wristYaw, smoothing, 0.008),
+    wristRoll: lerpWithDeadband(previous?.wristRoll ?? 0, next.wristRoll, smoothing, 0.008),
+  };
 
-function getHandTargetMotionAmount(target: HandRetargetTarget): number {
-  return (
-    getFingerCurlAverage(target.fingers) +
-    Math.abs(target.wristPitch) +
-    Math.abs(target.wristYaw) +
-    Math.abs(target.wristRoll)
-  );
+  return result;
 }
 
 function mirrorHandX(hand: NormalizedLandmark[]): NormalizedLandmark[] {
@@ -295,12 +286,12 @@ function getOppositeHandSide(side: 'left' | 'right'): 'left' | 'right' {
   return side === 'left' ? 'right' : 'left';
 }
 
-function getFingerCurlAverage(curl: HandFingerCurl): number {
-  return (curl.thumb + curl.index + curl.middle + curl.ring + curl.little) / 5;
-}
-
 function lerp(from: number, to: number, alpha: number): number {
   return from + (to - from) * clamp01(alpha);
+}
+
+function lerpWithDeadband(from: number, to: number, alpha: number, deadband: number): number {
+  return Math.abs(to - from) < deadband ? from : lerp(from, to, alpha);
 }
 
 function clamp01(value: number): number {

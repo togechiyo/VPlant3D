@@ -222,27 +222,56 @@ describe('smoothUpperBodyRetargetPose', () => {
     });
   });
 
-  it('keeps releasing motion gradually when tracking is lost', () => {
+  it('holds the last visible pose when tracking is lost', () => {
+    const previous = {
+      enabled: true,
+      chestYaw: 0.1,
+      chestRoll: -0.1,
+      neckYaw: 0.04,
+      neckRoll: -0.03,
+      leftUpperArmRoll: -0.2,
+      rightUpperArmRoll: 0.1,
+      leftLowerArmRoll: -0.4,
+      rightLowerArmRoll: 0.2,
+    };
     const smoothed = smoothUpperBodyRetargetPose(
-      {
-        enabled: true,
-        chestYaw: 0.1,
-        chestRoll: -0.1,
-        neckYaw: 0.04,
-        neckRoll: -0.03,
-        leftUpperArmRoll: -0.2,
-        rightUpperArmRoll: 0.1,
-        leftLowerArmRoll: -0.4,
-        rightLowerArmRoll: 0.2,
-      },
+      previous,
       createNeutralRetargetPose(false),
       0.25,
     );
 
-    expect(smoothed.enabled).toBe(true);
-    expect(smoothed.chestYaw).toBeCloseTo(0.098);
-    expect(smoothed.leftUpperArmRoll).toBeCloseTo(-0.196);
-    expect(smoothed.leftLowerArmRoll).toBeCloseTo(-0.392);
+    expect(smoothed).toEqual(previous);
+  });
+
+  it('ignores tiny body jitter', () => {
+    const previous = {
+      enabled: true,
+      chestYaw: 0.1,
+      chestRoll: -0.1,
+      neckYaw: 0.04,
+      neckRoll: -0.03,
+      leftUpperArmRoll: -0.2,
+      rightUpperArmRoll: 0.1,
+      leftLowerArmRoll: -0.4,
+      rightLowerArmRoll: 0.2,
+    };
+    const smoothed = smoothUpperBodyRetargetPose(
+      previous,
+      {
+        enabled: true,
+        chestYaw: 0.103,
+        chestRoll: -0.096,
+        neckYaw: 0.043,
+        neckRoll: -0.027,
+        leftUpperArmRoll: -0.191,
+        rightUpperArmRoll: 0.109,
+        leftLowerArmRoll: -0.389,
+        rightLowerArmRoll: 0.211,
+      },
+      0.25,
+    );
+
+    expect(smoothed).toEqual(previous);
   });
 });
 

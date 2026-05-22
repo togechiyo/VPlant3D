@@ -109,18 +109,16 @@ export function smoothUpperBodyRetargetPose(
   const amount = clamp(smoothing, 0, 1);
 
   if (!next.enabled) {
-    const releaseAmount = amount * 0.08;
-
     return {
       enabled: hasVisibleMotion(previous, 0.006),
-      chestYaw: lerp(previous.chestYaw, 0, releaseAmount),
-      chestRoll: lerp(previous.chestRoll, 0, releaseAmount),
-      neckYaw: lerp(previous.neckYaw, 0, releaseAmount),
-      neckRoll: lerp(previous.neckRoll, 0, releaseAmount),
-      leftUpperArmRoll: lerp(previous.leftUpperArmRoll, 0, releaseAmount),
-      rightUpperArmRoll: lerp(previous.rightUpperArmRoll, 0, releaseAmount),
-      leftLowerArmRoll: lerp(previous.leftLowerArmRoll, 0, releaseAmount),
-      rightLowerArmRoll: lerp(previous.rightLowerArmRoll, 0, releaseAmount),
+      chestYaw: previous.chestYaw,
+      chestRoll: previous.chestRoll,
+      neckYaw: previous.neckYaw,
+      neckRoll: previous.neckRoll,
+      leftUpperArmRoll: previous.leftUpperArmRoll,
+      rightUpperArmRoll: previous.rightUpperArmRoll,
+      leftLowerArmRoll: previous.leftLowerArmRoll,
+      rightLowerArmRoll: previous.rightLowerArmRoll,
     };
   }
 
@@ -128,14 +126,14 @@ export function smoothUpperBodyRetargetPose(
 
   return {
     enabled: nextEnabled,
-    chestYaw: lerp(previous.chestYaw, next.chestYaw, amount),
-    chestRoll: lerp(previous.chestRoll, next.chestRoll, amount),
-    neckYaw: lerp(previous.neckYaw, next.neckYaw, amount),
-    neckRoll: lerp(previous.neckRoll, next.neckRoll, amount),
-    leftUpperArmRoll: lerp(previous.leftUpperArmRoll, next.leftUpperArmRoll, amount),
-    rightUpperArmRoll: lerp(previous.rightUpperArmRoll, next.rightUpperArmRoll, amount),
-    leftLowerArmRoll: lerp(previous.leftLowerArmRoll, next.leftLowerArmRoll, amount),
-    rightLowerArmRoll: lerp(previous.rightLowerArmRoll, next.rightLowerArmRoll, amount),
+    chestYaw: lerpWithDeadband(previous.chestYaw, next.chestYaw, amount, 0.005),
+    chestRoll: lerpWithDeadband(previous.chestRoll, next.chestRoll, amount, 0.005),
+    neckYaw: lerpWithDeadband(previous.neckYaw, next.neckYaw, amount, 0.004),
+    neckRoll: lerpWithDeadband(previous.neckRoll, next.neckRoll, amount, 0.004),
+    leftUpperArmRoll: lerpWithDeadband(previous.leftUpperArmRoll, next.leftUpperArmRoll, amount, 0.01),
+    rightUpperArmRoll: lerpWithDeadband(previous.rightUpperArmRoll, next.rightUpperArmRoll, amount, 0.01),
+    leftLowerArmRoll: lerpWithDeadband(previous.leftLowerArmRoll, next.leftLowerArmRoll, amount, 0.012),
+    rightLowerArmRoll: lerpWithDeadband(previous.rightLowerArmRoll, next.rightLowerArmRoll, amount, 0.012),
   };
 }
 
@@ -155,6 +153,15 @@ export function createNeutralRetargetPose(enabled = false): UpperBodyRetargetPos
 
 function lerp(previous: number, next: number, amount: number): number {
   return previous + (next - previous) * amount;
+}
+
+function lerpWithDeadband(
+  previous: number,
+  next: number,
+  amount: number,
+  deadband: number,
+): number {
+  return Math.abs(next - previous) < deadband ? previous : lerp(previous, next, amount);
 }
 
 function clamp(value: number, min: number, max: number): number {
