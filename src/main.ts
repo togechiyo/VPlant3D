@@ -25,6 +25,7 @@ import {
   resolveLookLights,
   type LookPresetId,
   type LookSettings,
+  type ResolvedLookLights,
   type RimLightColor,
   type RimLightDirection,
   type RimLightStrength,
@@ -73,9 +74,14 @@ import {
 import { VPlantRelayClient } from './relay/client';
 import type {
   RelayAssetDescriptor,
+  RelayAvatarTransform,
   RelayMessage,
   RelayRenderState,
 } from './relay/messages';
+import {
+  smoothRelayAvatarTransform,
+  smoothResolvedLookLights,
+} from './relay/render-smoothing';
 import {
   getUnknownVrmLoadErrorMessage,
   getVrmFileValidationMessage,
@@ -259,6 +265,18 @@ let relayHeadTarget: HeadRetargetPose = createNeutralHeadRetargetPose(false);
 let relayUpperBodyTarget: UpperBodyRetargetPose = createNeutralRetargetPose(false);
 let relayHandTarget: HandRetargetPose = createNeutralHandRetargetPose();
 let relayExpressionTarget: VrmFaceExpressionWeights = createNeutralFaceExpressionWeights();
+let relayAvatarTransformCurrent: RelayAvatarTransform = {
+  offsetX: 0,
+  offsetY: 0,
+  scale: 1,
+  rotationY: 0,
+};
+let relayAvatarTransformTarget: RelayAvatarTransform = {
+  ...relayAvatarTransformCurrent,
+};
+let relayLookLightsCurrent: ResolvedLookLights = resolveLookLights(appStore.getState().lookSettings);
+let relayLookSettingsTarget: LookSettings = appStore.getState().lookSettings;
+let relayStableStateInitialized = false;
 let relayStatePublishTime = 0;
 let loadingRelayVrmAssetId: string | null = null;
 let loadingRelayVrmaAssetSignature: string | null = null;
@@ -758,8 +776,10 @@ function resize(): void {
 }
 
 function applyLookSettings(settings: LookSettings): void {
-  const lights = resolveLookLights(settings);
+  applyResolvedLookLights(resolveLookLights(settings));
+}
 
+function applyResolvedLookLights(lights: ResolvedLookLights): void {
   keyLight.color.setHex(lights.keyColor);
   keyLight.intensity = lights.keyIntensity;
   keyLight.position.set(...lights.keyPosition);
@@ -1000,6 +1020,7 @@ function animate(frameTime = performance.now()): void {
   cube.rotation.x = elapsed * 0.32;
   cube.rotation.y = elapsed * 0.52;
   currentVrmaMixer?.update(delta);
+  updateRelayRenderStableState(delta);
   updateRelayRenderMotion(delta);
   applyManualControlPose();
   applyUpperBodyRetarget();
@@ -1108,21 +1129,46 @@ function applyRelayVrmaCommand(
 }
 
 function applyRelayRenderState(nextState: RelayRenderState): void {
-  appStore.getState().setAvatarOffsetX(nextState.avatarTransform.offsetX);
-  appStore.getState().setAvatarOffsetY(nextState.avatarTransform.offsetY);
-  appStore.getState().setAvatarScale(nextState.avatarTransform.scale);
-  appStore.getState().setAvatarRotationY(nextState.avatarTransform.rotationY);
+  relayAvatarTransformTarget = nextState.avatarTransform;
   appStore.getState().setLookSettings(nextState.look);
+  relayLookSettingsTarget = appStore.getState().lookSettings;
   appStore.getState().setVrmaLoop(nextState.vrmaLoop);
-  applyAvatarTransform();
-  applyLookSettings(appStore.getState().lookSettings);
   syncVrmaLoopMode(nextState.vrmaLoop);
+
+  if (!relayStableStateInitialized) {
+    relayAvatarTransformCurrent = { ...relayAvatarTransformTarget };
+    relayLookLightsCurrent = resolveLookLights(relayLookSettingsTarget);
+    applyAvatarTransformValues(relayAvatarTransformCurrent);
+    applyResolvedLookLights(relayLookLightsCurrent);
+    relayStableStateInitialized = true;
+  }
 
   relayMotionActive = true;
   relayHeadTarget = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
   relayUpperBodyTarget = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
   relayHandTarget = nextState.pose.hands ?? createNeutralHandRetargetPose();
   relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
+}
+
+function updateRelayRenderStableState(delta: number): void {
+  if (!isRenderPage) {
+    return;
+  }
+
+  const avatarSmoothing = getFrameSmoothing(delta, 5);
+  const lookSmoothing = getFrameSmoothing(delta, 3.2);
+  relayAvatarTransformCurrent = smoothRelayAvatarTransform(
+    relayAvatarTransformCurrent,
+    relayAvatarTransformTarget,
+    avatarSmoothing,
+  );
+  relayLookLightsCurrent = smoothResolvedLookLights(
+    relayLookLightsCurrent,
+    resolveLookLights(relayLookSettingsTarget),
+    lookSmoothing,
+  );
+  applyAvatarTransformValues(relayAvatarTransformCurrent);
+  applyResolvedLookLights(relayLookLightsCurrent);
 }
 
 function updateRelayRenderMotion(delta: number): void {
@@ -1494,19 +1540,28 @@ function captureAvatarBaseTransform(object: THREE.Object3D): void {
 }
 
 function applyAvatarTransform(): void {
+  const nextState = appStore.getState();
+  applyAvatarTransformValues({
+    offsetX: nextState.avatarOffsetX,
+    offsetY: nextState.avatarOffsetY,
+    scale: nextState.avatarScale,
+    rotationY: nextState.avatarRotationY,
+  });
+}
+
+function applyAvatarTransformValues(transform: RelayAvatarTransform): void {
   if (!currentVrm) {
     return;
   }
 
-  const nextState = appStore.getState();
   currentVrm.scene.position.set(
-    avatarBasePosition.x + nextState.avatarOffsetX,
-    avatarBasePosition.y + nextState.avatarOffsetY,
+    avatarBasePosition.x + transform.offsetX,
+    avatarBasePosition.y + transform.offsetY,
     avatarBasePosition.z,
   );
-  currentVrm.scene.scale.copy(avatarBaseScale).multiplyScalar(nextState.avatarScale);
+  currentVrm.scene.scale.copy(avatarBaseScale).multiplyScalar(transform.scale);
   currentVrm.scene.rotation.y =
-    avatarBaseRotationY + THREE.MathUtils.degToRad(nextState.avatarRotationY);
+    avatarBaseRotationY + THREE.MathUtils.degToRad(transform.rotationY);
 }
 
 function updateVrmStatusUi(nextState: AppState): void {

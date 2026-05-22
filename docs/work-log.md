@@ -2117,3 +2117,34 @@
 - Aliciaと別モデルで、標準/明るめ/正面上/ネオン/輪郭強調の見え方を確認する
 - 必要ならKey/Fill/Rimの初期値、プリセット強度、露出を調整する
 - アウトライン/モデル線は別タスクとして検討を続ける
+
+## 2026-05-22 Render Stable State Smoothing
+
+### Goal
+
+- OBS Render Pageで、モデル位置/回転/拡大とライト設定がrelay更新ごとに即時反映され、ブルブル震えたり明滅したりする問題を軽減する
+
+### Did
+
+- `src/relay/render-smoothing.ts` を追加した
+- OBS Render Pageではavatar transformとlook lightsを即時適用せず、最後に受け取った値をtargetとして保持し、animation frameごとにゆっくり補間するようにした
+- ポーズ/表情は従来通り速め、モデル位置/回転/拡大とライトは低速追従に分けた
+- avatar回転は最短角度で補間するようにした
+- ライトは色、強度、位置、露出を補間するようにした
+- 単体テストを追加した
+
+### Worked
+
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Failed / Blocked
+
+- OBS実機でのブルブル/明滅改善は人間確認が必要
+
+### Next
+
+- OBSでモデル位置、回転、ライトプリセット、リム設定を動かし、震えや明滅が減ったか確認する
+- まだ残る場合は、Controlから送る静的状態を変更時だけ送信するか、Render側の補間速度をさらに下げる
