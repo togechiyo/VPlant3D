@@ -13,6 +13,14 @@ import {
   sampleAutoBlink,
   type AutoBlinkState,
 } from './idle/auto-blink';
+import {
+  createNeutralManualPoseState,
+  updateManualAvatarScaleFromWheel,
+  updateManualAvatarTransformFromDrag,
+  updateManualPoseFromDrag,
+  type ManualPointerButton,
+  type ManualPoseState,
+} from './input/manual-control';
 import { sampleIdleSway } from './idle/idle-sway';
 import {
   createNeutralFaceExpressionWeights,
@@ -203,6 +211,16 @@ let idleSwayInput: HTMLInputElement | null = null;
 let expressionPresetText: HTMLElement | null = null;
 let faceTrackingText: HTMLElement | null = null;
 let handTrackingText: HTMLElement | null = null;
+let manualControlInput: HTMLInputElement | null = null;
+let manualMouseInput: HTMLInputElement | null = null;
+let manualControlStatusText: HTMLElement | null = null;
+let manualPose: ManualPoseState = createNeutralManualPoseState(false);
+let manualPointerSession: {
+  pointerId: number;
+  button: ManualPointerButton;
+  lastX: number;
+  lastY: number;
+} | null = null;
 let poseAnimationFrameId: number | null = null;
 let lastPoseVideoTime = -1;
 let upperBodyRetargetPose = createNeutralRetargetPose(false);
@@ -293,6 +311,27 @@ if (isControlPage) {
         <input id="vrm-file-input" class="sr-only" type="file" accept=".vrm" />
         VRMを読み込む
       </label>
+    </div>
+    <div class="grid gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
+      <div class="flex items-start justify-between gap-3">
+        <div class="grid gap-1">
+          <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">手動操作</span>
+          <strong class="text-sm font-bold text-[#eef4f2]">カメラなし操作</strong>
+        </div>
+        <span id="manual-control-status-text" class="text-xs font-bold text-[#9fa9aa]">未操作</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+          <input id="manual-control-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+          手動操作
+        </label>
+        <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+          <input id="manual-mouse-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+          マウス
+        </label>
+      </div>
+      <button id="manual-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">顔向きリセット</button>
+      <span class="text-xs font-bold text-[#9fa9aa]">プレビュー上で 左: 顔 / 中: 位置 / 右: 回転 / Wheel: 拡大</span>
     </div>
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/25 bg-black/20 p-2">
       <div class="grid gap-1">
@@ -487,6 +526,10 @@ if (isControlPage) {
   expressionPresetText = panel.querySelector<HTMLElement>('#expression-preset-text');
   faceTrackingText = panel.querySelector<HTMLElement>('#face-tracking-text');
   handTrackingText = panel.querySelector<HTMLElement>('#hand-tracking-text');
+  manualControlInput = panel.querySelector<HTMLInputElement>('#manual-control-input');
+  manualMouseInput = panel.querySelector<HTMLInputElement>('#manual-mouse-input');
+  manualControlStatusText = panel.querySelector<HTMLElement>('#manual-control-status-text');
+  const manualResetButton = panel.querySelector<HTMLButtonElement>('#manual-reset-button');
 
   vrmFileInput?.addEventListener('change', () => {
     const file = vrmFileInput.files?.[0] ?? null;
@@ -517,6 +560,17 @@ if (isControlPage) {
     appStore.getState().resetAvatarTransform();
     applyAvatarTransform();
   });
+  manualControlInput?.addEventListener('change', () => {
+    const enabled = manualControlInput?.checked ?? true;
+    appStore.getState().setManualControlEnabled(enabled);
+    if (!enabled) {
+      resetManualControlPose();
+    }
+  });
+  manualMouseInput?.addEventListener('change', () => {
+    appStore.getState().setManualMouseEnabled(manualMouseInput?.checked ?? true);
+  });
+  manualResetButton?.addEventListener('click', resetManualControlPose);
   vrmaPlayButton?.addEventListener('click', startVrmaPlayback);
   vrmaStopButton?.addEventListener('click', stopVrmaPlayback);
   vrmaLoopInput?.addEventListener('change', () => {
@@ -581,6 +635,7 @@ if (isControlPage) {
   });
   renderVrmaSlotList();
   updateExpressionPresetUi();
+  setupManualControlEvents();
 
   viewport.append(panel);
 } else {
@@ -599,6 +654,175 @@ function resize(): void {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height, !isControlPage);
+}
+
+function setupManualControlEvents(): void {
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('pointerdown', handleManualPointerDown);
+  canvas.addEventListener('pointermove', handleManualPointerMove);
+  canvas.addEventListener('pointerup', handleManualPointerEnd);
+  canvas.addEventListener('pointercancel', handleManualPointerEnd);
+  canvas.addEventListener('lostpointercapture', handleManualPointerCaptureLost);
+  canvas.addEventListener('dblclick', handleManualDoubleClick);
+  canvas.addEventListener('contextmenu', preventManualCanvasDefault);
+  canvas.addEventListener('auxclick', preventManualCanvasDefault);
+  canvas.addEventListener('wheel', handleManualWheel, {
+    passive: false,
+  });
+}
+
+function handleManualPointerDown(event: PointerEvent): void {
+  if (!canUseManualMouse()) {
+    return;
+  }
+
+  const button = getManualPointerButton(event.button);
+
+  if (!button) {
+    return;
+  }
+
+  event.preventDefault();
+  renderer.domElement.setPointerCapture(event.pointerId);
+  manualPointerSession = {
+    pointerId: event.pointerId,
+    button,
+    lastX: event.clientX,
+    lastY: event.clientY,
+  };
+}
+
+function handleManualPointerMove(event: PointerEvent): void {
+  if (!manualPointerSession || event.pointerId !== manualPointerSession.pointerId) {
+    return;
+  }
+
+  if (!canUseManualMouse()) {
+    manualPointerSession = null;
+    return;
+  }
+
+  event.preventDefault();
+  const rect = renderer.domElement.getBoundingClientRect();
+  const deltaX = event.clientX - manualPointerSession.lastX;
+  const deltaY = event.clientY - manualPointerSession.lastY;
+
+  manualPointerSession.lastX = event.clientX;
+  manualPointerSession.lastY = event.clientY;
+
+  if (manualPointerSession.button === 'primary') {
+    manualPose = updateManualPoseFromDrag(manualPose, {
+      button: manualPointerSession.button,
+      deltaX,
+      deltaY,
+      viewportWidth: rect.width,
+      viewportHeight: rect.height,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+    });
+    appStore.getState().setManualControlStatus(event.altKey ? '傾き操作' : '顔操作');
+    applyManualControlPose();
+    return;
+  }
+
+  const currentState = appStore.getState();
+  const transform = updateManualAvatarTransformFromDrag(
+    {
+      offsetX: currentState.avatarOffsetX,
+      offsetY: currentState.avatarOffsetY,
+      scale: currentState.avatarScale,
+      rotationY: currentState.avatarRotationY,
+    },
+    {
+      button: manualPointerSession.button,
+      deltaX,
+      deltaY,
+      viewportWidth: rect.width,
+      viewportHeight: rect.height,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+    },
+  );
+
+  currentState.setAvatarOffsetX(transform.offsetX);
+  currentState.setAvatarOffsetY(transform.offsetY);
+  currentState.setAvatarRotationY(transform.rotationY);
+  appStore
+    .getState()
+    .setManualControlStatus(manualPointerSession.button === 'auxiliary' ? '位置調整' : '回転');
+  applyAvatarTransform();
+}
+
+function handleManualPointerEnd(event: PointerEvent): void {
+  if (!manualPointerSession || event.pointerId !== manualPointerSession.pointerId) {
+    return;
+  }
+
+  event.preventDefault();
+  manualPointerSession = null;
+}
+
+function handleManualPointerCaptureLost(event: PointerEvent): void {
+  if (manualPointerSession?.pointerId === event.pointerId) {
+    manualPointerSession = null;
+  }
+}
+
+function handleManualDoubleClick(event: MouseEvent): void {
+  if (!canUseManualMouse()) {
+    return;
+  }
+
+  event.preventDefault();
+  resetManualControlPose();
+}
+
+function handleManualWheel(event: WheelEvent): void {
+  if (!canUseManualMouse()) {
+    return;
+  }
+
+  event.preventDefault();
+  const currentState = appStore.getState();
+  const transform = updateManualAvatarScaleFromWheel(
+    {
+      offsetX: currentState.avatarOffsetX,
+      offsetY: currentState.avatarOffsetY,
+      scale: currentState.avatarScale,
+      rotationY: currentState.avatarRotationY,
+    },
+    event.deltaY,
+  );
+
+  currentState.setAvatarScale(transform.scale);
+  appStore.getState().setManualControlStatus('拡大');
+  applyAvatarTransform();
+}
+
+function preventManualCanvasDefault(event: Event): void {
+  if (canUseManualMouse()) {
+    event.preventDefault();
+  }
+}
+
+function canUseManualMouse(): boolean {
+  const nextState = appStore.getState();
+
+  return isControlPage && nextState.manualControlEnabled && nextState.manualMouseEnabled;
+}
+
+function getManualPointerButton(button: number): ManualPointerButton | null {
+  switch (button) {
+    case 0:
+      return 'primary';
+    case 1:
+      return 'auxiliary';
+    case 2:
+      return 'secondary';
+    default:
+      return null;
+  }
 }
 
 function getRenderSize(): { width: number; height: number } {
@@ -632,6 +856,7 @@ function animate(frameTime = performance.now()): void {
   cube.rotation.y = elapsed * 0.52;
   currentVrmaMixer?.update(delta);
   updateRelayRenderMotion(delta);
+  applyManualControlPose();
   applyUpperBodyRetarget();
   applyHandRetarget();
   if (!isRenderPage) {
@@ -1146,6 +1371,7 @@ function updateVrmStatusUi(nextState: AppState): void {
   updateMicStatusUi(nextState);
   updatePoseStatusUi(nextState);
   updateAvatarTransformUi(nextState);
+  updateManualControlUi(nextState);
 }
 
 function getVrmStatusText(nextState: AppState): string {
@@ -1192,6 +1418,20 @@ function updateAvatarTransformUi(nextState: AppState): void {
 
   if (avatarRotationYText) {
     avatarRotationYText.textContent = `${Math.round(nextState.avatarRotationY)}°`;
+  }
+}
+
+function updateManualControlUi(nextState: AppState): void {
+  if (manualControlInput) {
+    manualControlInput.checked = nextState.manualControlEnabled;
+  }
+
+  if (manualMouseInput) {
+    manualMouseInput.checked = nextState.manualMouseEnabled;
+  }
+
+  if (manualControlStatusText) {
+    manualControlStatusText.textContent = nextState.manualControlStatus;
   }
 }
 
@@ -1890,6 +2130,41 @@ function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
     );
 }
 
+function applyManualControlPose(): void {
+  if (!isControlPage || !appStore.getState().manualControlEnabled || !manualPose.enabled) {
+    return;
+  }
+
+  headRetargetPose = {
+    enabled: true,
+    pitch: manualPose.headPitch,
+    yaw: manualPose.headYaw,
+    roll: manualPose.headRoll,
+  };
+  upperBodyRetargetPose = {
+    ...upperBodyRetargetPose,
+    enabled: true,
+    chestYaw: manualPose.chestYaw,
+    chestRoll: manualPose.chestRoll,
+    neckYaw: manualPose.chestYaw * 0.45,
+    neckRoll: manualPose.chestRoll * 0.32,
+  };
+  applyHeadRetarget();
+}
+
+function resetManualControlPose(): void {
+  manualPose = createNeutralManualPoseState(false);
+  appStore.getState().setManualControlStatus('未操作');
+
+  if (!relayMotionActive && appStore.getState().faceTrackingStatus !== 'active') {
+    resetHeadRetarget();
+  }
+
+  if (!relayMotionActive && appStore.getState().poseStatus !== 'active') {
+    resetUpperBodyRetarget();
+  }
+}
+
 function applyHeadRetarget(): void {
   if (!currentVrm) {
     return;
@@ -2011,7 +2286,10 @@ function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
 
 function applyUpperBodyRetarget(): void {
   const nextState = appStore.getState();
-  if (!currentVrm || (!relayMotionActive && nextState.poseStatus !== 'active')) {
+  if (
+    !currentVrm ||
+    (!relayMotionActive && nextState.poseStatus !== 'active' && !isManualControlPoseActive())
+  ) {
     return;
   }
 
@@ -2054,6 +2332,10 @@ function applyUpperBodyRetarget(): void {
     VRMHumanBoneName.RightLowerArm,
     upperBodyRetargetPose.rightLowerArmRoll,
   );
+}
+
+function isManualControlPoseActive(): boolean {
+  return isControlPage && appStore.getState().manualControlEnabled && manualPose.enabled;
 }
 
 function applyHandRetarget(): void {
@@ -2223,6 +2505,7 @@ function applyCameraLessIdle(elapsedSeconds: number): void {
   if (
     !currentVrm ||
     !idleSwayEnabled ||
+    isManualControlPoseActive() ||
     appStore.getState().poseStatus === 'active' ||
     appStore.getState().vrmaPlaybackStatus === 'playing'
   ) {

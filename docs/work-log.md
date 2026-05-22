@@ -1993,3 +1993,37 @@
 
 - 次に実装へ進むなら、純粋関数のテストから始める
 - 最小目標は左ドラッグ顔向き、ダブルクリックリセット、Control Pageの手動操作カード
+
+## 2026-05-22 Manual Mouse Control MVP
+
+### Goal
+
+- コントローラー側モデルプレビューで、マウス操作によるカメラなしVTuber向けの手動操作MVPを実装する
+
+### Did
+
+- `src/input/manual-control.ts` を追加し、ドラッグ/ホイール入力を手動姿勢とavatar transformへ変換する純粋関数を実装した
+- 左ドラッグで顔yaw/pitch、Alt+左ドラッグで顔roll、中ドラッグでモデルX/Y、右ドラッグで全体Y回転、ホイールで拡大縮小を操作できるようにした
+- Control Pageに「手動操作」カードを追加し、手動操作ON/OFF、マウスON/OFF、顔向きリセット、状態表示を追加した
+- 手動顔向きは離しても保持し、ダブルクリックまたはボタンでリセットする挙動にした
+- Control Page preview canvas上では `contextmenu` / `auxclick` を抑制し、Pointer Captureでドラッグ操作を安定させた
+- Unit testとE2Eを追加した
+
+### Worked
+
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+- Playwrightで左/中/右ドラッグとホイール操作の状態反映を確認できた
+
+### Failed / Blocked
+
+- 最初のE2Eでは `手動操作` テキストが見出しとラベルの2箇所にあり、strict locatorで失敗した。対象をIDベースに変更して修正した
+- 中ボタンドラッグの実際のブラウザ/マウス挙動は人間確認が必要
+
+### Next
+
+- Chromeでモデルを読み込んだ状態で、顔向き保持、位置調整、右ドラッグ回転の手触りを確認する
+- 顔向きの感度、保持/自動復帰、胸への分配量を人間の感覚に合わせて調整する
+- 次の拡張候補はゲームパッド右スティック顔向き、表情ボタン、複数VRMAスロットのワンボタン再生

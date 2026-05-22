@@ -74,7 +74,10 @@ body.is-transparent-render {
   position: relative;
   z-index: 20;
   flex: none;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
   width: var(--control-width) !important;
   height: auto !important;
   aspect-ratio: 16 / 9;

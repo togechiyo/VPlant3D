@@ -43,6 +43,9 @@ export interface AppState {
   handTrackingStatus: TrackingStatus;
   handTrackingSummary: string;
   handTrackingError: string | null;
+  manualControlEnabled: boolean;
+  manualMouseEnabled: boolean;
+  manualControlStatus: string;
   avatarOffsetX: number;
   avatarOffsetY: number;
   avatarScale: number;
@@ -84,6 +87,9 @@ export interface AppState {
   setHandTrackingError: (message: string) => void;
   setHandTrackingStopped: () => void;
   setHandTrackingFrame: (summary: string) => void;
+  setManualControlEnabled: (enabled: boolean) => void;
+  setManualMouseEnabled: (enabled: boolean) => void;
+  setManualControlStatus: (status: string) => void;
   setAvatarOffsetX: (offsetX: number) => void;
   setAvatarOffsetY: (offsetY: number) => void;
   setAvatarScale: (scale: number) => void;
@@ -129,6 +135,9 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     handTrackingStatus: 'idle',
     handTrackingSummary: '手: 待機',
     handTrackingError: null,
+    manualControlEnabled: true,
+    manualMouseEnabled: true,
+    manualControlStatus: '未操作',
     avatarOffsetX: 0,
     avatarOffsetY: 0,
     avatarScale: 1,
@@ -317,6 +326,20 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     setHandTrackingFrame: (summary) =>
       set({
         handTrackingSummary: summary,
+      }),
+    setManualControlEnabled: (enabled) =>
+      set({
+        manualControlEnabled: enabled,
+        manualControlStatus: enabled ? '未操作' : '停止中',
+      }),
+    setManualMouseEnabled: (enabled) =>
+      set({
+        manualMouseEnabled: enabled,
+        manualControlStatus: enabled ? '未操作' : 'マウスOFF',
+      }),
+    setManualControlStatus: (status) =>
+      set({
+        manualControlStatus: status,
       }),
     setAvatarOffsetX: (offsetX) =>
       set({

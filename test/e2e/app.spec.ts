@@ -35,6 +35,10 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#vrma-file-input')).toHaveAttribute('multiple', '');
   await expect(page.locator('#vrma-requirement-text')).toHaveText('VRMが必要');
   await expect(page.locator('#vrma-play-button')).toBeDisabled();
+  await expect(page.getByText('カメラなし操作')).toBeVisible();
+  await expect(page.locator('#manual-control-input')).toBeChecked();
+  await expect(page.locator('#manual-mouse-input')).toBeChecked();
+  await expect(page.locator('#manual-control-status-text')).toHaveText('未操作');
   await expect(page.getByText('位置調整')).toBeVisible();
   await expect(page.locator('#avatar-offset-x-input')).toHaveValue('0');
   await expect(page.locator('#avatar-scale-input')).toHaveValue('1');
@@ -85,11 +89,52 @@ test('OBS transparent mode hides Setup UI but keeps the scene canvas', async ({ 
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
   await expect(page.getByText('VRMを読み込む', { exact: true })).toHaveCount(0);
   await expect(page.getByText('VRMAを読み込む', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('手動操作', { exact: true })).toHaveCount(0);
   await expect(page.getByText('顔 / 口')).toHaveCount(0);
   await expect(page.getByText('まばたき')).toHaveCount(0);
   await expect(page.getByText('表情')).toHaveCount(0);
   await expect(page.getByText('体トラック')).toHaveCount(0);
   await expect(page.getByText('設定')).toHaveCount(0);
+  expect(errors()).toEqual([]);
+});
+
+test('Control preview accepts manual mouse controls', async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto('/?control=1');
+  const canvas = page.locator('canvas.scene-canvas');
+  const box = await canvas.boundingBox();
+  expect(box).not.toBeNull();
+
+  const x = (box?.x ?? 0) + (box?.width ?? 0) / 2;
+  const y = (box?.y ?? 0) + (box?.height ?? 0) / 2;
+
+  await page.mouse.move(x, y);
+  await page.mouse.down({ button: 'left' });
+  await page.mouse.move(x + 80, y - 40);
+  await page.mouse.up({ button: 'left' });
+  await expect(page.locator('#manual-control-status-text')).toHaveText('顔操作');
+
+  await page.mouse.move(x, y);
+  await page.mouse.down({ button: 'middle' });
+  await page.mouse.move(x + 40, y + 20);
+  await page.mouse.up({ button: 'middle' });
+  await expect(page.locator('#manual-control-status-text')).toHaveText('位置調整');
+  await expect(page.locator('#avatar-offset-x-input')).not.toHaveValue('0');
+
+  await page.mouse.move(x, y);
+  await page.mouse.down({ button: 'right' });
+  await page.mouse.move(x + 40, y);
+  await page.mouse.up({ button: 'right' });
+  await expect(page.locator('#manual-control-status-text')).toHaveText('回転');
+  await expect(page.locator('#avatar-rotation-y-input')).not.toHaveValue('0');
+
+  await page.mouse.wheel(0, -120);
+  await expect(page.locator('#manual-control-status-text')).toHaveText('拡大');
+  await expect(page.locator('#avatar-scale-input')).not.toHaveValue('1');
+
+  await canvas.dblclick();
+  await expect(page.locator('#manual-control-status-text')).toHaveText('未操作');
   expect(errors()).toEqual([]);
 });
 

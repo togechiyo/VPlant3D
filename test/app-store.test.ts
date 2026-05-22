@@ -43,6 +43,9 @@ describe('createAppStore', () => {
       handTrackingStatus: 'idle',
       handTrackingSummary: '手: 待機',
       handTrackingError: null,
+      manualControlEnabled: true,
+      manualMouseEnabled: true,
+      manualControlStatus: '未操作',
       avatarOffsetX: 0,
       avatarOffsetY: 0,
       avatarScale: 1,
@@ -295,6 +298,33 @@ describe('createAppStore', () => {
       avatarOffsetY: 0,
       avatarScale: 1,
       avatarRotationY: 0,
+    });
+  });
+
+  it('tracks manual control options and status', () => {
+    const store = createAppStore({
+      obsMode: false,
+      controlMode: false,
+      transparent: false,
+    });
+
+    store.getState().setManualControlStatus('顔操作');
+    store.getState().setManualMouseEnabled(false);
+    store.getState().setManualControlEnabled(false);
+
+    expect(store.getState()).toMatchObject({
+      manualControlEnabled: false,
+      manualMouseEnabled: false,
+      manualControlStatus: '停止中',
+    });
+
+    store.getState().setManualControlEnabled(true);
+    store.getState().setManualMouseEnabled(true);
+
+    expect(store.getState()).toMatchObject({
+      manualControlEnabled: true,
+      manualMouseEnabled: true,
+      manualControlStatus: '未操作',
     });
   });
 });
