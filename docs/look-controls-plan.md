@@ -24,7 +24,7 @@ VPlant3Dの次の見栄え強化として、モデル表示の印象をOBS向け
 4. 追加アウトラインの検証
 5. 2段アウトライン、黒縁+白ふち/ネオンふち
 
-ライトとリムライトは既存のThree.jsライトを調整UI化するだけで始められる。VRM内蔵アウトラインは、モデル作者の意図を活かしたまま全体倍率だけ触る。追加アウトラインは映えるが、透明背景、OBS Browser Source、VRMスキニングとの相性確認が必要なので別フェーズにする。
+ライトとリムライトは既存のThree.jsライトを調整UI化するだけで始められる。今後はKey / Fill / Rimの3灯をすべて `DirectionalLight` に統一する。VRM内蔵アウトラインは、モデル作者の意図を活かしたまま全体倍率だけ触る。追加アウトラインは映えるが、透明背景、OBS Browser Source、VRMスキニングとの相性確認が必要なので別フェーズにする。
 
 ## 現状
 
@@ -41,6 +41,8 @@ const fillLight = new THREE.HemisphereLight(0xf2f7ff, 0x101314, 0.54);
 ```
 
 このため、リムライトはすでに弱く入っている。まずは追加実装ではなく、既存ライトの強度、色、方向を操作できるUIへするのが安全。
+
+ただし、`fillLight` は現状 `HemisphereLight` なので、ルック操作実装時に `DirectionalLight` へ置き換える。3灯すべてを方向ライトにそろえることで、配信者にも馴染みのある「Key / Fill / Rim」構成として説明しやすく、UIも統一できる。
 
 ## UI案
 
@@ -75,23 +77,68 @@ Control Pageに「ルック」カードを追加する。
 
 UIテキストは「シェーダー」より「ルック」「モデル線」「輪郭」の方がユーザーに伝わりやすい。
 
+### 3灯UI案
+
+最初の実装では、個別スライダーを増やしすぎない。プリセットとリムの調整だけで、触れる量を抑える。
+
+```text
+ルック
+  プリセット: 標準 / 明るめ / 正面上 / ネオン / 輪郭強調
+
+3灯
+  Key:  0%  100%  200%
+  Fill: 0%  100%  200%
+  Rim:  OFF 弱 中 強
+
+リム
+  色: 白 / 青 / 緑
+  方向: 左後ろ / 右後ろ / 上後ろ
+```
+
+詳細設定を入れるなら後からでよい。
+
+- Key色
+- Fill色
+- Key方向
+- Fill方向
+- exposure
+
+MVPでは「プリセット選択 + Rim強度/色/方向」だけでも十分。
+
 ## ライト
 
 ### 実装方針
 
-`keyLight`、`fillLight`、`rimLight` をモジュール化して、プリセット適用関数を作る。
+`keyLight`、`fillLight`、`rimLight` をすべて `DirectionalLight` としてモジュール化し、プリセット適用関数を作る。
 
 ```ts
-type LookPresetId = "standard" | "bright" | "front-top" | "neon" | "chroma";
+type LookPresetId = "standard" | "bright" | "front-top" | "neon" | "edge";
+type RimLightStrength = "off" | "soft" | "medium" | "strong";
+type RimLightColor = "white" | "blue" | "green";
+type RimLightDirection = "left-back" | "right-back" | "top-back";
 
 type LookLightPreset = {
+  id: LookPresetId;
+  label: string;
   keyColor: number;
   keyIntensity: number;
   keyPosition: [number, number, number];
-  fillSkyColor: number;
-  fillGroundColor: number;
+  fillColor: number;
   fillIntensity: number;
+  fillPosition: [number, number, number];
+  rimColor: number;
+  rimIntensity: number;
+  rimPosition: [number, number, number];
   exposure: number;
+};
+
+type LookSettings = {
+  preset: LookPresetId;
+  keyIntensityScale: number;
+  fillIntensityScale: number;
+  rimStrength: RimLightStrength;
+  rimColor: RimLightColor;
+  rimDirection: RimLightDirection;
 };
 ```
 
@@ -110,15 +157,25 @@ test/look-presets.test.ts
 | 明るめ | 暗いVRM向け |
 | 正面上 | 顔が見やすいOBS向け |
 | ネオン | 青/緑アクセントを強くする |
-| クロマキー向け | 背景色と分離しやすい自然寄り |
+| 輪郭強調 | key/fill控えめ、rim強めで輪郭を出す |
 
 露出は `renderer.toneMappingExposure` を使う。ただしモデルごとの白飛びが出やすいので、プリセットだけで始め、スライダーは必要になってから追加する。
+
+### 3灯の初期配置
+
+| ライト | position | 役割 |
+| --- | --- | --- |
+| Key | `[0.35, 3.4, 4.2]` | 正面やや上から顔と体を照らす |
+| Fill | `[-2.6, 2.1, 3.0]` | 影側を弱く起こす |
+| Rim | `[3.0, 2.4, -2.2]` | 背面斜め上から輪郭を出す |
+
+Fillも `DirectionalLight` にする。暗部が硬くなりすぎる場合はFillを正面寄りにし、強度を弱めにする。
 
 ## リムライト
 
 ### 方向ライト方式を採用
 
-初期実装は、単純な `DirectionalLight` をリムライトとして使う。
+初期実装は、単純な `DirectionalLight` をリムライトとして使う。Key / Fill / Rimの3灯すべてをDirectionalLightに統一する。
 
 理由:
 
@@ -243,10 +300,21 @@ UI:
 
 - `src/look/look-presets.ts`
 - `LookSettings` をstoreに追加
+- `fillLight` を `HemisphereLight` から `DirectionalLight` に変更
 - key/fill/rim lightを設定から更新
 - Control Pageに「ルック」カード追加
 - relayにlook settingsを追加してOBS Render Pageへ同期
 - E2EでControlにUIがあり、OBSにUIがないことを確認
+
+実装の最小単位:
+
+1. `src/look/look-presets.ts` にプリセットと正規化関数を作る
+2. `RelayRenderState` に `look` を追加する
+3. storeに `lookPreset`、`keyIntensityScale`、`fillIntensityScale`、`rimStrength`、`rimColor`、`rimDirection` を追加する
+4. `applyLookSettings()` を作り、Control/Render両方でライトに反映する
+5. Control Pageに「ルック」カードを追加する
+
+E2Eは、ControlにルックUIが表示されること、OBS Render PageにはUIがないこと、select操作で状態が変わることを確認する。実際の見た目はChrome/OBSで人間確認する。
 
 ### Phase 2: VRM内蔵アウトライン倍率
 

@@ -2056,3 +2056,30 @@
 
 - 実装するなら、まず `src/look/look-presets.ts` とライト/リムライトUIから始める
 - 追加アウトラインは別ブランチまたは検証スパイクで試す
+
+## 2026-05-22 Three Light Look Control Plan
+
+### Goal
+
+- Key / Fill / Rim の3灯すべてをDirectionalLightにそろえるルック操作案を具体化する
+
+### Did
+
+- `docs/look-controls-plan.md` に3灯UI案と実装順を追記した
+- 現在の `HemisphereLight` fillを `DirectionalLight` fillへ置き換える方針にした
+- MVP UIはプリセット、Key/Fill倍率、Rim強度/色/方向に絞る案にした
+- `RelayRenderState` にlook設定を載せ、Control PageとOBS Render Pageの見た目を同期する方針を明記した
+
+### Worked
+
+- 3灯構成は配信/撮影に馴染みがあり、ユーザーにも説明しやすい
+- 実装は既存ライトの置き換えと設定反映が中心で、アウトラインより低リスク
+
+### Failed / Blocked
+
+- 見た目の良し悪しはモデル依存なので、実装後にAliciaと別モデルで人間確認が必要
+
+### Next
+
+- 実装するなら `src/look/look-presets.ts` とstore/relayのlook設定追加から始める
+- 最初は3灯UIだけにし、アウトラインは別タスクとして残す
