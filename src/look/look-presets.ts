@@ -51,7 +51,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.6, 1.9, 2.25],
     fillTarget: [0, 1.12, 0],
     rimColor: 0x38d5ff,
-    rimIntensity: 0.82,
+    rimIntensity: 1.05,
     rimPosition: [2.9, 2.65, -3.4],
     rimTarget: [0, 1.42, 0],
     exposure: 0.88,
@@ -68,7 +68,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.5, 1.95, 2.45],
     fillTarget: [0, 1.12, 0],
     rimColor: 0xf4fbff,
-    rimIntensity: 0.78,
+    rimIntensity: 1.02,
     rimPosition: [2.9, 2.7, -3.35],
     rimTarget: [0, 1.42, 0],
     exposure: 0.9,
@@ -85,7 +85,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.35, 1.85, 2.25],
     fillTarget: [0, 1.1, 0],
     rimColor: 0x38d5ff,
-    rimIntensity: 0.72,
+    rimIntensity: 0.98,
     rimPosition: [2.8, 2.65, -3.35],
     rimTarget: [0, 1.42, 0],
     exposure: 0.88,
@@ -102,7 +102,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.85, 1.9, 2.1],
     fillTarget: [0, 1.08, 0],
     rimColor: 0x6dff9a,
-    rimIntensity: 1.65,
+    rimIntensity: 2.15,
     rimPosition: [3.2, 2.65, -3.55],
     rimTarget: [0, 1.42, 0],
     exposure: 0.84,
@@ -119,7 +119,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.7, 1.85, 2.05],
     fillTarget: [0, 1.08, 0],
     rimColor: 0x38d5ff,
-    rimIntensity: 1.95,
+    rimIntensity: 2.55,
     rimPosition: [3.35, 2.75, -3.6],
     rimTarget: [0, 1.44, 0],
     exposure: 0.84,
@@ -173,11 +173,11 @@ function getRimIntensity(strength: RimLightStrength, presetIntensity: number): n
     case 'off':
       return 0;
     case 'soft':
-      return Math.min(presetIntensity, 0.65);
+      return Math.min(presetIntensity, 1.05);
     case 'medium':
-      return Math.max(presetIntensity, 1);
+      return Math.max(presetIntensity, 1.45);
     case 'strong':
-      return Math.max(presetIntensity, 1.8);
+      return Math.max(presetIntensity, 2.4);
   }
 }
 
@@ -204,7 +204,7 @@ function getRimPosition(
     case 'right-back':
       return [3.2, 2.65, -3.55];
     case 'top-back':
-      return [0, 3.65, -3.35];
+      return [0, 5.2, -1.15];
     default:
       return fallback;
   }

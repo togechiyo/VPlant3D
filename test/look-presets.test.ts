@@ -17,7 +17,7 @@ describe('look presets', () => {
     expect(lights.fillIntensity).toBeCloseTo(0.26);
     expect(lights.fillPosition[0]).toBeGreaterThan(0);
     expect(lights.fillPosition[2]).toBeGreaterThan(0);
-    expect(lights.rimIntensity).toBeCloseTo(0.65);
+    expect(lights.rimIntensity).toBeCloseTo(1.05);
     expect(lights.rimColor).toBe(0x38d5ff);
     expect(lights.rimPosition).toEqual([3.2, 2.65, -3.55]);
     expect(lights.rimTarget).toEqual([0, 1.42, 0]);
@@ -42,7 +42,7 @@ describe('look presets', () => {
       rimDirection: 'left-back',
     });
 
-    expect(lights.rimIntensity).toBeCloseTo(1.8);
+    expect(lights.rimIntensity).toBeCloseTo(2.4);
     expect(lights.rimColor).toBe(0x6dff9a);
     expect(lights.rimPosition).toEqual([-3.2, 2.65, -3.55]);
   });

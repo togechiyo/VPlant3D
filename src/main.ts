@@ -290,6 +290,7 @@ let relayAvatarTransformTarget: RelayAvatarTransform = {
 let relayLookLightsCurrent: ResolvedLookLights = resolveLookLights(appStore.getState().lookSettings);
 let relayLookSettingsTarget: LookSettings = appStore.getState().lookSettings;
 let relayStableStateInitialized = false;
+let relayStaticStateSignature = '';
 let relayStatePublishTime = 0;
 let loadingRelayVrmAssetId: string | null = null;
 let loadingRelayVrmaAssetSignature: string | null = null;
@@ -1145,17 +1146,28 @@ function applyRelayVrmaCommand(
 }
 
 function applyRelayRenderState(nextState: RelayRenderState): void {
-  relayAvatarTransformTarget = nextState.avatarTransform;
-  appStore.getState().setLookSettings(nextState.look);
-  relayLookSettingsTarget = appStore.getState().lookSettings;
+  const staticStateSignature = createRelayStaticStateSignature(nextState);
+  if (staticStateSignature !== relayStaticStateSignature) {
+    relayStaticStateSignature = staticStateSignature;
+    relayAvatarTransformTarget = nextState.avatarTransform;
+    relayAvatarTransformCurrent = { ...relayAvatarTransformTarget };
+    const currentState = appStore.getState();
+    currentState.setAvatarOffsetX(nextState.avatarTransform.offsetX);
+    currentState.setAvatarOffsetY(nextState.avatarTransform.offsetY);
+    currentState.setAvatarScale(nextState.avatarTransform.scale);
+    currentState.setAvatarRotationY(nextState.avatarTransform.rotationY);
+    currentState.setLookSettings(nextState.look);
+    relayLookSettingsTarget = appStore.getState().lookSettings;
+    relayLookLightsCurrent = resolveLookLights(relayLookSettingsTarget);
+    applyAvatarTransformValues(relayAvatarTransformCurrent);
+    applyResolvedLookLights(relayLookLightsCurrent);
+  }
+
   appStore.getState().setVrmaLoop(nextState.vrmaLoop);
   syncVrmaLoopMode(nextState.vrmaLoop);
 
   if (!relayStableStateInitialized) {
-    relayAvatarTransformCurrent = { ...relayAvatarTransformTarget };
-    relayLookLightsCurrent = resolveLookLights(relayLookSettingsTarget);
-    applyAvatarTransformValues(relayAvatarTransformCurrent);
-    applyResolvedLookLights(relayLookLightsCurrent);
+    relayStaticStateSignature = staticStateSignature;
     relayStableStateInitialized = true;
   }
 
@@ -1164,6 +1176,13 @@ function applyRelayRenderState(nextState: RelayRenderState): void {
   relayUpperBodyTarget = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
   relayHandTarget = nextState.pose.hands ?? createNeutralHandRetargetPose();
   relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
+}
+
+function createRelayStaticStateSignature(state: RelayRenderState): string {
+  return JSON.stringify({
+    avatarTransform: state.avatarTransform,
+    look: state.look,
+  });
 }
 
 function updateRelayRenderStableState(delta: number): void {
