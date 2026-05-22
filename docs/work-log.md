@@ -1964,3 +1964,32 @@
 - 実装するなら、まず `src/input/manual-control.ts` にドラッグ量から正規化poseを作る純粋関数を追加する
 - Control Page preview canvasにpointer操作を接続し、顔yaw/pitchだけ最小実装する
 - ゲームパッドはマウス操作の正規化レイヤーができた後に右スティック顔向きから追加する
+
+## 2026-05-22 Manual Control Implementation Plan
+
+### Goal
+
+- コントローラー側モデルプレビューで、マウス操作により顔向き、モデル位置、拡大、全体回転を操作する実装案を具体化する
+
+### Did
+
+- `docs/manual-control-research.md` に具体実装案を追記した
+- 左ドラッグは顔yaw/pitch、中ドラッグはモデルX/Y、ホイールは拡大縮小、右ドラッグは全体Y回転、ダブルクリックは手動顔向きリセットにする案を整理した
+- 初期実装では `RelayRenderState` を増やさず、Control Page側で既存の `headRetargetPose` / `upperBodyRetargetPose` へ合成して送る方針にした
+- `src/input/manual-control.ts` と `test/manual-control.test.ts` を追加する実装単位を決めた
+
+### Worked
+
+- 既存のrelay schemaを大きく変えずに始められる
+- Render Page側の補間処理をそのまま使える
+- 手動顔向きは保持を初期挙動にすることで、棒立ちへ戻る時のブレを避けやすい
+
+### Failed / Blocked
+
+- 中ボタンドラッグはブラウザのオートスクロールと競合する可能性があるため、`auxclick` やpointer handlingの実ブラウザ確認が必要
+- 実装後の手触りはChromeで人間確認が必要
+
+### Next
+
+- 次に実装へ進むなら、純粋関数のテストから始める
+- 最小目標は左ドラッグ顔向き、ダブルクリックリセット、Control Pageの手動操作カード
