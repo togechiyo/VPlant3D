@@ -1906,3 +1906,32 @@
 
 - OBSで、検出が一瞬弱くなる場面でも棒立ちへ吸われるようなブレが減ったか確認する
 - まだ残る場合は、Control側で姿勢targetを一定時間ホールドする
+
+## 2026-05-22 External Tracking Research
+
+### Goal
+
+- 外部トラッキング接続、iFacialMocap、VMC Protocol、VTube Studio系の入力を調べ、VPlant3Dへ入れる場合の設計を整理する
+
+### Did
+
+- 公式/一次情報を中心に、VMC Protocol、iFacialMocap通信仕様、VTube Studio Public API、VTube Studio iOS tracking UDPサンプルを確認した
+- `docs/external-tracking-research.md` を作成した
+- ブラウザ/OBSへ直接UDPを入れるのではなく、Node側ローカル中継サーバーで受信して既存WebSocket relayへ流す方針を整理した
+- iFacialMocapは顔専用、VMCはボーン/表情汎用、VTube Studio iOS trackingはiPhone顔トラッカー候補として扱う方針にした
+
+### Worked
+
+- 既存のControl Page / OBS Render Page分離設計と、外部入力adapter方式は相性がよい
+- まずはiFacialMocap parserの純粋関数テストから始められる見通し
+
+### Failed / Blocked
+
+- iFacialMocap、VTube Studio iOS tracking、VMC送信元アプリは実機/実アプリがないと品質確認できない
+- 外部トラッキングはUDP/OSCが多く、ブラウザ単体実装には向かない
+
+### Next
+
+- 実装するなら、まず `server/external-tracking/` に正規化型とiFacialMocap文字列parserを追加する
+- 人間側でiFacialMocapまたはVMC送信元アプリを使う予定があるか確認する
+- VMCは最初から全身ボーンを扱わず、表情とhead/chestだけに絞る
