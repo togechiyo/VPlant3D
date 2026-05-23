@@ -10,6 +10,8 @@ const assets = new Map();
 let latestVrmAssetMessage = null;
 let latestVrmaSlotsMessage = null;
 let latestStateMessage = null;
+let latestStaticStateMessage = null;
+let latestMotionStateMessage = null;
 let latestVrmaCommandMessage = null;
 
 const vite = await createViteServer({
@@ -78,6 +80,8 @@ function sendLatestMessages(webSocket) {
     latestVrmAssetMessage,
     latestVrmaSlotsMessage,
     latestStateMessage,
+    latestStaticStateMessage,
+    latestMotionStateMessage,
     latestVrmaCommandMessage,
   ]) {
     if (message && webSocket.readyState === 1) {
@@ -87,26 +91,37 @@ function sendLatestMessages(webSocket) {
 }
 
 function rememberLatestMessage(message) {
+  if (message.includes('"type":"motionState"')) {
+    latestMotionStateMessage = message;
+    return;
+  }
+
+  if (message.includes('"type":"staticState"')) {
+    latestStaticStateMessage = message;
+    return;
+  }
+
+  if (message.includes('"type":"state"')) {
+    latestStateMessage = message;
+    return;
+  }
+
+  if (message.includes('"type":"vrmaCommand"')) {
+    latestVrmaCommandMessage = message;
+    return;
+  }
+
+  if (message.includes('"type":"vrmaSlots"')) {
+    latestVrmaSlotsMessage = message;
+    return;
+  }
+
   try {
     const parsed = JSON.parse(message);
 
     if (parsed?.type === 'asset' && parsed.asset?.kind === 'vrm') {
       latestVrmAssetMessage = message;
       return;
-    }
-
-    if (parsed?.type === 'vrmaSlots') {
-      latestVrmaSlotsMessage = message;
-      return;
-    }
-
-    if (parsed?.type === 'state') {
-      latestStateMessage = message;
-      return;
-    }
-
-    if (parsed?.type === 'vrmaCommand') {
-      latestVrmaCommandMessage = message;
     }
   } catch {
     // Ignore malformed client messages; browser clients also validate on receipt.

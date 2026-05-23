@@ -76,7 +76,9 @@ import type {
   RelayAssetDescriptor,
   RelayAvatarTransform,
   RelayMessage,
+  RelayMotionState,
   RelayRenderState,
+  RelayStaticState,
 } from './relay/messages';
 import {
   smoothRelayAvatarTransform,
@@ -289,9 +291,11 @@ let relayAvatarTransformTarget: RelayAvatarTransform = {
 };
 let relayLookLightsCurrent: ResolvedLookLights = resolveLookLights(appStore.getState().lookSettings);
 let relayLookSettingsTarget: LookSettings = appStore.getState().lookSettings;
-let relayStableStateInitialized = false;
-let relayStaticStateSignature = '';
-let relayStatePublishTime = 0;
+let relayRenderStaticStateSignature = '';
+let relayStaticPublishSignature = '';
+let relayMotionPublishTime = 0;
+let relayMotionSequence = 0;
+let relayLastAppliedMotionSequence = -1;
 let loadingRelayVrmAssetId: string | null = null;
 let loadingRelayVrmaAssetSignature: string | null = null;
 const relayClient = new VPlantRelayClient(
@@ -1075,6 +1079,12 @@ function handleRelayMessage(message: RelayMessage): void {
     case 'state':
       applyRelayRenderState(message.state);
       break;
+    case 'staticState':
+      applyRelayStaticState(message.state);
+      break;
+    case 'motionState':
+      applyRelayMotionState(message.state);
+      break;
     case 'vrmaCommand':
       applyRelayVrmaCommand(message.command, message.selectedIndex, message.loop);
       break;
@@ -1146,31 +1156,47 @@ function applyRelayVrmaCommand(
 }
 
 function applyRelayRenderState(nextState: RelayRenderState): void {
+  applyRelayStaticState({
+    avatarTransform: nextState.avatarTransform,
+    look: nextState.look,
+    vrmaLoop: nextState.vrmaLoop,
+  });
+  applyRelayMotionState({
+    sequence: ++relayLastAppliedMotionSequence,
+    expressions: nextState.expressions,
+    pose: nextState.pose,
+  });
+}
+
+function applyRelayStaticState(nextState: RelayStaticState): void {
   const staticStateSignature = createRelayStaticStateSignature(nextState);
-  if (staticStateSignature !== relayStaticStateSignature) {
-    relayStaticStateSignature = staticStateSignature;
-    relayAvatarTransformTarget = nextState.avatarTransform;
-    relayAvatarTransformCurrent = { ...relayAvatarTransformTarget };
-    const currentState = appStore.getState();
-    currentState.setAvatarOffsetX(nextState.avatarTransform.offsetX);
-    currentState.setAvatarOffsetY(nextState.avatarTransform.offsetY);
-    currentState.setAvatarScale(nextState.avatarTransform.scale);
-    currentState.setAvatarRotationY(nextState.avatarTransform.rotationY);
-    currentState.setLookSettings(nextState.look);
-    relayLookSettingsTarget = appStore.getState().lookSettings;
-    relayLookLightsCurrent = resolveLookLights(relayLookSettingsTarget);
-    applyAvatarTransformValues(relayAvatarTransformCurrent);
-    applyResolvedLookLights(relayLookLightsCurrent);
+  if (staticStateSignature === relayRenderStaticStateSignature) {
+    return;
   }
 
-  appStore.getState().setVrmaLoop(nextState.vrmaLoop);
+  relayRenderStaticStateSignature = staticStateSignature;
+  relayAvatarTransformTarget = nextState.avatarTransform;
+  relayAvatarTransformCurrent = { ...relayAvatarTransformTarget };
+  const currentState = appStore.getState();
+  currentState.setAvatarOffsetX(nextState.avatarTransform.offsetX);
+  currentState.setAvatarOffsetY(nextState.avatarTransform.offsetY);
+  currentState.setAvatarScale(nextState.avatarTransform.scale);
+  currentState.setAvatarRotationY(nextState.avatarTransform.rotationY);
+  currentState.setLookSettings(nextState.look);
+  currentState.setVrmaLoop(nextState.vrmaLoop);
   syncVrmaLoopMode(nextState.vrmaLoop);
+  relayLookSettingsTarget = appStore.getState().lookSettings;
+  relayLookLightsCurrent = resolveLookLights(relayLookSettingsTarget);
+  applyAvatarTransformValues(relayAvatarTransformCurrent);
+  applyResolvedLookLights(relayLookLightsCurrent);
+}
 
-  if (!relayStableStateInitialized) {
-    relayStaticStateSignature = staticStateSignature;
-    relayStableStateInitialized = true;
+function applyRelayMotionState(nextState: RelayMotionState): void {
+  if (nextState.sequence <= relayLastAppliedMotionSequence) {
+    return;
   }
 
+  relayLastAppliedMotionSequence = nextState.sequence;
   relayMotionActive = true;
   relayHeadTarget = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
   relayUpperBodyTarget = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
@@ -1178,10 +1204,11 @@ function applyRelayRenderState(nextState: RelayRenderState): void {
   relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
 }
 
-function createRelayStaticStateSignature(state: RelayRenderState): string {
+function createRelayStaticStateSignature(state: RelayStaticState): string {
   return JSON.stringify({
     avatarTransform: state.avatarTransform,
     look: state.look,
+    vrmaLoop: state.vrmaLoop,
   });
 }
 
@@ -1263,41 +1290,116 @@ function getFrameSmoothing(delta: number, speed: number): number {
 }
 
 function publishRelayState(frameTime: number): void {
-  if (!isControlPage || frameTime - relayStatePublishTime < 33) {
+  if (!isControlPage) {
     return;
   }
 
-  relayStatePublishTime = frameTime;
   const nextState = appStore.getState();
+  const staticState = createRelayStaticState(nextState);
+  const staticSignature = createRelayStaticStateSignature(staticState);
+
+  if (staticSignature !== relayStaticPublishSignature) {
+    relayStaticPublishSignature = staticSignature;
+    relayClient.send({
+      type: 'staticState',
+      state: staticState,
+    });
+  }
+
+  if (frameTime - relayMotionPublishTime < 66 || relayClient.bufferedAmount > 16_384) {
+    return;
+  }
+
+  relayMotionPublishTime = frameTime;
   relayClient.send({
-    type: 'state',
-    state: {
-      avatarTransform: {
-        offsetX: nextState.avatarOffsetX,
-        offsetY: nextState.avatarOffsetY,
-        scale: nextState.avatarScale,
-        rotationY: nextState.avatarRotationY,
-      },
-      look: nextState.lookSettings,
-      expressions: {
-        blinkLeft: faceExpressionWeights.blinkLeft,
-        blinkRight: faceExpressionWeights.blinkRight,
-        aa: faceExpressionWeights.aa,
-        ih: faceExpressionWeights.ih,
-        ou: faceExpressionWeights.ou,
-        ee: faceExpressionWeights.ee,
-        oh: faceExpressionWeights.oh,
-        happy: faceExpressionWeights.happy,
-        surprised: faceExpressionWeights.surprised,
-      },
-      pose: {
-        head: headRetargetPose,
-        upperBody: upperBodyRetargetPose,
-        hands: handRetargetPose,
-      },
-      vrmaLoop: nextState.vrmaLoop,
-    },
+    type: 'motionState',
+    state: createRelayMotionState(nextState),
   });
+}
+
+function createRelayStaticState(nextState: AppState): RelayStaticState {
+  return {
+    avatarTransform: {
+      offsetX: nextState.avatarOffsetX,
+      offsetY: nextState.avatarOffsetY,
+      scale: nextState.avatarScale,
+      rotationY: nextState.avatarRotationY,
+    },
+    look: nextState.lookSettings,
+    vrmaLoop: nextState.vrmaLoop,
+  };
+}
+
+function createRelayMotionState(nextState: AppState): RelayMotionState {
+  return {
+    sequence: ++relayMotionSequence,
+    expressions: {
+      blinkLeft: roundRelayValue(faceExpressionWeights.blinkLeft, 3),
+      blinkRight: roundRelayValue(faceExpressionWeights.blinkRight, 3),
+      aa: roundRelayValue(faceExpressionWeights.aa, 3),
+      ih: roundRelayValue(faceExpressionWeights.ih, 3),
+      ou: roundRelayValue(faceExpressionWeights.ou, 3),
+      ee: roundRelayValue(faceExpressionWeights.ee, 3),
+      oh: roundRelayValue(faceExpressionWeights.oh, 3),
+      happy: roundRelayValue(faceExpressionWeights.happy, 3),
+      surprised: roundRelayValue(faceExpressionWeights.surprised, 3),
+    },
+    pose: {
+      head: roundRelayHeadPose(headRetargetPose),
+      upperBody: roundRelayUpperBodyPose(upperBodyRetargetPose),
+      hands: nextState.handTrackingEnabled ? roundRelayHandPose(handRetargetPose) : undefined,
+    },
+  };
+}
+
+function roundRelayHeadPose(pose: HeadRetargetPose): HeadRetargetPose {
+  return {
+    enabled: pose.enabled,
+    pitch: roundRelayValue(pose.pitch, 4),
+    yaw: roundRelayValue(pose.yaw, 4),
+    roll: roundRelayValue(pose.roll, 4),
+  };
+}
+
+function roundRelayUpperBodyPose(pose: UpperBodyRetargetPose): UpperBodyRetargetPose {
+  return {
+    enabled: pose.enabled,
+    chestYaw: roundRelayValue(pose.chestYaw, 4),
+    chestRoll: roundRelayValue(pose.chestRoll, 4),
+    neckYaw: roundRelayValue(pose.neckYaw, 4),
+    neckRoll: roundRelayValue(pose.neckRoll, 4),
+    leftUpperArmRoll: roundRelayValue(pose.leftUpperArmRoll, 4),
+    rightUpperArmRoll: roundRelayValue(pose.rightUpperArmRoll, 4),
+    leftLowerArmRoll: roundRelayValue(pose.leftLowerArmRoll, 4),
+    rightLowerArmRoll: roundRelayValue(pose.rightLowerArmRoll, 4),
+  };
+}
+
+function roundRelayHandPose(pose: HandRetargetPose): HandRetargetPose {
+  return {
+    left: pose.left ? roundRelayHandTarget(pose.left) : null,
+    right: pose.right ? roundRelayHandTarget(pose.right) : null,
+  };
+}
+
+function roundRelayHandTarget(target: HandRetargetTarget): HandRetargetTarget {
+  return {
+    fingers: {
+      thumb: roundRelayValue(target.fingers.thumb, 3),
+      index: roundRelayValue(target.fingers.index, 3),
+      middle: roundRelayValue(target.fingers.middle, 3),
+      ring: roundRelayValue(target.fingers.ring, 3),
+      little: roundRelayValue(target.fingers.little, 3),
+    },
+    wristPitch: roundRelayValue(target.wristPitch, 4),
+    wristYaw: roundRelayValue(target.wristYaw, 4),
+    wristRoll: roundRelayValue(target.wristRoll, 4),
+  };
+}
+
+function roundRelayValue(value: number, decimals: number): number {
+  const scale = 10 ** decimals;
+  return Math.round(value * scale) / scale;
 }
 
 async function handleVrmFileSelection(file: File | null): Promise<void> {

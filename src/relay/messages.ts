@@ -83,6 +83,18 @@ export interface RelayRenderState {
   vrmaLoop: boolean;
 }
 
+export interface RelayStaticState {
+  avatarTransform: RelayAvatarTransform;
+  look: RelayLookSettings;
+  vrmaLoop: boolean;
+}
+
+export interface RelayMotionState {
+  sequence: number;
+  expressions: RelayExpressionState;
+  pose: RelayPoseState;
+}
+
 export type RelayMessage =
   | {
       type: 'hello';
@@ -100,6 +112,14 @@ export type RelayMessage =
   | {
       type: 'state';
       state: RelayRenderState;
+    }
+  | {
+      type: 'staticState';
+      state: RelayStaticState;
+    }
+  | {
+      type: 'motionState';
+      state: RelayMotionState;
     }
   | {
       type: 'vrmaCommand';

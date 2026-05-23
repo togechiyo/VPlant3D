@@ -59,6 +59,10 @@ export class VPlantRelayClient {
     this.queuedMessages.push(message);
   }
 
+  get bufferedAmount(): number {
+    return this.socket?.bufferedAmount ?? 0;
+  }
+
   close(): void {
     this.socket?.close();
     this.socket = null;

@@ -2232,3 +2232,32 @@
 
 - `src/vrm/vrm-license-meta.ts` を追加し、VRM 0.x / 1.0 のメタ情報を正規化する
 - Control Pageに「モデル利用条件」カードを追加し、危険そうな条件を警告バッジで表示する
+
+## 2026-05-23 Relay Static / Motion Split
+
+### Goal
+
+- ハンドトラッキング追加後に目立つOBS側のカクつき、照明チカチカ、復帰っぽい揺れを減らす
+- 毎フレーム送る必要がないモデル位置/拡大/回転/照明を、モーション更新のpayloadから分離する
+
+### Did
+
+- relay messageを `staticState` と `motionState` に分割した
+- `staticState` は avatar transform、look settings、VRMA loop を含み、Control側で値が変わった時だけ送るようにした
+- `motionState` は expression と pose だけを含み、約15fpsへ落とした
+- WebSocketの送信bufferが詰まっている時はmotion送信をスキップし、古い姿勢が順番待ちになる状態を減らした
+- motion payloadは小数を丸め、hand poseは手トラック有効時だけ送るようにした
+- Local Relay serverは `motionState` / `staticState` の最新保持を軽い文字列判定で行い、毎motionでJSON parseしないようにした
+- 旧 `state` messageは互換用に受け取れるまま残した
+
+### Worked
+
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Next
+
+- OBS実機で、ハンドトラッキングON時のカクつきと照明チカチカが減るか確認する
+- まだ残る場合は、motionStateをさらに10fpsへ下げる、またはhead/body/hand/expressionを個別channelに分ける
