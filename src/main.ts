@@ -324,6 +324,7 @@ let lastAppliedRelayExpressionSequence = 0;
 let lastAppliedRelayExpressionSentAt = 0;
 let lastAppliedRelayRuntimeSequence = 0;
 let lastAppliedRelayRuntimeSentAt = 0;
+let relayRuntimeModeActive = false;
 let relayDroppedStaleRuntimeFrames = 0;
 let relayDroppedStaleMotionFrames = 0;
 let relayDroppedStaleExpressionFrames = 0;
@@ -1251,14 +1252,25 @@ function applyRelayRuntimeState(nextState: RelayRuntimeState): void {
     return;
   }
 
+  relayRuntimeModeActive = true;
   relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
   faceExpressionWeights = relayExpressionTarget;
-  applyRelayMotionState(nextState);
+  relayMotionActive = true;
+  relayHeadTarget = nextState.pose.head ?? relayHeadTarget;
+  relayUpperBodyTarget = nextState.pose.upperBody ?? relayUpperBodyTarget;
+  relayHandTarget = nextState.pose.hands ?? createNeutralHandRetargetPose();
+  relayPreviousMotionFrame = null;
+  relayCurrentMotionFrame = null;
   lastAppliedRelayRuntimeSequence = nextState.sequence;
   lastAppliedRelayRuntimeSentAt = nextState.sentAt;
 }
 
 function applyRelayMotionState(nextState: RelayMotionState): void {
+  if (relayRuntimeModeActive) {
+    relayDroppedStaleMotionFrames += 1;
+    return;
+  }
+
   if (lastAppliedRelayRuntimeSentAt >= nextState.sentAt) {
     relayDroppedStaleMotionFrames += 1;
     return;
@@ -1284,6 +1296,11 @@ function applyRelayMotionState(nextState: RelayMotionState): void {
 }
 
 function applyRelayExpressionState(nextState: RelayExpressionSyncState): void {
+  if (relayRuntimeModeActive) {
+    relayDroppedStaleExpressionFrames += 1;
+    return;
+  }
+
   if (lastAppliedRelayRuntimeSentAt >= nextState.sentAt) {
     relayDroppedStaleExpressionFrames += 1;
     return;
@@ -1508,10 +1525,14 @@ function createRelayRuntimeState(nextState: AppState): RelayRuntimeState {
     upperBody: roundRelayUpperBodyPose(upperBodyRetargetPose),
     hands: nextState.handTrackingEnabled ? roundRelayHandPose(handRetargetPose) : undefined,
   };
-  const isCameraTrackingActive = nextState.poseStatus === 'active';
+  const isHeadTrackingActive =
+    nextState.faceTrackingStatus === 'active' ||
+    nextState.poseStatus === 'active' ||
+    isManualControlPoseActive();
+  const isUpperBodyTrackingActive = nextState.poseStatus === 'active' || isManualControlPoseActive();
   const pose = stabilizeRelayPoseState(poseCandidate, relayPoseStabilizer, Date.now(), {
-    headHoldMs: isCameraTrackingActive ? 260 : 0,
-    upperBodyHoldMs: isCameraTrackingActive ? 260 : 0,
+    headHoldMs: isHeadTrackingActive ? 260 : 0,
+    upperBodyHoldMs: isUpperBodyTrackingActive ? 260 : 0,
   });
 
   return createRelayRuntimeStateMessage(++relayRuntimeSequence, Date.now(), {

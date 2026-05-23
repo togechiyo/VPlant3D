@@ -2717,3 +2717,33 @@
 
 - OBS実機で `?debug=1` を見ながら、頭・上半身・表情値が意図せず0へ戻らないか確認する
 - まだゼロが混ざる場合は、MediaPipe検出結果からControl側のretarget poseへ入る段階の値をdebug表示し、入力検出そのものの欠落かRelay直前の生成問題かを分離する
+
+## 2026-05-23 OBS Runtime State Path Isolation
+
+### Goal
+
+- Control側では起きないのにOBS側だけ値が0へ戻る問題について、Render側の読み方/適用経路の混線を減らす
+
+### Findings
+
+- OBS Render側は `runtimeState` を受信したあとも、互換用の `motionState` / `expressionState` と同じ適用経路・補間フレームを共有していた
+- relay serverは新しいRender接続時に最新の `runtimeState` の後へ古い `motionState` / `expressionState` も再送するため、runtime移行後に古いゼロ値が後勝ちする余地があった
+- 頭の保持条件が `poseStatus` に寄っており、Face trackingだけで頭を動かすケースでは送信前のゼロ落ちガードが効きにくかった
+
+### Did
+
+- OBS Renderが一度 `runtimeState` を受け取った後は、互換用の `motionState` / `expressionState` を破棄するようにした
+- `runtimeState` は補間キューへ入れず、pose/expressionの単一ソースとして直接ターゲットへ反映するようにした
+- 頭poseの送信前ホールド条件に `faceTrackingStatus === active` を含めた
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- OBS実機で `?debug=1` の `runtime #` と `motion #` / `expression #` を確認する。runtime受信後にmotion/expressionが進まない、かつhead/mouth/blinkが0へ戻らないのが期待値
+- まだ0へ戻る場合は、OBS側debug overlayへ「受信直後のruntime値」と「VRMへ適用した直後の値」を別表示し、VRM update/VRMA mixer/expressionManagerのどこで戻っているかをさらに分離する
