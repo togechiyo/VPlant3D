@@ -2278,3 +2278,29 @@
 
 - OBS実機で動きの硬さと残像感を確認する
 - まだ硬い場合は、motion送信を24fps相当へ上げるか、Render側で前後2点補間する方式を検討する
+
+## 2026-05-23 15fps Relay Motion Interpolation Buffer
+
+### Goal
+
+- ControlからOBS Renderへ送るmotionStateを15fps相当に抑えつつ、OBS側の見た目は硬くならないようにする
+- 通信量増加で再びピクつきや照明チカチカが戻ることを避ける
+
+### Did
+
+- motionState送信間隔を `66ms` にし、15fps相当に戻した
+- Render側で受信motionStateを直近2フレーム保持し、約 `80ms` 遅延した表示時刻でhead/body/hand/expressionを線形補間するようにした
+- 補間後のposeを既存のRender側smoothingへ渡す構成にし、通信頻度と描画追従を分離した
+- 補間ロジックを `src/relay/motion-interpolation.ts` として分離し、単体テストを追加した
+
+### Worked
+
+- `npm run test` は成功
+- `npm run lint` は成功
+- `npm run build` は成功。ただし既存のbundle size warningは継続
+- `npm run test:e2e` は成功
+
+### Next
+
+- OBS実機で15fps送信＋補間の硬さ、遅延感、ピクつきの有無を確認する
+- まだ硬い場合は、補間遅延を `100ms` 前後へ増やす、またはhead/body/hand別に補間・追従速度を分ける

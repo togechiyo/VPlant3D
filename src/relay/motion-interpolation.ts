@@ -1,0 +1,172 @@
+import { createNeutralFaceExpressionWeights } from '../mocap/face-expression-retarget';
+import { createNeutralHandRetargetPose } from '../mocap/hand-landmarks';
+import { createNeutralHeadRetargetPose } from '../mocap/head-retarget';
+import { createNeutralRetargetPose } from '../mocap/upper-body-retarget';
+import type { VrmFaceExpressionWeights } from '../mocap/face-expression-retarget';
+import type { HandRetargetPose, HandRetargetTarget } from '../mocap/hand-landmarks';
+import type { HeadRetargetPose } from '../mocap/head-retarget';
+import type { UpperBodyRetargetPose } from '../mocap/upper-body-retarget';
+import type { RelayExpressionState, RelayMotionState } from './messages';
+
+export const defaultRelayMotionInterpolationDelayMs = 80;
+
+export interface RelayMotionFrame {
+  receivedAt: number;
+  state: RelayMotionState;
+}
+
+export function sampleRelayMotionFrames(
+  previous: RelayMotionFrame | null,
+  current: RelayMotionFrame | null,
+  now: number,
+  delayMs = defaultRelayMotionInterpolationDelayMs,
+): RelayMotionState | null {
+  if (!current) {
+    return null;
+  }
+
+  if (!previous) {
+    return current.state;
+  }
+
+  const targetTime = now - delayMs;
+
+  if (targetTime <= previous.receivedAt) {
+    return previous.state;
+  }
+
+  if (targetTime >= current.receivedAt) {
+    return current.state;
+  }
+
+  const amount = clamp01(
+    (targetTime - previous.receivedAt) /
+      Math.max(current.receivedAt - previous.receivedAt, 1),
+  );
+  return interpolateRelayMotionState(previous.state, current.state, amount);
+}
+
+export function interpolateRelayMotionState(
+  previous: RelayMotionState,
+  current: RelayMotionState,
+  amount: number,
+): RelayMotionState {
+  const nextAmount = clamp01(amount);
+  return {
+    sequence: current.sequence,
+    expressions: interpolateRelayExpressions(previous.expressions, current.expressions, nextAmount),
+    pose: {
+      head: interpolateHeadPose(
+        previous.pose.head ?? createNeutralHeadRetargetPose(false),
+        current.pose.head ?? createNeutralHeadRetargetPose(false),
+        nextAmount,
+      ),
+      upperBody: interpolateUpperBodyPose(
+        previous.pose.upperBody ?? createNeutralRetargetPose(false),
+        current.pose.upperBody ?? createNeutralRetargetPose(false),
+        nextAmount,
+      ),
+      hands: interpolateHandPose(
+        previous.pose.hands ?? createNeutralHandRetargetPose(),
+        current.pose.hands ?? createNeutralHandRetargetPose(),
+        nextAmount,
+      ),
+    },
+  };
+}
+
+function interpolateRelayExpressions(
+  previous: RelayExpressionState,
+  current: RelayExpressionState,
+  amount: number,
+): VrmFaceExpressionWeights {
+  const neutral = createNeutralFaceExpressionWeights();
+  return {
+    blinkLeft: lerp(previous.blinkLeft ?? neutral.blinkLeft, current.blinkLeft ?? neutral.blinkLeft, amount),
+    blinkRight: lerp(previous.blinkRight ?? neutral.blinkRight, current.blinkRight ?? neutral.blinkRight, amount),
+    aa: lerp(previous.aa ?? neutral.aa, current.aa ?? neutral.aa, amount),
+    ih: lerp(previous.ih ?? neutral.ih, current.ih ?? neutral.ih, amount),
+    ou: lerp(previous.ou ?? neutral.ou, current.ou ?? neutral.ou, amount),
+    ee: lerp(previous.ee ?? neutral.ee, current.ee ?? neutral.ee, amount),
+    oh: lerp(previous.oh ?? neutral.oh, current.oh ?? neutral.oh, amount),
+    happy: lerp(previous.happy ?? neutral.happy, current.happy ?? neutral.happy, amount),
+    surprised: lerp(
+      previous.surprised ?? neutral.surprised,
+      current.surprised ?? neutral.surprised,
+      amount,
+    ),
+  };
+}
+
+function interpolateHeadPose(
+  previous: HeadRetargetPose,
+  current: HeadRetargetPose,
+  amount: number,
+): HeadRetargetPose {
+  return {
+    enabled: previous.enabled || current.enabled,
+    pitch: lerp(previous.pitch, current.pitch, amount),
+    yaw: lerp(previous.yaw, current.yaw, amount),
+    roll: lerp(previous.roll, current.roll, amount),
+  };
+}
+
+function interpolateUpperBodyPose(
+  previous: UpperBodyRetargetPose,
+  current: UpperBodyRetargetPose,
+  amount: number,
+): UpperBodyRetargetPose {
+  return {
+    enabled: previous.enabled || current.enabled,
+    chestYaw: lerp(previous.chestYaw, current.chestYaw, amount),
+    chestRoll: lerp(previous.chestRoll, current.chestRoll, amount),
+    neckYaw: lerp(previous.neckYaw, current.neckYaw, amount),
+    neckRoll: lerp(previous.neckRoll, current.neckRoll, amount),
+    leftUpperArmRoll: lerp(previous.leftUpperArmRoll, current.leftUpperArmRoll, amount),
+    rightUpperArmRoll: lerp(previous.rightUpperArmRoll, current.rightUpperArmRoll, amount),
+    leftLowerArmRoll: lerp(previous.leftLowerArmRoll, current.leftLowerArmRoll, amount),
+    rightLowerArmRoll: lerp(previous.rightLowerArmRoll, current.rightLowerArmRoll, amount),
+  };
+}
+
+function interpolateHandPose(
+  previous: HandRetargetPose,
+  current: HandRetargetPose,
+  amount: number,
+): HandRetargetPose {
+  return {
+    left: interpolateHandTarget(previous.left, current.left, amount),
+    right: interpolateHandTarget(previous.right, current.right, amount),
+  };
+}
+
+function interpolateHandTarget(
+  previous: HandRetargetTarget | null,
+  current: HandRetargetTarget | null,
+  amount: number,
+): HandRetargetTarget | null {
+  if (!previous || !current) {
+    return current ?? previous;
+  }
+
+  return {
+    fingers: {
+      thumb: lerp(previous.fingers.thumb, current.fingers.thumb, amount),
+      index: lerp(previous.fingers.index, current.fingers.index, amount),
+      middle: lerp(previous.fingers.middle, current.fingers.middle, amount),
+      ring: lerp(previous.fingers.ring, current.fingers.ring, amount),
+      little: lerp(previous.fingers.little, current.fingers.little, amount),
+    },
+    wristPitch: lerp(previous.wristPitch, current.wristPitch, amount),
+    wristYaw: lerp(previous.wristYaw, current.wristYaw, amount),
+    wristRoll: lerp(previous.wristRoll, current.wristRoll, amount),
+  };
+}
+
+function lerp(previous: number, current: number, amount: number): number {
+  return previous + (current - previous) * amount;
+}
+
+function clamp01(value: number): number {
+  return Math.min(Math.max(value, 0), 1);
+}

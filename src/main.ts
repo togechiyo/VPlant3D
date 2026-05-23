@@ -85,6 +85,10 @@ import {
   smoothResolvedLookLights,
 } from './relay/render-smoothing';
 import {
+  sampleRelayMotionFrames,
+  type RelayMotionFrame,
+} from './relay/motion-interpolation';
+import {
   getUnknownVrmLoadErrorMessage,
   getVrmFileValidationMessage,
   validateVrmFile,
@@ -295,6 +299,8 @@ let relayRenderStaticStateSignature = '';
 let relayStaticPublishSignature = '';
 let relayMotionPublishTime = 0;
 let relayMotionSequence = 0;
+let relayPreviousMotionFrame: RelayMotionFrame | null = null;
+let relayCurrentMotionFrame: RelayMotionFrame | null = null;
 let loadingRelayVrmAssetId: string | null = null;
 let loadingRelayVrmaAssetSignature: string | null = null;
 const relayClient = new VPlantRelayClient(
@@ -1192,6 +1198,18 @@ function applyRelayStaticState(nextState: RelayStaticState): void {
 
 function applyRelayMotionState(nextState: RelayMotionState): void {
   relayMotionActive = true;
+  relayPreviousMotionFrame = relayCurrentMotionFrame;
+  relayCurrentMotionFrame = {
+    receivedAt: performance.now(),
+    state: nextState,
+  };
+
+  if (!relayPreviousMotionFrame) {
+    applySampledRelayMotionState(nextState);
+  }
+}
+
+function applySampledRelayMotionState(nextState: RelayMotionState): void {
   relayHeadTarget = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
   relayUpperBodyTarget = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
   relayHandTarget = nextState.pose.hands ?? createNeutralHandRetargetPose();
@@ -1232,7 +1250,17 @@ function updateRelayRenderMotion(delta: number): void {
     return;
   }
 
-  const activeMotionSmoothing = getFrameSmoothing(delta, 28);
+  const sampledMotionState = sampleRelayMotionFrames(
+    relayPreviousMotionFrame,
+    relayCurrentMotionFrame,
+    performance.now(),
+  );
+
+  if (sampledMotionState) {
+    applySampledRelayMotionState(sampledMotionState);
+  }
+
+  const activeMotionSmoothing = getFrameSmoothing(delta, 32);
   const releaseMotionSmoothing = getFrameSmoothing(delta, 1.8);
   const headSmoothing = relayHeadTarget.enabled ? activeMotionSmoothing : releaseMotionSmoothing;
   const upperBodySmoothing = relayUpperBodyTarget.enabled
@@ -1241,7 +1269,7 @@ function updateRelayRenderMotion(delta: number): void {
   const handSmoothing = hasHandTarget(relayHandTarget)
     ? activeMotionSmoothing
     : releaseMotionSmoothing;
-  const expressionSmoothing = getFrameSmoothing(delta, 42);
+  const expressionSmoothing = getFrameSmoothing(delta, 48);
   headRetargetPose = smoothHeadRetargetPose(headRetargetPose, relayHeadTarget, headSmoothing);
   upperBodyRetargetPose = smoothUpperBodyRetargetPose(
     upperBodyRetargetPose,
@@ -1300,7 +1328,7 @@ function publishRelayState(frameTime: number): void {
     });
   }
 
-  if (frameTime - relayMotionPublishTime < 50 || relayClient.bufferedAmount > 262_144) {
+  if (frameTime - relayMotionPublishTime < 66 || relayClient.bufferedAmount > 262_144) {
     return;
   }
 
