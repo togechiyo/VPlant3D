@@ -2747,3 +2747,25 @@
 
 - OBS実機で `?debug=1` の `runtime #` と `motion #` / `expression #` を確認する。runtime受信後にmotion/expressionが進まない、かつhead/mouth/blinkが0へ戻らないのが期待値
 - まだ0へ戻る場合は、OBS側debug overlayへ「受信直後のruntime値」と「VRMへ適用した直後の値」を別表示し、VRM update/VRMA mixer/expressionManagerのどこで戻っているかをさらに分離する
+
+## 2026-05-23 Roll Back OBS Runtime Hold Experiment
+
+### Goal
+
+- OBS側の挙動が悪化したため、直近の保持系実験を取り下げて安定点へ戻す
+
+### Findings
+
+- OBS Render側のraw/target stabilizerは、欠測0を抑える狙いだったが追従性を大きく落とした
+- その後の保持延長修正でも体感が悪化しており、補正を重ねる段階ではない
+- いま必要なのは追加補正ではなく、Control送信値、OBS受信値、VRM適用直後、`currentVrm.update()` 後のどこで0になるかを測ること
+
+### Did
+
+- `Stabilize OBS runtime raw zero frames` と `Prevent stabilizer holds from freezing motion` をrevertした
+- `Isolate OBS runtime state path` までは残した。これはruntime経路を分離する変更で、悪化前の「変わらず」状態に近い
+
+### Next
+
+- 次の修正は挙動を変えず、debug overlay / telemetryだけを追加する
+- 具体的には、受信runtime raw、relay target、VRM expressionManager適用直後、`currentVrm.update()` 後を同じフレーム内で比較表示する
