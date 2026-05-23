@@ -45,6 +45,39 @@
 - 
 ```
 
+## 2026-05-23 OBS Render Cleanup Planning
+
+### Goal
+
+- OBS側だけ表情・口・まばたき・頭/体の戻りやカクつきが出る問題について、実装を続ける前に整理設計を立てる
+
+### Did
+
+- `src/main.ts`、`src/relay/messages.ts`、`server/vplant-relay.mjs`、`docs/obs-architecture-redesign.md` を確認
+- `docs/obs-render-code-cleanup-plan.md` を追加し、現状診断、目標アーキテクチャ、通信設計、段階的な分割計画をまとめた
+
+### Worked
+
+- `main.ts` にControl UI、MediaPipe、mic、manual control、Relay送受信、OBS Render適用が集中していることを整理できた
+- `motionState` / `expressionState` の分離は一時対処として有効だが、長期的には `runtimeState` へ寄せる方針を明文化できた
+
+### Failed / Blocked
+
+- まだ実装はしていない
+- OBS側で本当にどの値が戻っているかは、debug overlayを入れて確認する必要がある
+
+### Decisions
+
+- 次の実装は機能追加ではなく、まずOBS Render debug overlayで受信値と適用値を見えるようにする
+- その後、`motionState` と `expressionState` を `runtimeState` へ統合する
+- OBS Render側は入力モード判断を持たず、受け取った正規化済みstateを描画するだけに寄せる
+
+### Next
+
+- Phase 0として `?debug=1` のOBS Render debug overlayを追加する
+- overlayで runtime sequence / age / blink / mouth / head / dropped frames / bufferedAmount を確認できるようにする
+- その結果を見て、原因が通信前かVRM適用時か切り分ける
+
 ## 2026-05-20 Initial Project Setup
 
 ### Goal
