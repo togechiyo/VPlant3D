@@ -295,7 +295,6 @@ let relayRenderStaticStateSignature = '';
 let relayStaticPublishSignature = '';
 let relayMotionPublishTime = 0;
 let relayMotionSequence = 0;
-let relayLastAppliedMotionSequence = -1;
 let loadingRelayVrmAssetId: string | null = null;
 let loadingRelayVrmaAssetSignature: string | null = null;
 const relayClient = new VPlantRelayClient(
@@ -1162,7 +1161,7 @@ function applyRelayRenderState(nextState: RelayRenderState): void {
     vrmaLoop: nextState.vrmaLoop,
   });
   applyRelayMotionState({
-    sequence: ++relayLastAppliedMotionSequence,
+    sequence: 0,
     expressions: nextState.expressions,
     pose: nextState.pose,
   });
@@ -1192,11 +1191,6 @@ function applyRelayStaticState(nextState: RelayStaticState): void {
 }
 
 function applyRelayMotionState(nextState: RelayMotionState): void {
-  if (nextState.sequence <= relayLastAppliedMotionSequence) {
-    return;
-  }
-
-  relayLastAppliedMotionSequence = nextState.sequence;
   relayMotionActive = true;
   relayHeadTarget = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
   relayUpperBodyTarget = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
@@ -1306,7 +1300,7 @@ function publishRelayState(frameTime: number): void {
     });
   }
 
-  if (frameTime - relayMotionPublishTime < 66 || relayClient.bufferedAmount > 16_384) {
+  if (frameTime - relayMotionPublishTime < 50 || relayClient.bufferedAmount > 262_144) {
     return;
   }
 
