@@ -43,13 +43,27 @@ describe('createVrmFaceExpressionWeights', () => {
   });
 
   it('shapes blink weights away from a long half-closed state', () => {
+    const noise = createVrmFaceExpressionWeights([category('eyeBlinkLeft', 0.04)]);
     const open = createVrmFaceExpressionWeights([category('eyeBlinkLeft', 0.25)]);
     const half = createVrmFaceExpressionWeights([category('eyeBlinkLeft', 0.5)]);
     const closed = createVrmFaceExpressionWeights([category('eyeBlinkLeft', 0.85)]);
 
+    expect(noise.blinkLeft).toBe(0);
     expect(open.blinkLeft).toBeLessThan(0.15);
     expect(half.blinkLeft).toBeLessThan(0.4);
     expect(closed.blinkLeft).toBeGreaterThan(0.98);
+  });
+
+  it('removes tiny mouth mocap noise before smoothing', () => {
+    const weights = createVrmFaceExpressionWeights([
+      category('jawOpen', 0.03),
+      category('mouthFunnel', 0.02),
+      category('mouthPucker', 0.01),
+    ]);
+
+    expect(weights.aa).toBe(0);
+    expect(weights.ou).toBe(0);
+    expect(weights.oh).toBe(0);
   });
 
   it('prioritizes rounded mouth shapes for ou and oh', () => {
@@ -87,6 +101,29 @@ describe('smoothFaceExpressionWeights', () => {
     expect(smoothed.blinkRight).toBeCloseTo(0.2);
     expect(smoothed.aa).toBeCloseTo(0.1);
     expect(smoothed.happy).toBeCloseTo(0.2);
+  });
+
+  it('holds tiny expression jitter and snaps near-zero values closed', () => {
+    const previous = {
+      ...createNeutralFaceExpressionWeights(),
+      blinkLeft: 0.2,
+      aa: 0.12,
+      happy: 0.01,
+    };
+    const smoothed = smoothFaceExpressionWeights(
+      previous,
+      {
+        ...createNeutralFaceExpressionWeights(),
+        blinkLeft: 0.22,
+        aa: 0.13,
+        happy: 0.015,
+      },
+      0.8,
+    );
+
+    expect(smoothed.blinkLeft).toBe(previous.blinkLeft);
+    expect(smoothed.aa).toBe(previous.aa);
+    expect(smoothed.happy).toBe(0);
   });
 });
 

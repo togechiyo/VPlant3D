@@ -62,11 +62,11 @@ export function createVrmFaceExpressionWeights(
   return {
     blinkLeft: shapeBlinkWeight(eyeBlinkLeft),
     blinkRight: shapeBlinkWeight(eyeBlinkRight),
-    aa: clamp01(openMouth * 1.35),
-    ih: clamp01(mouthStretch * 0.7),
-    ou: clamp01(roundMouth * 1.05),
-    ee: clamp01(mouthSmile * 0.35),
-    oh: clamp01(Math.max(roundMouth * 0.45, jawOpen * 0.3)),
+    aa: shapeMouthWeight(openMouth * 1.35),
+    ih: shapeMouthWeight(mouthStretch * 0.7),
+    ou: shapeMouthWeight(roundMouth * 1.05),
+    ee: shapeMouthWeight(mouthSmile * 0.35),
+    oh: shapeMouthWeight(Math.max(roundMouth * 0.45, jawOpen * 0.3)),
     happy: clamp01(mouthSmile * 0.75),
     surprised: clamp01(Math.max(browInnerUp, browOuterUp) * 0.55),
   };
@@ -80,15 +80,15 @@ export function smoothFaceExpressionWeights(
   const amount = clamp01(smoothing);
 
   return {
-    blinkLeft: lerp(previous.blinkLeft, next.blinkLeft, amount),
-    blinkRight: lerp(previous.blinkRight, next.blinkRight, amount),
-    aa: lerp(previous.aa, next.aa, amount),
-    ih: lerp(previous.ih, next.ih, amount),
-    ou: lerp(previous.ou, next.ou, amount),
-    ee: lerp(previous.ee, next.ee, amount),
-    oh: lerp(previous.oh, next.oh, amount),
-    happy: lerp(previous.happy, next.happy, amount),
-    surprised: lerp(previous.surprised, next.surprised, amount),
+    blinkLeft: smoothExpressionWeight(previous.blinkLeft, next.blinkLeft, amount, 0.035, 0.03),
+    blinkRight: smoothExpressionWeight(previous.blinkRight, next.blinkRight, amount, 0.035, 0.03),
+    aa: smoothExpressionWeight(previous.aa, next.aa, amount, 0.025, 0.035),
+    ih: smoothExpressionWeight(previous.ih, next.ih, amount, 0.025, 0.035),
+    ou: smoothExpressionWeight(previous.ou, next.ou, amount, 0.025, 0.035),
+    ee: smoothExpressionWeight(previous.ee, next.ee, amount, 0.02, 0.03),
+    oh: smoothExpressionWeight(previous.oh, next.oh, amount, 0.025, 0.035),
+    happy: smoothExpressionWeight(previous.happy, next.happy, amount, 0.018, 0.02),
+    surprised: smoothExpressionWeight(previous.surprised, next.surprised, amount, 0.018, 0.02),
   };
 }
 
@@ -115,8 +115,12 @@ function getOppositeSideCategory(categoryName: string): string {
 function shapeBlinkWeight(score: number): number {
   const value = clamp01(score);
 
+  if (value < 0.08) {
+    return 0;
+  }
+
   if (value < 0.2) {
-    return value * 0.35;
+    return (value - 0.08) * 0.45;
   }
 
   if (value > 0.58) {
@@ -124,6 +128,34 @@ function shapeBlinkWeight(score: number): number {
   }
 
   return 0.07 + (value - 0.2) * 1.05;
+}
+
+function shapeMouthWeight(score: number): number {
+  const value = clamp01(score);
+
+  if (value < 0.055) {
+    return 0;
+  }
+
+  return value;
+}
+
+function smoothExpressionWeight(
+  previous: number,
+  next: number,
+  amount: number,
+  deadband: number,
+  zeroSnapThreshold: number,
+): number {
+  if (previous < zeroSnapThreshold && next < zeroSnapThreshold) {
+    return 0;
+  }
+
+  if (Math.abs(next - previous) < deadband) {
+    return previous;
+  }
+
+  return lerp(previous, next, amount);
 }
 
 function lerp(previous: number, next: number, amount: number): number {

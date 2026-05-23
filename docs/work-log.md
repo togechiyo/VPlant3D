@@ -2339,3 +2339,21 @@
 
 - OBS実機で頭/体の復帰びくつきが消えたか確認する
 - まだ残る場合は、RelayMotionFrameにpose種別ごとの最終有効時刻を持たせ、保持時間を明示的に制御する
+
+## 2026-05-23 Face Expression Jitter Reduction
+
+### Goal
+
+- まばたきと口パクのモーキャプが小刻みにぴくぴくする問題を抑える
+
+### Did
+
+- blink入力の低スコア帯を0へ落とし、目が開いている時の細かい揺れをまばたきとして扱わないようにした
+- mouth系expressionに小さな入力dead zoneを追加し、口を閉じている時のノイズを0へ寄せた
+- `smoothFaceExpressionWeights` にchannelごとのdeadbandとnear-zero snapを追加した
+- Render側expression smoothingを少し落とし、30fps送信時に細かい表情ノイズを追いすぎないようにした
+
+### Next
+
+- OBS実機でまばたき/口パクのぴくつきと、発話時・瞬き時の反応遅れが許容範囲か確認する
+- まだ揺れる場合は、まばたきだけ短いhysteresis state machineに分離する
