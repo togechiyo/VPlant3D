@@ -2687,3 +2687,33 @@
 
 - OBS実機で閉眼/ウインク/開口の保持と追従が改善したか確認する
 - まだ戻る場合は、VRM/VRMAのexpression上書き順を調べるため、OBS Render側にdebug overlayで受信expression値と実適用値を表示する
+
+## 2026-05-23 Relay Pose Zero Dropout Guard
+
+### Goal
+
+- OBS側で頭・体・表情が毎フレーム0へ戻るように見えるガクつきを減らす
+
+### Findings
+
+- OBS debug overlayと目視確認から、Render側だけで補正が起きているというより、Control側から送るruntimeStateに一瞬だけ0姿勢/0表情が混ざる可能性が高い
+- 表情だけでなく、頭yaw/pitch/rollや上半身値も0フレームを受けると、OBS側では「戻り補正」のように見えてフレーム落ち以上に悪目立ちする
+
+### Did
+
+- Relay送信前の頭・上半身poseに `pose-stabilizer` を追加した
+- カメラトラッキングがactiveの間だけ、直前に有効な姿勢がある状態で急に0/disabledへ落ちたフレームを短時間ホールドする
+- 手トラックはユーザーがオフにした時の停止感を優先し、今回のホールド対象から外した
+- 表情のゼロ落ち対策と同じく、強くなる/増える入力は即時に通し、急なゼロ落ちだけを疑う設計にした
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- OBS実機で `?debug=1` を見ながら、頭・上半身・表情値が意図せず0へ戻らないか確認する
+- まだゼロが混ざる場合は、MediaPipe検出結果からControl側のretarget poseへ入る段階の値をdebug表示し、入力検出そのものの欠落かRelay直前の生成問題かを分離する

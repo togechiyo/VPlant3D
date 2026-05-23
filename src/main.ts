@@ -79,6 +79,7 @@ import type {
   RelayExpressionSyncState,
   RelayMessage,
   RelayMotionState,
+  RelayPoseState,
   RelayRenderState,
   RelayRuntimeState,
   RelayStaticState,
@@ -91,6 +92,10 @@ import {
   createRelayExpressionStabilizer,
   stabilizeRelayExpressionState,
 } from './relay/expression-stabilizer';
+import {
+  createRelayPoseStabilizer,
+  stabilizeRelayPoseState,
+} from './relay/pose-stabilizer';
 import {
   smoothRelayAvatarTransform,
   smoothResolvedLookLights,
@@ -312,6 +317,7 @@ let relayStaticPublishSignature = '';
 let relayMotionPublishTime = 0;
 let relayRuntimeSequence = 0;
 const relayExpressionStabilizer = createRelayExpressionStabilizer();
+const relayPoseStabilizer = createRelayPoseStabilizer();
 let lastAppliedRelayMotionSequence = 0;
 let lastAppliedRelayMotionSentAt = 0;
 let lastAppliedRelayExpressionSequence = 0;
@@ -1497,13 +1503,20 @@ function createRelayStaticState(nextState: AppState): RelayStaticState {
 }
 
 function createRelayRuntimeState(nextState: AppState): RelayRuntimeState {
+  const poseCandidate: RelayPoseState = {
+    head: roundRelayHeadPose(headRetargetPose),
+    upperBody: roundRelayUpperBodyPose(upperBodyRetargetPose),
+    hands: nextState.handTrackingEnabled ? roundRelayHandPose(handRetargetPose) : undefined,
+  };
+  const isCameraTrackingActive = nextState.poseStatus === 'active';
+  const pose = stabilizeRelayPoseState(poseCandidate, relayPoseStabilizer, Date.now(), {
+    headHoldMs: isCameraTrackingActive ? 260 : 0,
+    upperBodyHoldMs: isCameraTrackingActive ? 260 : 0,
+  });
+
   return createRelayRuntimeStateMessage(++relayRuntimeSequence, Date.now(), {
     expressions: createRelayExpressionState(),
-    pose: {
-      head: roundRelayHeadPose(headRetargetPose),
-      upperBody: roundRelayUpperBodyPose(upperBodyRetargetPose),
-      hands: nextState.handTrackingEnabled ? roundRelayHandPose(handRetargetPose) : undefined,
-    },
+    pose,
   });
 }
 
