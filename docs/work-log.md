@@ -121,6 +121,40 @@
 - overlay値が正しいのにモデルだけ戻るなら、VRM expression適用関数をRender側で1箇所に絞る
 - overlay値自体が戻っているなら、Control側の表情state解決を分離する
 
+## 2026-05-23 OBS Expression Return Jitter Follow-Up
+
+### Goal
+
+- runtimeState化後も残る、OBS側のまばたき・口の復帰ガチャつきを軽減する
+
+### Did
+
+- OBS Render側で `runtimeState` / 旧 `expressionState` 受信直後に表情を即時適用する処理をやめ、描画フレーム内の `updateRelayRenderMotion()` で一度だけ適用する形へ寄せた
+- debug overlayに、target値とは別に `expressionManager.getValue('blinkLeft')` と `getValue('aa')` の適用値を表示する行を追加した
+- MediaPipe表情スムージングで、blink / mouthのreleaseをattackより遅くし、一瞬の低スコアで中立へ戻りすぎないようにした
+- release挙動の単体テストを更新・追加した
+
+### Worked
+
+- `npm run test` は成功: 20 files / 109 tests
+- `npm run lint` は成功
+- `npm run build` は成功。既存のlarge chunk warningのみ
+- `npm run test:e2e` は成功: 10 tests
+
+### Failed / Blocked
+
+- OBS実機でガチャつきがどの程度減るかは人間確認が必要
+
+### Decisions
+
+- OBS Render側の表情適用は、受信イベントではなく描画フレーム内の一箇所へ寄せる
+- MediaPipe表情は、戻り方向だけ少し粘らせて配信上の小刻みな復帰を抑える
+
+### Next
+
+- OBS debug overlayで `mouth aa` と `applied blink/aa` が一致しているか見る
+- target値は安定しているのにapplied値やモデルだけ戻る場合は、VRM expressionManager / VRMA animation trackの上書きをさらに調べる
+
 ## 2026-05-20 Initial Project Setup
 
 ### Goal

@@ -1241,7 +1241,6 @@ function applyRelayRuntimeState(nextState: RelayRuntimeState): void {
 
   relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
   faceExpressionWeights = relayExpressionTarget;
-  applyRelayExpressions(faceExpressionWeights);
   applyRelayMotionState(nextState);
   lastAppliedRelayRuntimeSequence = nextState.sequence;
   lastAppliedRelayRuntimeSentAt = nextState.sentAt;
@@ -1287,7 +1286,6 @@ function applyRelayExpressionState(nextState: RelayExpressionSyncState): void {
   lastAppliedRelayExpressionSentAt = nextState.sentAt;
   relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
   faceExpressionWeights = relayExpressionTarget;
-  applyRelayExpressions(faceExpressionWeights);
 }
 
 function shouldDiscardRelayMotionState(nextState: RelayMotionState): boolean {
@@ -1425,6 +1423,7 @@ function updateRelayDebugOverlay(): void {
     relayDroppedStaleRuntimeFrames +
     relayDroppedStaleMotionFrames +
     relayDroppedStaleExpressionFrames;
+  const expressionManager = currentVrm?.expressionManager;
 
   relayDebugOverlay.textContent = [
     'OBS Relay Debug',
@@ -1434,6 +1433,7 @@ function updateRelayDebugOverlay(): void {
     `dropped runtime/motion/expression ${relayDroppedStaleRuntimeFrames}/${relayDroppedStaleMotionFrames}/${relayDroppedStaleExpressionFrames} total ${droppedFrames}`,
     `blink L/R ${formatRelayDebugValue(relayExpressionTarget.blinkLeft)} / ${formatRelayDebugValue(relayExpressionTarget.blinkRight)}`,
     `mouth aa/ih/ou/ee/oh ${formatRelayDebugValue(relayExpressionTarget.aa)} / ${formatRelayDebugValue(relayExpressionTarget.ih)} / ${formatRelayDebugValue(relayExpressionTarget.ou)} / ${formatRelayDebugValue(relayExpressionTarget.ee)} / ${formatRelayDebugValue(relayExpressionTarget.oh)}`,
+    `applied blink/aa ${formatRelayDebugValue(expressionManager?.getValue('blinkLeft') ?? undefined)} / ${formatRelayDebugValue(expressionManager?.getValue('aa') ?? undefined)}`,
     `emotion happy/surprised ${formatRelayDebugValue(relayExpressionTarget.happy)} / ${formatRelayDebugValue(relayExpressionTarget.surprised)}`,
     `head yaw/pitch/roll ${formatRelayDebugValue(relayHeadTarget.yaw)} / ${formatRelayDebugValue(relayHeadTarget.pitch)} / ${formatRelayDebugValue(relayHeadTarget.roll)} enabled ${relayHeadTarget.enabled ? 'yes' : 'no'}`,
     `upper chestYaw/chestRoll ${formatRelayDebugValue(relayUpperBodyTarget.chestYaw)} / ${formatRelayDebugValue(relayUpperBodyTarget.chestRoll)} enabled ${relayUpperBodyTarget.enabled ? 'yes' : 'no'}`,

@@ -79,13 +79,13 @@ export function smoothFaceExpressionWeights(
   const amount = clamp01(smoothing);
 
   return {
-    blinkLeft: smoothMocapExpressionWeight(previous.blinkLeft, next.blinkLeft, amount, 0.008),
-    blinkRight: smoothMocapExpressionWeight(previous.blinkRight, next.blinkRight, amount, 0.008),
-    aa: smoothMocapExpressionWeight(previous.aa, next.aa, amount, 0.006),
-    ih: smoothMocapExpressionWeight(previous.ih, next.ih, amount, 0.006),
-    ou: smoothMocapExpressionWeight(previous.ou, next.ou, amount, 0.006),
-    ee: smoothMocapExpressionWeight(previous.ee, next.ee, amount, 0.006),
-    oh: smoothMocapExpressionWeight(previous.oh, next.oh, amount, 0.006),
+    blinkLeft: smoothMocapExpressionWeight(previous.blinkLeft, next.blinkLeft, amount, 0.008, 0.35),
+    blinkRight: smoothMocapExpressionWeight(previous.blinkRight, next.blinkRight, amount, 0.008, 0.35),
+    aa: smoothMocapExpressionWeight(previous.aa, next.aa, amount, 0.006, 0.35),
+    ih: smoothMocapExpressionWeight(previous.ih, next.ih, amount, 0.006, 0.35),
+    ou: smoothMocapExpressionWeight(previous.ou, next.ou, amount, 0.006, 0.35),
+    ee: smoothMocapExpressionWeight(previous.ee, next.ee, amount, 0.006, 0.35),
+    oh: smoothMocapExpressionWeight(previous.oh, next.oh, amount, 0.006, 0.35),
     happy: smoothExpressionWeight(previous.happy, next.happy, amount, 0.018, 0.02),
     surprised: smoothExpressionWeight(previous.surprised, next.surprised, amount, 0.018, 0.02),
   };
@@ -162,12 +162,13 @@ function smoothMocapExpressionWeight(
   next: number,
   amount: number,
   deadband: number,
+  releaseMultiplier = 1,
 ): number {
   if (Math.abs(next - previous) < deadband) {
     return previous;
   }
 
-  return lerp(previous, next, amount);
+  return lerp(previous, next, next < previous ? amount * releaseMultiplier : amount);
 }
 
 function lerp(previous: number, next: number, amount: number): number {

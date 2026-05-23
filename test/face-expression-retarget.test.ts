@@ -152,7 +152,7 @@ describe('smoothFaceExpressionWeights', () => {
     expect(smoothed.ou).toBeCloseTo(0.248);
   });
 
-  it('tracks closing and opening mouth changes symmetrically', () => {
+  it('slows mouth release to avoid jittering back to neutral', () => {
     const smoothed = smoothFaceExpressionWeights(
       {
         ...createNeutralFaceExpressionWeights(),
@@ -165,7 +165,26 @@ describe('smoothFaceExpressionWeights', () => {
       0.8,
     );
 
-    expect(smoothed.aa).toBeCloseTo(0.2);
+    expect(smoothed.aa).toBeCloseTo(0.46);
+  });
+
+  it('still reacts quickly when blink and mouth weights increase', () => {
+    const smoothed = smoothFaceExpressionWeights(
+      {
+        ...createNeutralFaceExpressionWeights(),
+        blinkLeft: 0.1,
+        aa: 0.1,
+      },
+      {
+        ...createNeutralFaceExpressionWeights(),
+        blinkLeft: 0.7,
+        aa: 0.6,
+      },
+      0.8,
+    );
+
+    expect(smoothed.blinkLeft).toBeCloseTo(0.58);
+    expect(smoothed.aa).toBeCloseTo(0.5);
   });
 });
 
