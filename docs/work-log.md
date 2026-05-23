@@ -2215,3 +2215,20 @@
 
 - OBSでカメラトラック中に一瞬検出が外れる動きを試し、プルプル復帰が減ったか確認する
 - まだ残る場合は、relay stateを生の検出状態と平滑済みposeに分け、OBS側で保持時間を明示的に管理する
+
+## 2026-05-23 VRM Meta License Research
+
+### Goal
+
+- VRM 0.x / 1.0 に含まれるアバター利用条件、商用利用、改変・再配布条件を実装に向けて整理する
+
+### Did
+
+- VRM公式ドキュメント、VRM 0.0仕様、VRM 1.0 meta仕様、`@pixiv/three-vrm` の `VRM0Meta` / `VRM1Meta` 型を確認した
+- VRM 0.x と 1.0 のmeta項目差分、デフォルト値、正規化方針を `docs/vrm-meta-implementation-notes.md` にまとめた
+- VPlant3Dでは `vrm.meta.metaVersion` で分岐し、共通の `NormalizedVrmLicenseMeta` に変換する方針にした
+
+### Next
+
+- `src/vrm/vrm-license-meta.ts` を追加し、VRM 0.x / 1.0 のメタ情報を正規化する
+- Control Pageに「モデル利用条件」カードを追加し、危険そうな条件を警告バッジで表示する
