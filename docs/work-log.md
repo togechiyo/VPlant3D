@@ -2374,3 +2374,21 @@
 
 - OBS実機で口を開けっぱなしにした時の勝手なパクパクが減ったか確認する
 - まだ残る場合は、口系だけ短時間のpeak holdまたはhysteresis state machineへ分離する
+
+## 2026-05-23 Direct Mocap Mouth Mapping
+
+### Goal
+
+- MediaPipeの表情がモデルへ素直に流し込まれていない感触を減らす
+
+### Did
+
+- 口系expressionの解釈を薄くし、`jawOpen` / `mouthStretch` / `mouthFunnel` / `mouthPucker` / `mouthSmile` をVRM表情へより直接マップするようにした
+- `aa` は丸口補正で差し引かず、`jawOpen` をそのまま使うようにした
+- 口系のdead zoneをかなり小さくし、小さな口の動きも落としすぎないようにした
+- 口の閉じ方向releaseを強すぎない程度へ戻し、保持しすぎて不自然になる問題を減らした
+
+### Next
+
+- OBS実機で「口を開けっぱなし」「すぼめ口」「笑顔」の入力が直感に近いか確認する
+- まだ違和感がある場合は、VRM visemeを複数同時に入れる方式ではなく、dominant viseme 1つだけを選ぶ方式を試す

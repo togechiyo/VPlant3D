@@ -57,16 +57,15 @@ export function createVrmFaceExpressionWeights(
       getMirroredScore(categories, 'browOuterUpRight', options.mirrorInput)) /
     2;
   const roundMouth = Math.max(mouthFunnel, mouthPucker);
-  const openMouth = Math.max(0, jawOpen - roundMouth * 0.25);
 
   return {
     blinkLeft: shapeBlinkWeight(eyeBlinkLeft),
     blinkRight: shapeBlinkWeight(eyeBlinkRight),
-    aa: shapeMouthWeight(openMouth * 1.35),
-    ih: shapeMouthWeight(mouthStretch * 0.7),
-    ou: shapeMouthWeight(roundMouth * 1.05),
-    ee: shapeMouthWeight(mouthSmile * 0.35),
-    oh: shapeMouthWeight(Math.max(roundMouth * 0.45, jawOpen * 0.3)),
+    aa: shapeMouthWeight(jawOpen),
+    ih: shapeMouthWeight(mouthStretch),
+    ou: shapeMouthWeight(roundMouth),
+    ee: shapeMouthWeight(mouthSmile),
+    oh: shapeMouthWeight(Math.max(roundMouth * 0.75, jawOpen * 0.45)),
     happy: clamp01(mouthSmile * 0.75),
     surprised: clamp01(Math.max(browInnerUp, browOuterUp) * 0.55),
   };
@@ -133,7 +132,7 @@ function shapeBlinkWeight(score: number): number {
 function shapeMouthWeight(score: number): number {
   const value = clamp01(score);
 
-  if (value < 0.055) {
+  if (value < 0.015) {
     return 0;
   }
 
@@ -162,8 +161,8 @@ function smoothMouthExpressionWeight(
   previous: number,
   next: number,
   amount: number,
-  deadband = 0.025,
-  zeroSnapThreshold = 0.035,
+  deadband = 0.01,
+  zeroSnapThreshold = 0.015,
 ): number {
   if (previous < zeroSnapThreshold && next < zeroSnapThreshold) {
     return 0;
@@ -173,7 +172,7 @@ function smoothMouthExpressionWeight(
     return previous;
   }
 
-  const nextAmount = next < previous ? amount * 0.28 : amount;
+  const nextAmount = next < previous ? amount * 0.7 : amount;
   return lerp(previous, next, nextAmount);
 }
 

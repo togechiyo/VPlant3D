@@ -24,7 +24,7 @@ describe('createVrmFaceExpressionWeights', () => {
 
     expect(weights.blinkLeft).toBeCloseTo(0.986);
     expect(weights.blinkRight).toBeCloseTo(0.28);
-    expect(weights.aa).toBeCloseTo(0.675);
+    expect(weights.aa).toBeCloseTo(0.5);
     expect(weights.happy).toBeCloseTo(0.375);
     expect(weights.surprised).toBeCloseTo(0.165);
   });
@@ -54,28 +54,28 @@ describe('createVrmFaceExpressionWeights', () => {
     expect(closed.blinkLeft).toBeGreaterThan(0.98);
   });
 
-  it('removes tiny mouth mocap noise before smoothing', () => {
+  it('keeps small mouth mocap values instead of over-filtering expression input', () => {
     const weights = createVrmFaceExpressionWeights([
       category('jawOpen', 0.03),
       category('mouthFunnel', 0.02),
       category('mouthPucker', 0.01),
     ]);
 
-    expect(weights.aa).toBe(0);
-    expect(weights.ou).toBe(0);
-    expect(weights.oh).toBe(0);
+    expect(weights.aa).toBeCloseTo(0.03);
+    expect(weights.ou).toBeCloseTo(0.02);
+    expect(weights.oh).toBeCloseTo(0.015);
   });
 
-  it('prioritizes rounded mouth shapes for ou and oh', () => {
+  it('maps mouth blendshapes directly while still deriving oh from rounded or open mouth', () => {
     const weights = createVrmFaceExpressionWeights([
       category('jawOpen', 0.6),
       category('mouthFunnel', 0.75),
       category('mouthPucker', 0.2),
     ]);
 
-    expect(weights.ou).toBeCloseTo(0.7875);
-    expect(weights.oh).toBeCloseTo(0.3375);
-    expect(weights.aa).toBeCloseTo(0.55625);
+    expect(weights.ou).toBeCloseTo(0.75);
+    expect(weights.oh).toBeCloseTo(0.5625);
+    expect(weights.aa).toBeCloseTo(0.6);
   });
 });
 
@@ -103,7 +103,7 @@ describe('smoothFaceExpressionWeights', () => {
     expect(smoothed.happy).toBeCloseTo(0.2);
   });
 
-  it('holds tiny expression jitter and snaps near-zero values closed', () => {
+  it('keeps blink jitter stable while allowing small mouth mocap changes through', () => {
     const previous = {
       ...createNeutralFaceExpressionWeights(),
       blinkLeft: 0.2,
@@ -122,7 +122,7 @@ describe('smoothFaceExpressionWeights', () => {
     );
 
     expect(smoothed.blinkLeft).toBe(previous.blinkLeft);
-    expect(smoothed.aa).toBe(previous.aa);
+    expect(smoothed.aa).toBeCloseTo(0.128);
     expect(smoothed.happy).toBe(0);
   });
 
@@ -138,8 +138,8 @@ describe('smoothFaceExpressionWeights', () => {
       0.8,
     );
 
-    expect(smoothed.aa).toBeCloseTo(0.4656);
-    expect(smoothed.ou).toBeCloseTo(0.2328);
+    expect(smoothed.aa).toBeCloseTo(0.264);
+    expect(smoothed.ou).toBeCloseTo(0.132);
   });
 
   it('still opens the mocap mouth quickly', () => {
