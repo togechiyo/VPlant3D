@@ -16,6 +16,8 @@ let latestMotionStateMessage = null;
 let latestExpressionStateMessage = null;
 let latestRuntimeStateMessage = null;
 let latestVrmaCommandMessage = null;
+let activeControlSocket = null;
+const clientRoles = new WeakMap();
 
 const vite = await createViteServer({
   server: {
@@ -64,11 +66,26 @@ webSocketServer.on('connection', (webSocket) => {
 
   webSocket.on('message', (data) => {
     const message = data.toString();
-    rememberLatestMessage(message);
+    const parsedMessage = parseRelayMessage(message);
+
+    if (parsedMessage?.type === 'hello') {
+      clientRoles.set(webSocket, parsedMessage.role);
+      if (parsedMessage.role === 'control') {
+        activeControlSocket = webSocket;
+      }
+      return;
+    }
+
     const isRealtimeState =
       message.includes('"type":"runtimeState"') ||
       message.includes('"type":"motionState"') ||
       message.includes('"type":"expressionState"');
+
+    if (isRealtimeState && webSocket !== activeControlSocket) {
+      return;
+    }
+
+    rememberLatestMessage(message);
 
     for (const client of webSocketServer.clients) {
       if (client !== webSocket && client.readyState === 1) {
@@ -78,6 +95,13 @@ webSocketServer.on('connection', (webSocket) => {
 
         client.send(message);
       }
+    }
+  });
+
+  webSocket.on('close', () => {
+    clientRoles.delete(webSocket);
+    if (activeControlSocket === webSocket) {
+      activeControlSocket = null;
     }
   });
 });
@@ -148,6 +172,15 @@ function rememberLatestMessage(message) {
     }
   } catch {
     // Ignore malformed client messages; browser clients also validate on receipt.
+  }
+}
+
+function parseRelayMessage(message) {
+  try {
+    const parsed = JSON.parse(message);
+    return typeof parsed === 'object' && parsed !== null ? parsed : null;
+  } catch {
+    return null;
   }
 }
 

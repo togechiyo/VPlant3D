@@ -2800,3 +2800,27 @@
 
 - OBS実機で `?debug=1` を見て、どの段階で0へ落ちるか確認する
 - `rx` が0ならControl送信前/MediaPipe入力側、`set` は非0で `after update` が0ならVRM update/VRMA/expressionManager側を疑う
+
+## 2026-05-23 Relay Active Control Guard
+
+### Goal
+
+- OBS側だけ表情/姿勢が0へ戻る原因を、デバッグ動画から切り分けて対処する
+
+### Findings
+
+- OBS書き出し動画では `rx = target = set = after update` が一致していた
+- つまりVRM update後に戻されているのではなく、OBSが受け取ったruntimeState自体に0フレームが含まれていた
+- 動画内で `runtime #629 -> #4053 -> #645` のようにsequenceが大きく飛んで戻るフレームがあり、単一Controlでは起きにくい
+- 複数のControlページ/古いタブが同じrelayへruntimeStateを送って混線している可能性が高い
+
+### Did
+
+- relay serverで最後に `hello: control` を送ったWebSocketをactive controlとして扱うようにした
+- `runtimeState` / `motionState` / `expressionState` はactive controlから来たものだけ保存・転送するようにした
+- 古いControlタブからのリアルタイム0フレームがOBS Renderへ混ざらないようにした
+
+### Next
+
+- OBS確認時はControlタブを1つだけ残す運用も併用する
+- まだ0が混ざる場合は、Control側の送信直前debugを追加してMediaPipe入力由来かどうかを確認する
