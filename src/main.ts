@@ -1232,7 +1232,7 @@ function updateRelayRenderMotion(delta: number): void {
     return;
   }
 
-  const activeMotionSmoothing = getFrameSmoothing(delta, 18);
+  const activeMotionSmoothing = getFrameSmoothing(delta, 28);
   const releaseMotionSmoothing = getFrameSmoothing(delta, 1.8);
   const headSmoothing = relayHeadTarget.enabled ? activeMotionSmoothing : releaseMotionSmoothing;
   const upperBodySmoothing = relayUpperBodyTarget.enabled
@@ -1241,7 +1241,7 @@ function updateRelayRenderMotion(delta: number): void {
   const handSmoothing = hasHandTarget(relayHandTarget)
     ? activeMotionSmoothing
     : releaseMotionSmoothing;
-  const expressionSmoothing = getFrameSmoothing(delta, 34);
+  const expressionSmoothing = getFrameSmoothing(delta, 42);
   headRetargetPose = smoothHeadRetargetPose(headRetargetPose, relayHeadTarget, headSmoothing);
   upperBodyRetargetPose = smoothUpperBodyRetargetPose(
     upperBodyRetargetPose,

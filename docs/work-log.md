@@ -2261,3 +2261,20 @@
 
 - OBS実機で、ハンドトラッキングON時のカクつきと照明チカチカが減るか確認する
 - まだ残る場合は、motionStateをさらに10fpsへ下げる、またはhead/body/hand/expressionを個別channelに分ける
+
+## 2026-05-23 Render Motion Interpolation Tuning
+
+### Goal
+
+- relay分割でピクつきは改善したが、OBS側の動きが低フレームレート気味で硬く見える問題を軽減する
+
+### Did
+
+- 通信頻度は維持したまま、Render側のmotion smoothing speedを上げた
+- head/body/handの追従速度を `18` から `28` に上げた
+- expressionの追従速度を `34` から `42` に上げた
+
+### Next
+
+- OBS実機で動きの硬さと残像感を確認する
+- まだ硬い場合は、motion送信を24fps相当へ上げるか、Render側で前後2点補間する方式を検討する
