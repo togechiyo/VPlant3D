@@ -2,6 +2,7 @@ import type { RelayExpressionState } from './messages';
 
 export interface RelayExpressionStabilizer {
   previous: RelayExpressionState;
+  previousRaw: RelayExpressionState;
   holdUntil: Partial<Record<RelayExpressionChannel, number>>;
 }
 
@@ -24,6 +25,7 @@ const mouthChannels = ['aa', 'ih', 'ou', 'ee', 'oh'] as const;
 export function createRelayExpressionStabilizer(): RelayExpressionStabilizer {
   return {
     previous: {},
+    previousRaw: {},
     holdUntil: {},
   };
 }
@@ -45,6 +47,7 @@ export function stabilizeRelayExpressionState(
       channel,
       candidate[channel],
       stabilizer.previous[channel],
+      stabilizer.previousRaw[channel],
       nextHoldUntil[channel],
       now,
       options.blinkHoldMs ?? 0,
@@ -59,6 +62,7 @@ export function stabilizeRelayExpressionState(
       channel,
       candidate[channel],
       stabilizer.previous[channel],
+      stabilizer.previousRaw[channel],
       nextHoldUntil[channel],
       now,
       options.mouthHoldMs ?? 0,
@@ -69,6 +73,7 @@ export function stabilizeRelayExpressionState(
   }
 
   stabilizer.previous = next;
+  stabilizer.previousRaw = candidate;
   stabilizer.holdUntil = nextHoldUntil;
   return next;
 
@@ -76,6 +81,7 @@ export function stabilizeRelayExpressionState(
     channel: RelayExpressionChannel,
     candidateValue: number | undefined,
     previousValue: number | undefined,
+    previousRawValue: number | undefined,
     holdUntil: number | undefined,
     currentTime: number,
     holdMs: number,
@@ -94,11 +100,11 @@ export function stabilizeRelayExpressionState(
     }
 
     const isSharpDrop =
-      previousValue >= activeThreshold &&
+      (previousRawValue ?? previousValue) >= activeThreshold &&
       candidateValue <= Math.max(nearZeroThreshold, previousValue * dropRatio);
 
-    if (isSharpDrop) {
-      nextHoldUntil[channel] = Math.max(holdUntil ?? 0, currentTime + holdMs);
+    if (isSharpDrop && (holdUntil ?? 0) <= currentTime) {
+      nextHoldUntil[channel] = currentTime + holdMs;
     }
 
     if ((nextHoldUntil[channel] ?? 0) > currentTime) {
