@@ -2322,3 +2322,20 @@
 
 - OBS実機で30fps送信時のカクつき、表情の追従性、通信負荷を確認する
 - まだ硬い場合はposeだけ30fps送信、expressionは毎フレーム近く送るなどchannel分離を検討する
+
+## 2026-05-23 Relay Tracking Loss Hold Fix
+
+### Goal
+
+- 30fps送信へ戻した後に再発した、頭/体が一瞬neutralへ戻るようなびくつきを抑える
+
+### Did
+
+- motion interpolationで「有効pose → 検出なしneutral」を中間補間しないようにした
+- head/bodyは次フレームがdisabledの場合、短い欠落として前回の有効poseを保持する
+- 補間モジュールに回帰テストを追加した
+
+### Next
+
+- OBS実機で頭/体の復帰びくつきが消えたか確認する
+- まだ残る場合は、RelayMotionFrameにpose種別ごとの最終有効時刻を持たせ、保持時間を明示的に制御する

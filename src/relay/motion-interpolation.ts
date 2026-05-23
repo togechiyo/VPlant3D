@@ -103,8 +103,16 @@ function interpolateHeadPose(
   current: HeadRetargetPose,
   amount: number,
 ): HeadRetargetPose {
+  if (!current.enabled) {
+    return previous.enabled ? previous : current;
+  }
+
+  if (!previous.enabled) {
+    return current;
+  }
+
   return {
-    enabled: previous.enabled || current.enabled,
+    enabled: true,
     pitch: lerp(previous.pitch, current.pitch, amount),
     yaw: lerp(previous.yaw, current.yaw, amount),
     roll: lerp(previous.roll, current.roll, amount),
@@ -116,8 +124,16 @@ function interpolateUpperBodyPose(
   current: UpperBodyRetargetPose,
   amount: number,
 ): UpperBodyRetargetPose {
+  if (!current.enabled) {
+    return previous.enabled ? previous : current;
+  }
+
+  if (!previous.enabled) {
+    return current;
+  }
+
   return {
-    enabled: previous.enabled || current.enabled,
+    enabled: true,
     chestYaw: lerp(previous.chestYaw, current.chestYaw, amount),
     chestRoll: lerp(previous.chestRoll, current.chestRoll, amount),
     neckYaw: lerp(previous.neckYaw, current.neckYaw, amount),

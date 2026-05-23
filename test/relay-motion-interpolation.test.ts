@@ -52,6 +52,33 @@ describe('relay motion interpolation', () => {
     expect(sampled.pose.hands?.left?.fingers.middle).toBeCloseTo(0.6);
     expect(sampled.pose.hands?.right).toBeNull();
   });
+
+  it('holds head and body pose instead of interpolating toward neutral during brief tracking loss', () => {
+    const previous = createMotionState(1, 0.8, 0.4, 0);
+    const current = createMotionState(2, 0, 0, 0);
+    current.pose.head = {
+      enabled: false,
+      pitch: 0,
+      yaw: 0,
+      roll: 0,
+    };
+    current.pose.upperBody = {
+      enabled: false,
+      chestYaw: 0,
+      chestRoll: 0,
+      neckYaw: 0,
+      neckRoll: 0,
+      leftUpperArmRoll: 0,
+      rightUpperArmRoll: 0,
+      leftLowerArmRoll: 0,
+      rightLowerArmRoll: 0,
+    };
+
+    const sampled = interpolateRelayMotionState(previous, current, 0.5);
+
+    expect(sampled.pose.head).toEqual(previous.pose.head);
+    expect(sampled.pose.upperBody).toEqual(previous.pose.upperBody);
+  });
 });
 
 function createFrame(receivedAt: number, state: RelayMotionState): RelayMotionFrame {
