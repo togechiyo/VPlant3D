@@ -2425,3 +2425,19 @@
 
 - OBS実機でウインク保持、閉眼保持、開口保持ができるか確認する
 - まだ戻る場合は、VRM expression override / blink表情と他表情の競合、またはRelay送信値のログ表示を追加して調べる
+
+## 2026-05-23 Faster Mocap Face Tracking
+
+### Goal
+
+- OBS側で表情だけ追従性が悪い問題を改善する
+
+### Did
+
+- OBS側の二重smoothは既に外れていたため、Control側でMediaPipe表情を `smoothFaceExpressionWeights` へ通す量を見直した
+- 顔モーキャプの表情平滑化を `0.45` から `0.85` へ上げ、blink / mouth が入力へかなり速く追従するようにした
+
+### Next
+
+- OBS実機でウインク、閉眼、開口、口形状変化の追従性を確認する
+- まだ遅い場合は、blink / mouth はsmoothを完全に外し、happy / surprisedだけ平滑化する

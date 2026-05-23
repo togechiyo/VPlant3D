@@ -2482,7 +2482,7 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
     const nextWeights = createVrmFaceExpressionWeights(categories, {
       mirrorInput: appStore.getState().poseMirrorInput,
     });
-    faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights);
+    faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights, 0.85);
   }
 
   headRetargetPose = smoothHeadRetargetPose(headRetargetPose, nextHeadPose);
