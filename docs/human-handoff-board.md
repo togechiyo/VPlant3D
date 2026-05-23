@@ -28,6 +28,26 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
+### Todo: OBS Render debug overlayで表情同期を確認
+
+- Owner: Human
+- Needed by: OBS側の表情戻り問題の次修正前
+- Why: Controller previewでは表情が正しく見えており、OBS Render側でだけ戻るため、OBS実機上で受信値とモデル挙動を同時に見る必要があるため
+- What to check:
+  - dev serverを起動する
+  - OBS Browser Sourceで `http://127.0.0.1:5173/?obs=1&transparent=1&debug=1` を開く
+  - Chrome Controlで `http://127.0.0.1:5173/?control=1` を開く
+  - VRMを読み込む
+  - 口を開けたままにして、overlayの `mouth aa/ih/ou/ee/oh` とモデルの口が同じように維持されるか見る
+  - 目を閉じたままにして、overlayの `blink L/R` とモデルの目が同じように維持されるか見る
+  - 口をオフ、まばたきをオフにした時、overlay値とモデルが勝手に動かないか見る
+  - `dropped runtime/motion/expression` と `age` が増え続けないか見る
+
+Notes:
+
+- overlay値が安定しているのにモデルだけ戻るなら、次はVRM expression適用経路の一本化が必要
+- overlay値そのものが戻っているなら、Control側の表情state解決を分離する
+
 ### Todo: 人間のGoogle ChromeでFace / Hand Trackingを確認
 
 - Owner: Human or Codex with Chrome extension

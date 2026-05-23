@@ -25,6 +25,7 @@ describe('parseObsQuery', () => {
       obsMode: true,
       controlMode: false,
       transparent: false,
+      debug: false,
     });
   });
 
@@ -33,6 +34,7 @@ describe('parseObsQuery', () => {
       obsMode: false,
       controlMode: true,
       transparent: false,
+      debug: false,
     });
   });
 
@@ -41,6 +43,16 @@ describe('parseObsQuery', () => {
       obsMode: false,
       controlMode: false,
       transparent: true,
+      debug: false,
+    });
+  });
+
+  it('enables debug overlay with ?debug=1', () => {
+    expect(parseObsQuery('?obs=1&debug=1')).toEqual({
+      obsMode: true,
+      controlMode: false,
+      transparent: false,
+      debug: true,
     });
   });
 
@@ -51,6 +63,7 @@ describe('parseObsQuery', () => {
       obsMode: true,
       controlMode: true,
       transparent: true,
+      debug: false,
     });
   });
 
@@ -59,6 +72,7 @@ describe('parseObsQuery', () => {
       obsMode: true,
       controlMode: false,
       transparent: false,
+      debug: false,
     });
   });
 });

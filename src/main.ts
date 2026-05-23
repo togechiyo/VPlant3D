@@ -80,8 +80,13 @@ import type {
   RelayMessage,
   RelayMotionState,
   RelayRenderState,
+  RelayRuntimeState,
   RelayStaticState,
 } from './relay/messages';
+import {
+  createRelayRuntimeState as createRelayRuntimeStateMessage,
+  shouldDiscardRelayRuntimeState,
+} from './relay/runtime-state';
 import {
   smoothRelayAvatarTransform,
   smoothResolvedLookLights,
@@ -300,15 +305,19 @@ let relayLookSettingsTarget: LookSettings = appStore.getState().lookSettings;
 let relayRenderStaticStateSignature = '';
 let relayStaticPublishSignature = '';
 let relayMotionPublishTime = 0;
-let relayMotionSequence = 0;
-let relayExpressionPublishTime = 0;
-let relayExpressionSequence = 0;
+let relayRuntimeSequence = 0;
 let lastAppliedRelayMotionSequence = 0;
 let lastAppliedRelayMotionSentAt = 0;
 let lastAppliedRelayExpressionSequence = 0;
 let lastAppliedRelayExpressionSentAt = 0;
+let lastAppliedRelayRuntimeSequence = 0;
+let lastAppliedRelayRuntimeSentAt = 0;
+let relayDroppedStaleRuntimeFrames = 0;
+let relayDroppedStaleMotionFrames = 0;
+let relayDroppedStaleExpressionFrames = 0;
 let relayPreviousMotionFrame: RelayMotionFrame | null = null;
 let relayCurrentMotionFrame: RelayMotionFrame | null = null;
+let relayDebugOverlay: HTMLElement | null = null;
 let loadingRelayVrmAssetId: string | null = null;
 let loadingRelayVrmaAssetSignature: string | null = null;
 const relayClient = new VPlantRelayClient(
@@ -789,6 +798,13 @@ if (isControlPage) {
   viewport.append(panel);
 } else {
   viewport.style.pointerEvents = 'none';
+  if (options.debug) {
+    relayDebugOverlay = document.createElement('aside');
+    relayDebugOverlay.className = 'relay-debug-overlay';
+    relayDebugOverlay.setAttribute('aria-label', 'OBS relay debug');
+    relayDebugOverlay.textContent = 'Relay debug waiting...';
+    viewport.append(relayDebugOverlay);
+  }
 }
 
 app.append(viewport);
@@ -1069,6 +1085,7 @@ function animate(frameTime = performance.now()): void {
     publishRelayState(frameTime);
   }
   currentVrm?.update(delta);
+  updateRelayDebugOverlay();
   renderer.render(scene, camera);
   window.requestAnimationFrame(animate);
 }
@@ -1097,6 +1114,9 @@ function handleRelayMessage(message: RelayMessage): void {
       break;
     case 'motionState':
       applyRelayMotionState(message.state);
+      break;
+    case 'runtimeState':
+      applyRelayRuntimeState(message.state);
       break;
     case 'expressionState':
       applyRelayExpressionState(message.state);
@@ -1183,11 +1203,6 @@ function applyRelayRenderState(nextState: RelayRenderState): void {
     expressions: nextState.expressions,
     pose: nextState.pose,
   });
-  applyRelayExpressionState({
-    sequence: lastAppliedRelayExpressionSequence + 1,
-    sentAt: Date.now(),
-    expressions: nextState.expressions,
-  });
 }
 
 function applyRelayStaticState(nextState: RelayStaticState): void {
@@ -1213,8 +1228,33 @@ function applyRelayStaticState(nextState: RelayStaticState): void {
   applyResolvedLookLights(relayLookLightsCurrent);
 }
 
+function applyRelayRuntimeState(nextState: RelayRuntimeState): void {
+  if (
+    shouldDiscardRelayRuntimeState(nextState, {
+      lastSequence: lastAppliedRelayRuntimeSequence,
+      lastSentAt: lastAppliedRelayRuntimeSentAt,
+    })
+  ) {
+    relayDroppedStaleRuntimeFrames += 1;
+    return;
+  }
+
+  relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
+  faceExpressionWeights = relayExpressionTarget;
+  applyRelayExpressions(faceExpressionWeights);
+  applyRelayMotionState(nextState);
+  lastAppliedRelayRuntimeSequence = nextState.sequence;
+  lastAppliedRelayRuntimeSentAt = nextState.sentAt;
+}
+
 function applyRelayMotionState(nextState: RelayMotionState): void {
+  if (lastAppliedRelayRuntimeSentAt >= nextState.sentAt) {
+    relayDroppedStaleMotionFrames += 1;
+    return;
+  }
+
   if (shouldDiscardRelayMotionState(nextState)) {
+    relayDroppedStaleMotionFrames += 1;
     return;
   }
 
@@ -1233,7 +1273,13 @@ function applyRelayMotionState(nextState: RelayMotionState): void {
 }
 
 function applyRelayExpressionState(nextState: RelayExpressionSyncState): void {
+  if (lastAppliedRelayRuntimeSentAt >= nextState.sentAt) {
+    relayDroppedStaleExpressionFrames += 1;
+    return;
+  }
+
   if (shouldDiscardRelayExpressionState(nextState)) {
+    relayDroppedStaleExpressionFrames += 1;
     return;
   }
 
@@ -1362,6 +1408,43 @@ function applyRelayExpressions(expressions: Partial<VrmFaceExpressionWeights>): 
   }
 }
 
+function updateRelayDebugOverlay(): void {
+  if (!relayDebugOverlay) {
+    return;
+  }
+
+  const runtimeAge =
+    lastAppliedRelayRuntimeSentAt > 0 ? Math.max(Date.now() - lastAppliedRelayRuntimeSentAt, 0) : 0;
+  const motionAge =
+    lastAppliedRelayMotionSentAt > 0 ? Math.max(Date.now() - lastAppliedRelayMotionSentAt, 0) : 0;
+  const expressionAge =
+    lastAppliedRelayExpressionSentAt > 0
+      ? Math.max(Date.now() - lastAppliedRelayExpressionSentAt, 0)
+      : 0;
+  const droppedFrames =
+    relayDroppedStaleRuntimeFrames +
+    relayDroppedStaleMotionFrames +
+    relayDroppedStaleExpressionFrames;
+
+  relayDebugOverlay.textContent = [
+    'OBS Relay Debug',
+    `runtime #${lastAppliedRelayRuntimeSequence} age ${runtimeAge}ms`,
+    `motion #${lastAppliedRelayMotionSequence} age ${motionAge}ms`,
+    `expression #${lastAppliedRelayExpressionSequence} age ${expressionAge}ms`,
+    `dropped runtime/motion/expression ${relayDroppedStaleRuntimeFrames}/${relayDroppedStaleMotionFrames}/${relayDroppedStaleExpressionFrames} total ${droppedFrames}`,
+    `blink L/R ${formatRelayDebugValue(relayExpressionTarget.blinkLeft)} / ${formatRelayDebugValue(relayExpressionTarget.blinkRight)}`,
+    `mouth aa/ih/ou/ee/oh ${formatRelayDebugValue(relayExpressionTarget.aa)} / ${formatRelayDebugValue(relayExpressionTarget.ih)} / ${formatRelayDebugValue(relayExpressionTarget.ou)} / ${formatRelayDebugValue(relayExpressionTarget.ee)} / ${formatRelayDebugValue(relayExpressionTarget.oh)}`,
+    `emotion happy/surprised ${formatRelayDebugValue(relayExpressionTarget.happy)} / ${formatRelayDebugValue(relayExpressionTarget.surprised)}`,
+    `head yaw/pitch/roll ${formatRelayDebugValue(relayHeadTarget.yaw)} / ${formatRelayDebugValue(relayHeadTarget.pitch)} / ${formatRelayDebugValue(relayHeadTarget.roll)} enabled ${relayHeadTarget.enabled ? 'yes' : 'no'}`,
+    `upper chestYaw/chestRoll ${formatRelayDebugValue(relayUpperBodyTarget.chestYaw)} / ${formatRelayDebugValue(relayUpperBodyTarget.chestRoll)} enabled ${relayUpperBodyTarget.enabled ? 'yes' : 'no'}`,
+    `hands ${relayHandTarget.left ? 'L' : '-'}${relayHandTarget.right ? 'R' : '-'} buffered ${relayClient.bufferedAmount} bytes`,
+  ].join('\n');
+}
+
+function formatRelayDebugValue(value: number | undefined): string {
+  return typeof value === 'number' ? value.toFixed(3) : 'n/a';
+}
+
 function getFrameSmoothing(delta: number, speed: number): number {
   return 1 - Math.exp(-speed * delta);
 }
@@ -1383,22 +1466,14 @@ function publishRelayState(frameTime: number): void {
     });
   }
 
-  if (frameTime - relayExpressionPublishTime >= 16 && relayClient.bufferedAmount <= 262_144) {
-    relayExpressionPublishTime = frameTime;
-    relayClient.send({
-      type: 'expressionState',
-      state: createRelayExpressionSyncState(),
-    });
-  }
-
   if (frameTime - relayMotionPublishTime < 33 || relayClient.bufferedAmount > 262_144) {
     return;
   }
 
   relayMotionPublishTime = frameTime;
   relayClient.send({
-    type: 'motionState',
-    state: createRelayMotionState(nextState),
+    type: 'runtimeState',
+    state: createRelayRuntimeState(nextState),
   });
 }
 
@@ -1415,25 +1490,15 @@ function createRelayStaticState(nextState: AppState): RelayStaticState {
   };
 }
 
-function createRelayMotionState(nextState: AppState): RelayMotionState {
-  return {
-    sequence: ++relayMotionSequence,
-    sentAt: Date.now(),
+function createRelayRuntimeState(nextState: AppState): RelayRuntimeState {
+  return createRelayRuntimeStateMessage(++relayRuntimeSequence, Date.now(), {
     expressions: createRelayExpressionState(),
     pose: {
       head: roundRelayHeadPose(headRetargetPose),
       upperBody: roundRelayUpperBodyPose(upperBodyRetargetPose),
       hands: nextState.handTrackingEnabled ? roundRelayHandPose(handRetargetPose) : undefined,
     },
-  };
-}
-
-function createRelayExpressionSyncState(): RelayExpressionSyncState {
-  return {
-    sequence: ++relayExpressionSequence,
-    sentAt: Date.now(),
-    expressions: createRelayExpressionState(),
-  };
+  });
 }
 
 function createRelayExpressionState(): RelayExpressionState {

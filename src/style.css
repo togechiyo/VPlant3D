@@ -121,3 +121,24 @@ body.is-transparent-render {
   width: 100%;
   height: 100%;
 }
+
+.relay-debug-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 50;
+  max-width: min(520px, calc(100vw - 32px));
+  white-space: pre;
+  border: 1px solid rgba(56, 213, 255, 0.55);
+  border-radius: 8px;
+  background: rgba(8, 12, 14, 0.82);
+  padding: 12px 14px;
+  color: #dff8ff;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: none;
+  text-shadow: 0 0 10px rgba(56, 213, 255, 0.32);
+}

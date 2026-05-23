@@ -14,6 +14,7 @@ let latestStateMessage = null;
 let latestStaticStateMessage = null;
 let latestMotionStateMessage = null;
 let latestExpressionStateMessage = null;
+let latestRuntimeStateMessage = null;
 let latestVrmaCommandMessage = null;
 
 const vite = await createViteServer({
@@ -65,7 +66,9 @@ webSocketServer.on('connection', (webSocket) => {
     const message = data.toString();
     rememberLatestMessage(message);
     const isRealtimeState =
-      message.includes('"type":"motionState"') || message.includes('"type":"expressionState"');
+      message.includes('"type":"runtimeState"') ||
+      message.includes('"type":"motionState"') ||
+      message.includes('"type":"expressionState"');
 
     for (const client of webSocketServer.clients) {
       if (client !== webSocket && client.readyState === 1) {
@@ -89,6 +92,7 @@ function sendLatestMessages(webSocket) {
     latestVrmaSlotsMessage,
     latestStateMessage,
     latestStaticStateMessage,
+    latestRuntimeStateMessage,
     latestMotionStateMessage,
     latestExpressionStateMessage,
     latestVrmaCommandMessage,
@@ -100,6 +104,11 @@ function sendLatestMessages(webSocket) {
 }
 
 function rememberLatestMessage(message) {
+  if (message.includes('"type":"runtimeState"')) {
+    latestRuntimeStateMessage = message;
+    return;
+  }
+
   if (message.includes('"type":"expressionState"')) {
     latestExpressionStateMessage = message;
     return;

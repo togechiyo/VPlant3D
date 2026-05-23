@@ -78,6 +78,49 @@
 - overlayで runtime sequence / age / blink / mouth / head / dropped frames / bufferedAmount を確認できるようにする
 - その結果を見て、原因が通信前かVRM適用時か切り分ける
 
+## 2026-05-23 OBS Runtime State Cleanup
+
+### Goal
+
+- OBS Render state flowを整理し、Controller/OBS間の表情不一致を切り分け・改善する
+
+### Did
+
+- `RelayRuntimeState` と `runtimeState` messageを追加
+- Control側の新規realtime送信を `motionState` / `expressionState` から `runtimeState` へ寄せた
+- Render側は `runtimeState` をpose + expressionsの単一ソースとして受け取り、古いruntime frameを破棄するようにした
+- 旧 `motionState` / `expressionState` は互換受信として残した
+- `?obs=1&transparent=1&debug=1` のときだけOBS Render debug overlayを表示するようにした
+- `docs/obs-render-code-cleanup-plan.md` に実装メモと次の切り分け手順を追記
+- runtime stateのstale frame破棄と表情保持の単体テストを追加
+- Playwrightで通常OBS URLではoverlay非表示、debug URLではoverlay表示を確認するE2Eを追加
+
+### Worked
+
+- `npm run test` は成功: 20 files / 108 tests
+- `npm run lint` は成功
+- `npm run build` は成功。既存のlarge chunk warningのみ
+- `npm run test:e2e` は成功: 10 tests
+- 通常OBS URLではSetup UIとdebug overlayが出ないことを自動確認できた
+- debug overlayでruntime sequence、age、drop数、表情値、pose値、bufferedAmountを見られるようになった
+
+### Failed / Blocked
+
+- OBS実機での表情戻り改善はまだ人間確認が必要
+- debug overlay値と実モデル挙動をOBS上で見比べる確認は未実施
+
+### Decisions
+
+- 今後の新規realtime同期は `runtimeState` を正とする
+- `motionState` / `expressionState` はしばらく受信互換として残す
+- OBS側だけまだ戻る場合は、次にRender側のexpression適用経路を1本化する
+
+### Next
+
+- OBSで `http://127.0.0.1:5173/?obs=1&transparent=1&debug=1` を開き、口開け維持・目閉じ維持・lip sync off・blink off時のoverlay値とモデル挙動を比較する
+- overlay値が正しいのにモデルだけ戻るなら、VRM expression適用関数をRender側で1箇所に絞る
+- overlay値自体が戻っているなら、Control側の表情state解決を分離する
+
 ## 2026-05-20 Initial Project Setup
 
 ### Goal

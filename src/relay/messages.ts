@@ -96,6 +96,13 @@ export interface RelayMotionState {
   pose: RelayPoseState;
 }
 
+export interface RelayRuntimeState {
+  sequence: number;
+  sentAt: number;
+  expressions: RelayExpressionState;
+  pose: RelayPoseState;
+}
+
 export interface RelayExpressionSyncState {
   sequence: number;
   sentAt: number;
@@ -127,6 +134,10 @@ export type RelayMessage =
   | {
       type: 'motionState';
       state: RelayMotionState;
+    }
+  | {
+      type: 'runtimeState';
+      state: RelayRuntimeState;
     }
   | {
       type: 'expressionState';

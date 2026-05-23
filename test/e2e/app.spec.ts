@@ -103,6 +103,20 @@ test('OBS transparent mode hides Setup UI but keeps the scene canvas', async ({ 
   await expect(page.getByText('表情')).toHaveCount(0);
   await expect(page.getByText('体トラック')).toHaveCount(0);
   await expect(page.getByText('設定')).toHaveCount(0);
+  await expect(page.locator('.relay-debug-overlay')).toHaveCount(0);
+  expect(errors()).toEqual([]);
+});
+
+test('OBS debug mode shows relay diagnostics without setup controls', async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto('/?obs=1&transparent=1&debug=1');
+
+  await expect(page.locator('canvas.scene-canvas')).toBeVisible();
+  await expect(page.locator('.relay-debug-overlay')).toBeVisible();
+  await expect(page.locator('.relay-debug-overlay')).toContainText('OBS Relay Debug');
+  await expect(page.locator('.relay-debug-overlay')).toContainText('runtime #');
+  await expect(page.getByText('VRMを読み込む', { exact: true })).toHaveCount(0);
   expect(errors()).toEqual([]);
 });
 

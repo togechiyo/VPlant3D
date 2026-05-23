@@ -2,6 +2,7 @@ export interface ObsQueryOptions {
   obsMode: boolean;
   controlMode: boolean;
   transparent: boolean;
+  debug?: boolean;
 }
 
 const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on']);
@@ -35,5 +36,6 @@ export function parseObsQuery(input: string | URLSearchParams): ObsQueryOptions 
     obsMode: parseBooleanParam(params.get('obs')),
     controlMode: parseBooleanParam(params.get('control')),
     transparent: parseBooleanParam(params.get('transparent')),
+    debug: parseBooleanParam(params.get('debug')),
   };
 }

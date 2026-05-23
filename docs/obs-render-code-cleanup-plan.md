@@ -408,3 +408,25 @@ http://127.0.0.1:5173/?obs=1&transparent=1&debug=1
 - 以降のruntimeState統合の検証に使える
 
 Phase 0で値が正しいのにモデルだけ戻るなら、VRM適用経路が原因。値自体が戻っているなら、Control側のstate解決かRelay送信が原因である。
+
+## 2026-05-23 実装メモ
+
+Phase 0とPhase 1の一部を実装した。
+
+- `?obs=1&transparent=1&debug=1` のときだけOBS Render debug overlayを表示する
+- 通常のOBS URLではdebug overlayを出さない
+- overlayにはruntime / motion / expression sequence、age、drop数、blink、mouth、emotion、head、upper body、hand、WebSocket bufferedAmountを表示する
+- `runtimeState` メッセージを追加し、Control側の新規送信は `motionState` / `expressionState` ではなく `runtimeState` に寄せた
+- Render側は `runtimeState` を受けたとき、poseとexpressionsを同じsequenceの正規状態として扱う
+- 旧 `motionState` / `expressionState` は互換受信として残している
+
+この段階での重要な切り分け:
+
+- `runtimeState` overlay上のblink / mouth値が安定しているのにモデルだけ戻る場合は、VRM適用経路またはVRM runtime update周辺が原因
+- overlay上のblink / mouth値そのものが戻っている場合は、Control側の状態解決かRelay送信前の値が原因
+- drop数やageが増え続ける場合は、通信詰まりまたはOBS側処理負荷が原因
+
+次の候補:
+
+- debug overlayを見ながらOBS実機で、口開けっぱなし、目閉じっぱなし、lip sync off、blink offを確認する
+- まだOBS側だけ戻る場合は、`applyRelayExpressions` と他のexpression適用関数の呼び出し順を調べ、Render側で表情を書ける箇所を1つに絞る
