@@ -165,7 +165,7 @@ describe('smoothFaceExpressionWeights', () => {
       0.8,
     );
 
-    expect(smoothed.aa).toBeCloseTo(0.46);
+    expect(smoothed.aa).toBeCloseTo(0.528);
   });
 
   it('still reacts quickly when blink and mouth weights increase', () => {

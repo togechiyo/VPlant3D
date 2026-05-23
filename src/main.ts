@@ -286,6 +286,7 @@ let lipSyncMode: LipSyncMode = 'mic';
 let idleSwayEnabled = true;
 let faceTracker: MediaPipeFaceTracker | null = null;
 let handTracker: MediaPipeHandTracker | null = null;
+let lastFaceTrackingSignalTime = 0;
 let relayMotionActive = false;
 let relayHeadTarget: HeadRetargetPose = createNeutralHeadRetargetPose(false);
 let relayUpperBodyTarget: UpperBodyRetargetPose = createNeutralRetargetPose(false);
@@ -2677,6 +2678,7 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
   const nextHeadPose = createHeadRetargetPose(result.facialTransformationMatrixes[0], {
     mirrorInput: appStore.getState().poseMirrorInput,
   });
+  const hasFaceSignal = categories.length > 0 || nextHeadPose.enabled;
 
   if (categories.length > 0) {
     const nextWeights = createVrmFaceExpressionWeights(categories, {
@@ -2685,7 +2687,15 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
     faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights, 0.85);
   }
 
-  headRetargetPose = smoothHeadRetargetPose(headRetargetPose, nextHeadPose);
+  if (hasFaceSignal) {
+    lastFaceTrackingSignalTime = frameTime;
+  }
+
+  const withinFaceHold = frameTime - lastFaceTrackingSignalTime <= 450;
+  headRetargetPose = smoothHeadRetargetPose(
+    headRetargetPose,
+    hasFaceSignal || !withinFaceHold ? nextHeadPose : headRetargetPose,
+  );
   applyMocapFaceExpressions(faceExpressionWeights);
   applyHeadRetarget();
   const faceSummaryParts = [

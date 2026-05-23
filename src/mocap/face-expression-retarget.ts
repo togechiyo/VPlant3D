@@ -79,13 +79,13 @@ export function smoothFaceExpressionWeights(
   const amount = clamp01(smoothing);
 
   return {
-    blinkLeft: smoothMocapExpressionWeight(previous.blinkLeft, next.blinkLeft, amount, 0.008, 0.35),
-    blinkRight: smoothMocapExpressionWeight(previous.blinkRight, next.blinkRight, amount, 0.008, 0.35),
-    aa: smoothMocapExpressionWeight(previous.aa, next.aa, amount, 0.006, 0.35),
-    ih: smoothMocapExpressionWeight(previous.ih, next.ih, amount, 0.006, 0.35),
-    ou: smoothMocapExpressionWeight(previous.ou, next.ou, amount, 0.006, 0.35),
-    ee: smoothMocapExpressionWeight(previous.ee, next.ee, amount, 0.006, 0.35),
-    oh: smoothMocapExpressionWeight(previous.oh, next.oh, amount, 0.006, 0.35),
+    blinkLeft: smoothMocapExpressionWeight(previous.blinkLeft, next.blinkLeft, amount, 0.008, 0.18),
+    blinkRight: smoothMocapExpressionWeight(previous.blinkRight, next.blinkRight, amount, 0.008, 0.18),
+    aa: smoothMocapExpressionWeight(previous.aa, next.aa, amount, 0.006, 0.18),
+    ih: smoothMocapExpressionWeight(previous.ih, next.ih, amount, 0.006, 0.18),
+    ou: smoothMocapExpressionWeight(previous.ou, next.ou, amount, 0.006, 0.18),
+    ee: smoothMocapExpressionWeight(previous.ee, next.ee, amount, 0.006, 0.18),
+    oh: smoothMocapExpressionWeight(previous.oh, next.oh, amount, 0.006, 0.18),
     happy: smoothExpressionWeight(previous.happy, next.happy, amount, 0.018, 0.02),
     surprised: smoothExpressionWeight(previous.surprised, next.surprised, amount, 0.018, 0.02),
   };

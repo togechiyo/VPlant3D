@@ -155,6 +155,44 @@
 - OBS debug overlayで `mouth aa` と `applied blink/aa` が一致しているか見る
 - target値は安定しているのにapplied値やモデルだけ戻る場合は、VRM expressionManager / VRMA animation trackの上書きをさらに調べる
 
+## 2026-05-23 OBS Exported Video Jitter Review
+
+### Goal
+
+- OBS書き出し動画 `2026-05-23 19-13-06.mov` で見える、まばたき・口・頭のガクつきを調べて追加対処する
+
+### Did
+
+- macOS Quick Look thumbnailで動画の複数時点を抜き、debug overlayを確認した
+- overlay上でも `runtimeState` のmouth値が0.8台から0へ落ちる瞬間、head enabledがyes/noへ切り替わる瞬間が見えた
+- つまりOBS側のexpression適用だけではなく、Control側のMediaPipe face/head入力が瞬間的に落ち、その値がrelayされている可能性が高いと判断した
+- MediaPipe表情スムージングのrelease係数をさらに下げ、口・まばたきが中立へ戻る時だけ強く粘るようにした
+- face/head tracking signalが一瞬欠けた時、450ms以内なら直前のhead poseを保持するようにした
+
+### Worked
+
+- `npm run test` は成功: 20 files / 109 tests
+- `npm run lint` は前段で成功済み
+- `npm run build` は成功。既存のlarge chunk warningのみ
+- `npm run test:e2e` は成功: 10 tests
+
+### Failed / Blocked
+
+- OBS実機での改善度はまだ人間確認が必要
+- `ffprobe` / `ffmpeg` はこの環境になく、動画解析はQuick Look thumbnailベースで行った
+
+### Decisions
+
+- ガクつきの主因は、少なくとも一部はOBS受信後ではなくControl側から送られるruntime値の瞬間的な落ち込みとみなす
+- 表情のattackは速く、releaseはかなり粘る方向に寄せる
+- face/headは短い未検出で無効化しない
+
+### Next
+
+- OBSで再確認する
+- まだ口だけパクパク戻る場合は、MediaPipe口形状に短時間ピークホールド、またはマイク口パク優先モードを使う
+- まだhead enabledが跳ねる場合は、face/head tracking signalのhold時間をUI化するか、head trackingをbody側状態に統合する
+
 ## 2026-05-20 Initial Project Setup
 
 ### Goal
