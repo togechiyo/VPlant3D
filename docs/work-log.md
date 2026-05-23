@@ -2769,3 +2769,34 @@
 
 - 次の修正は挙動を変えず、debug overlay / telemetryだけを追加する
 - 具体的には、受信runtime raw、relay target、VRM expressionManager適用直後、`currentVrm.update()` 後を同じフレーム内で比較表示する
+
+## 2026-05-23 Expression Pipeline Telemetry
+
+### Goal
+
+- 30FPS通信そのものが原因なのか、OBS Render側のVRM適用順が原因なのかを切り分ける
+
+### Findings
+
+- 端末内WebSocketでVRM表情程度のJSONを30FPS送ること自体は軽いはず
+- Control側で起きずOBS側だけで起きるなら、通信帯域よりOBS Render側の適用順、`currentVrm.update()`、VRMA mixer、expressionManagerの上書きが疑わしい
+
+### Did
+
+- 挙動を変えず、debug overlayに表情パイプラインの測定点を追加した
+- `rx blink/aa`: OBSがruntimeStateで受け取った値
+- `target blink/aa`: Relay targetへ採用した値
+- `set blink/aa`: expressionManagerへsetした直後の値
+- `after update blink/aa`: `currentVrm.update()` 後の値
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- OBS実機で `?debug=1` を見て、どの段階で0へ落ちるか確認する
+- `rx` が0ならControl送信前/MediaPipe入力側、`set` は非0で `after update` が0ならVRM update/VRMA/expressionManager側を疑う
