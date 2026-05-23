@@ -103,7 +103,7 @@ describe('smoothFaceExpressionWeights', () => {
     expect(smoothed.happy).toBeCloseTo(0.2);
   });
 
-  it('keeps blink jitter stable while allowing small mouth mocap changes through', () => {
+  it('smooths mocap blink and mouth with only a tiny deadband', () => {
     const previous = {
       ...createNeutralFaceExpressionWeights(),
       blinkLeft: 0.2,
@@ -121,38 +121,51 @@ describe('smoothFaceExpressionWeights', () => {
       0.8,
     );
 
-    expect(smoothed.blinkLeft).toBe(previous.blinkLeft);
+    expect(smoothed.blinkLeft).toBeCloseTo(0.216);
     expect(smoothed.aa).toBeCloseTo(0.128);
     expect(smoothed.happy).toBe(0);
   });
 
-  it('keeps an open mocap mouth from snapping shut on a brief zero frame', () => {
+  it('allows a held mocap blink and open mouth to coexist', () => {
     const previous = {
       ...createNeutralFaceExpressionWeights(),
-      aa: 0.6,
-      ou: 0.3,
+      blinkLeft: 0.95,
+      blinkRight: 0.92,
+      aa: 0.58,
+      ou: 0.24,
     };
     const smoothed = smoothFaceExpressionWeights(
       previous,
-      createNeutralFaceExpressionWeights(),
-      0.8,
-    );
-
-    expect(smoothed.aa).toBeCloseTo(0.264);
-    expect(smoothed.ou).toBeCloseTo(0.132);
-  });
-
-  it('still opens the mocap mouth quickly', () => {
-    const smoothed = smoothFaceExpressionWeights(
-      createNeutralFaceExpressionWeights(),
       {
         ...createNeutralFaceExpressionWeights(),
+        blinkLeft: 0.96,
+        blinkRight: 0.93,
         aa: 0.6,
+        ou: 0.25,
       },
       0.8,
     );
 
-    expect(smoothed.aa).toBeCloseTo(0.48);
+    expect(smoothed.blinkLeft).toBeCloseTo(0.958);
+    expect(smoothed.blinkRight).toBeCloseTo(0.928);
+    expect(smoothed.aa).toBeCloseTo(0.596);
+    expect(smoothed.ou).toBeCloseTo(0.248);
+  });
+
+  it('tracks closing and opening mouth changes symmetrically', () => {
+    const smoothed = smoothFaceExpressionWeights(
+      {
+        ...createNeutralFaceExpressionWeights(),
+        aa: 0.6,
+      },
+      {
+        ...createNeutralFaceExpressionWeights(),
+        aa: 0.1,
+      },
+      0.8,
+    );
+
+    expect(smoothed.aa).toBeCloseTo(0.2);
   });
 });
 

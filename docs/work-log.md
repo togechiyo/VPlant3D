@@ -2392,3 +2392,20 @@
 
 - OBS実機で「口を開けっぱなし」「すぼめ口」「笑顔」の入力が直感に近いか確認する
 - まだ違和感がある場合は、VRM visemeを複数同時に入れる方式ではなく、dominant viseme 1つだけを選ぶ方式を試す
+
+## 2026-05-23 Mocap Expression Hold Semantics
+
+### Goal
+
+- MediaPipeモーキャプで「目を閉じたまま」「口を開けたまま」が素直に維持できるようにする
+
+### Did
+
+- blink / mouth 系expressionを、near-zero snapや非対称releaseの対象から外した
+- blink / mouth 系はごく小さなdeadbandだけ残し、入力値へ対称に追従するようにした
+- 閉眼状態と開口状態が同時に維持されることを単体テストに追加した
+
+### Next
+
+- OBS実機で閉眼キープ、開口キープ、閉眼＋開口の同時入力が維持されるか確認する
+- まだ片方が消える場合は、VRM側のexpression override設定や表情preset同士の競合を調べる
