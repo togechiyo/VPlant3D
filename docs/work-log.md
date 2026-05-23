@@ -2441,3 +2441,21 @@
 
 - OBS実機でウインク、閉眼、開口、口形状変化の追従性を確認する
 - まだ遅い場合は、blink / mouth はsmoothを完全に外し、happy / surprisedだけ平滑化する
+
+## 2026-05-23 Lip Sync Off Mouth Reset Fix
+
+### Goal
+
+- 口設定を `オフ` にしても、OBS側で口がぱくぱくする問題を止める
+
+### Did
+
+- `applyMouthOpen()` が `aa` だけを更新していたため、過去の `ih/ou/ee/oh` が残る問題を修正した
+- 口系expressionを `aa/ih/ou/ee/oh` まとめて適用・リセットする `applyMouthExpressions()` を追加した
+- `口=オフ` の時はControl側表示とRelay送信の両方で口系expressionを必ず0にするようにした
+- `口=マイク` の時は `aa` だけを送信し、他の口形状は0にするようにした
+
+### Next
+
+- OBS実機で `口=オフ` の時に `aa/ih/ou/ee/oh` が動かないか確認する
+- まだ動く場合はVRM expression presetやVRMA側の口表情上書きを確認する

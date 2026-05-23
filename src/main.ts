@@ -75,6 +75,7 @@ import { VPlantRelayClient } from './relay/client';
 import type {
   RelayAssetDescriptor,
   RelayAvatarTransform,
+  RelayExpressionState,
   RelayMessage,
   RelayMotionState,
   RelayRenderState,
@@ -754,7 +755,7 @@ if (isControlPage) {
     lipSyncMode = getLipSyncModeFromSelect();
     syncFaceTrackingEnabledFromModes();
     if (lipSyncMode !== 'mic') {
-      applyMouthOpen(0);
+      applyMouthExpressions(createNeutralMouthExpressions());
     }
     void syncFaceTrackerForCurrentModes();
   });
@@ -1350,22 +1351,45 @@ function createRelayStaticState(nextState: AppState): RelayStaticState {
 function createRelayMotionState(nextState: AppState): RelayMotionState {
   return {
     sequence: ++relayMotionSequence,
-    expressions: {
-      blinkLeft: roundRelayValue(faceExpressionWeights.blinkLeft, 3),
-      blinkRight: roundRelayValue(faceExpressionWeights.blinkRight, 3),
-      aa: roundRelayValue(faceExpressionWeights.aa, 3),
-      ih: roundRelayValue(faceExpressionWeights.ih, 3),
-      ou: roundRelayValue(faceExpressionWeights.ou, 3),
-      ee: roundRelayValue(faceExpressionWeights.ee, 3),
-      oh: roundRelayValue(faceExpressionWeights.oh, 3),
-      happy: roundRelayValue(faceExpressionWeights.happy, 3),
-      surprised: roundRelayValue(faceExpressionWeights.surprised, 3),
-    },
+    expressions: createRelayExpressionState(),
     pose: {
       head: roundRelayHeadPose(headRetargetPose),
       upperBody: roundRelayUpperBodyPose(upperBodyRetargetPose),
       hands: nextState.handTrackingEnabled ? roundRelayHandPose(handRetargetPose) : undefined,
     },
+  };
+}
+
+function createRelayExpressionState(): RelayExpressionState {
+  const mouthExpressions =
+    lipSyncMode === 'off'
+      ? createNeutralMouthExpressions()
+      : lipSyncMode === 'mic'
+        ? {
+            aa: faceExpressionWeights.aa,
+            ih: 0,
+            ou: 0,
+            ee: 0,
+            oh: 0,
+          }
+        : {
+            aa: faceExpressionWeights.aa,
+            ih: faceExpressionWeights.ih,
+            ou: faceExpressionWeights.ou,
+            ee: faceExpressionWeights.ee,
+            oh: faceExpressionWeights.oh,
+          };
+
+  return {
+    blinkLeft: roundRelayValue(faceExpressionWeights.blinkLeft, 3),
+    blinkRight: roundRelayValue(faceExpressionWeights.blinkRight, 3),
+    aa: roundRelayValue(mouthExpressions.aa, 3),
+    ih: roundRelayValue(mouthExpressions.ih, 3),
+    ou: roundRelayValue(mouthExpressions.ou, 3),
+    ee: roundRelayValue(mouthExpressions.ee, 3),
+    oh: roundRelayValue(mouthExpressions.oh, 3),
+    happy: roundRelayValue(faceExpressionWeights.happy, 3),
+    surprised: roundRelayValue(faceExpressionWeights.surprised, 3),
   };
 }
 
@@ -1579,7 +1603,7 @@ function replaceCurrentVrm(nextVrm: VRM): void {
   captureRestBoneQuaternions(nextVrm);
   resetVrmaMixer();
   applyExpressionPreset();
-  applyMouthOpen(appStore.getState().mouthOpen);
+  applyMouthOpen(lipSyncMode === 'mic' ? appStore.getState().mouthOpen : 0);
 }
 
 function fitObjectToDefaultView(object: THREE.Object3D): void {
@@ -2040,7 +2064,9 @@ async function startMicReactiveMouth(): Promise<void> {
 function stopMicReactiveMouth(): void {
   micController?.stop();
   micController = null;
-  applyMouthOpen(0);
+  if (lipSyncMode !== 'mocap') {
+    applyMouthExpressions(createNeutralMouthExpressions());
+  }
   appStore.getState().setMicStopped();
 }
 
@@ -2057,11 +2083,40 @@ function sampleMicReactiveMouth(): void {
 }
 
 function applyMouthOpen(value: number): void {
+  applyMouthExpressions({
+    aa: value,
+    ih: 0,
+    ou: 0,
+    ee: 0,
+    oh: 0,
+  });
+}
+
+function applyMouthExpressions(
+  expressions: Pick<VrmFaceExpressionWeights, 'aa' | 'ih' | 'ou' | 'ee' | 'oh'>,
+): void {
   faceExpressionWeights = {
     ...faceExpressionWeights,
-    aa: value,
+    ...expressions,
   };
-  currentVrm?.expressionManager?.setValue('aa', value);
+  currentVrm?.expressionManager?.setValue('aa', expressions.aa);
+  currentVrm?.expressionManager?.setValue('ih', expressions.ih);
+  currentVrm?.expressionManager?.setValue('ou', expressions.ou);
+  currentVrm?.expressionManager?.setValue('ee', expressions.ee);
+  currentVrm?.expressionManager?.setValue('oh', expressions.oh);
+}
+
+function createNeutralMouthExpressions(): Pick<
+  VrmFaceExpressionWeights,
+  'aa' | 'ih' | 'ou' | 'ee' | 'oh'
+> {
+  return {
+    aa: 0,
+    ih: 0,
+    ou: 0,
+    ee: 0,
+    oh: 0,
+  };
 }
 
 function applyAllFaceExpressions(weights: VrmFaceExpressionWeights): void {
@@ -2083,11 +2138,15 @@ function applyMocapFaceExpressions(weights: VrmFaceExpressionWeights): void {
   }
 
   if (lipSyncMode === 'mocap') {
-    currentVrm?.expressionManager?.setValue('aa', weights.aa);
-    currentVrm?.expressionManager?.setValue('ih', weights.ih);
-    currentVrm?.expressionManager?.setValue('ou', weights.ou);
-    currentVrm?.expressionManager?.setValue('ee', weights.ee);
-    currentVrm?.expressionManager?.setValue('oh', weights.oh);
+    applyMouthExpressions({
+      aa: weights.aa,
+      ih: weights.ih,
+      ou: weights.ou,
+      ee: weights.ee,
+      oh: weights.oh,
+    });
+  } else if (lipSyncMode === 'off') {
+    applyMouthExpressions(createNeutralMouthExpressions());
   }
 
   currentVrm?.expressionManager?.setValue('happy', weights.happy);
