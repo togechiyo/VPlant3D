@@ -193,6 +193,43 @@
 - まだ口だけパクパク戻る場合は、MediaPipe口形状に短時間ピークホールド、またはマイク口パク優先モードを使う
 - まだhead enabledが跳ねる場合は、face/head tracking signalのhold時間をUI化するか、head trackingをbody側状態に統合する
 
+## 2026-05-23 Relay Expression Zero-Drop Guard
+
+### Goal
+
+- OBS側で毎フレーム0が混ざっているように見える問題に対し、Control側のrelay送信直前で短い0ドロップアウトを止める
+
+### Did
+
+- `src/relay/expression-stabilizer.ts` を追加
+- モーキャプ口・まばたきの値が高い状態から急に0近くへ落ちた場合、短時間だけ直前値を保持するstabilizerを実装
+- `createRelayExpressionState()` の最後でstabilizerを通し、OBSへ送る `runtimeState.expressions` に一瞬の0が乗りにくくした
+- blink holdはモーキャプまばたき時のみ120ms
+- mouth holdはモーキャプリップシンク時のみ240ms
+- マイク口パクやOFFモードではholdしない
+- `test/relay-expression-stabilizer.test.ts` を追加
+
+### Worked
+
+- `npm run test` は成功: 21 files / 112 tests
+- `npm run lint` は成功
+- `npm run build` は成功。既存のlarge chunk warningのみ
+- `npm run test:e2e` は成功: 10 tests
+
+### Failed / Blocked
+
+- OBS実機確認はまだ必要
+
+### Decisions
+
+- 0混入の最終防衛線はControl側のrelay送信直前に置く
+- OFF系モードでは意図した0を邪魔しない
+
+### Next
+
+- OBS debug overlayで `mouth aa` が一瞬0へ落ちなくなったか確認する
+- まだ0が混ざるなら、VRMA expression trackの除去またはMediaPipe mouth入力のピークホールドUIを検討する
+
 ## 2026-05-20 Initial Project Setup
 
 ### Goal

@@ -88,6 +88,10 @@ import {
   shouldDiscardRelayRuntimeState,
 } from './relay/runtime-state';
 import {
+  createRelayExpressionStabilizer,
+  stabilizeRelayExpressionState,
+} from './relay/expression-stabilizer';
+import {
   smoothRelayAvatarTransform,
   smoothResolvedLookLights,
 } from './relay/render-smoothing';
@@ -307,6 +311,7 @@ let relayRenderStaticStateSignature = '';
 let relayStaticPublishSignature = '';
 let relayMotionPublishTime = 0;
 let relayRuntimeSequence = 0;
+const relayExpressionStabilizer = createRelayExpressionStabilizer();
 let lastAppliedRelayMotionSequence = 0;
 let lastAppliedRelayMotionSentAt = 0;
 let lastAppliedRelayExpressionSequence = 0;
@@ -1522,7 +1527,7 @@ function createRelayExpressionState(): RelayExpressionState {
             oh: faceExpressionWeights.oh,
           };
 
-  return {
+  const candidate = {
     blinkLeft: roundRelayValue(faceExpressionWeights.blinkLeft, 3),
     blinkRight: roundRelayValue(faceExpressionWeights.blinkRight, 3),
     aa: roundRelayValue(mouthExpressions.aa, 3),
@@ -1533,6 +1538,11 @@ function createRelayExpressionState(): RelayExpressionState {
     happy: roundRelayValue(faceExpressionWeights.happy, 3),
     surprised: roundRelayValue(faceExpressionWeights.surprised, 3),
   };
+
+  return stabilizeRelayExpressionState(candidate, relayExpressionStabilizer, Date.now(), {
+    blinkHoldMs: blinkMode === 'mocap' ? 120 : 0,
+    mouthHoldMs: lipSyncMode === 'mocap' ? 240 : 0,
+  });
 }
 
 function roundRelayHeadPose(pose: HeadRetargetPose): HeadRetargetPose {
