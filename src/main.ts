@@ -76,6 +76,7 @@ import type {
   RelayAssetDescriptor,
   RelayAvatarTransform,
   RelayExpressionState,
+  RelayExpressionSyncState,
   RelayMessage,
   RelayMotionState,
   RelayRenderState,
@@ -300,8 +301,12 @@ let relayRenderStaticStateSignature = '';
 let relayStaticPublishSignature = '';
 let relayMotionPublishTime = 0;
 let relayMotionSequence = 0;
+let relayExpressionPublishTime = 0;
+let relayExpressionSequence = 0;
 let lastAppliedRelayMotionSequence = 0;
 let lastAppliedRelayMotionSentAt = 0;
+let lastAppliedRelayExpressionSequence = 0;
+let lastAppliedRelayExpressionSentAt = 0;
 let relayPreviousMotionFrame: RelayMotionFrame | null = null;
 let relayCurrentMotionFrame: RelayMotionFrame | null = null;
 let loadingRelayVrmAssetId: string | null = null;
@@ -1093,6 +1098,9 @@ function handleRelayMessage(message: RelayMessage): void {
     case 'motionState':
       applyRelayMotionState(message.state);
       break;
+    case 'expressionState':
+      applyRelayExpressionState(message.state);
+      break;
     case 'vrmaCommand':
       applyRelayVrmaCommand(message.command, message.selectedIndex, message.loop);
       break;
@@ -1175,6 +1183,11 @@ function applyRelayRenderState(nextState: RelayRenderState): void {
     expressions: nextState.expressions,
     pose: nextState.pose,
   });
+  applyRelayExpressionState({
+    sequence: lastAppliedRelayExpressionSequence + 1,
+    sentAt: Date.now(),
+    expressions: nextState.expressions,
+  });
 }
 
 function applyRelayStaticState(nextState: RelayStaticState): void {
@@ -1208,7 +1221,6 @@ function applyRelayMotionState(nextState: RelayMotionState): void {
   relayMotionActive = true;
   lastAppliedRelayMotionSequence = nextState.sequence;
   lastAppliedRelayMotionSentAt = nextState.sentAt;
-  relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
   relayPreviousMotionFrame = relayCurrentMotionFrame;
   relayCurrentMotionFrame = {
     receivedAt: performance.now(),
@@ -1218,6 +1230,18 @@ function applyRelayMotionState(nextState: RelayMotionState): void {
   if (!relayPreviousMotionFrame) {
     applySampledRelayMotionState(nextState);
   }
+}
+
+function applyRelayExpressionState(nextState: RelayExpressionSyncState): void {
+  if (shouldDiscardRelayExpressionState(nextState)) {
+    return;
+  }
+
+  lastAppliedRelayExpressionSequence = nextState.sequence;
+  lastAppliedRelayExpressionSentAt = nextState.sentAt;
+  relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
+  faceExpressionWeights = relayExpressionTarget;
+  applyRelayExpressions(faceExpressionWeights);
 }
 
 function shouldDiscardRelayMotionState(nextState: RelayMotionState): boolean {
@@ -1230,6 +1254,19 @@ function shouldDiscardRelayMotionState(nextState: RelayMotionState): boolean {
   return (
     nextState.sequence <= lastAppliedRelayMotionSequence &&
     nextState.sentAt <= lastAppliedRelayMotionSentAt
+  );
+}
+
+function shouldDiscardRelayExpressionState(nextState: RelayExpressionSyncState): boolean {
+  const staleAgeMs = Date.now() - nextState.sentAt;
+
+  if (staleAgeMs > 250) {
+    return true;
+  }
+
+  return (
+    nextState.sequence <= lastAppliedRelayExpressionSequence &&
+    nextState.sentAt <= lastAppliedRelayExpressionSentAt
   );
 }
 
@@ -1346,6 +1383,14 @@ function publishRelayState(frameTime: number): void {
     });
   }
 
+  if (frameTime - relayExpressionPublishTime >= 16 && relayClient.bufferedAmount <= 262_144) {
+    relayExpressionPublishTime = frameTime;
+    relayClient.send({
+      type: 'expressionState',
+      state: createRelayExpressionSyncState(),
+    });
+  }
+
   if (frameTime - relayMotionPublishTime < 33 || relayClient.bufferedAmount > 262_144) {
     return;
   }
@@ -1380,6 +1425,14 @@ function createRelayMotionState(nextState: AppState): RelayMotionState {
       upperBody: roundRelayUpperBodyPose(upperBodyRetargetPose),
       hands: nextState.handTrackingEnabled ? roundRelayHandPose(handRetargetPose) : undefined,
     },
+  };
+}
+
+function createRelayExpressionSyncState(): RelayExpressionSyncState {
+  return {
+    sequence: ++relayExpressionSequence,
+    sentAt: Date.now(),
+    expressions: createRelayExpressionState(),
   };
 }
 

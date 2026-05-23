@@ -96,6 +96,12 @@ export interface RelayMotionState {
   pose: RelayPoseState;
 }
 
+export interface RelayExpressionSyncState {
+  sequence: number;
+  sentAt: number;
+  expressions: RelayExpressionState;
+}
+
 export type RelayMessage =
   | {
       type: 'hello';
@@ -121,6 +127,10 @@ export type RelayMessage =
   | {
       type: 'motionState';
       state: RelayMotionState;
+    }
+  | {
+      type: 'expressionState';
+      state: RelayExpressionSyncState;
     }
   | {
       type: 'vrmaCommand';

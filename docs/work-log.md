@@ -2483,3 +2483,22 @@
 
 - OBS実機でウインク/閉眼/開口が古い通常表情フレームへ戻らないか確認する
 - まだ戻る場合は、expressionStateをmotionStateから分離し、表情だけ最新値coalesce専用channelへ移す
+
+## 2026-05-23 OBS Render Relay Expression Split
+
+### Goal
+
+- OBS側だけ表情が標準へ戻る/追従が悪い問題に対して、OBS Render側のRelay処理を整理する
+
+### Did
+
+- 表情同期を `motionState` から分離し、新しい `expressionState` messageを追加した
+- Control側は表情を約60fpsで `expressionState` として送るようにした
+- OBS Render側は `expressionState` を受けたらpose補間を待たず即適用するようにした
+- OBS Render側は古い/逆順の `expressionState` を破棄するようにした
+- `motionState` は引き続きpose同期用として残し、表情は最新値専用channelを優先する形に整理した
+
+### Next
+
+- OBS実機で閉眼/ウインク/開口の保持と追従が改善したか確認する
+- まだ戻る場合は、VRM/VRMAのexpression上書き順を調べるため、OBS Render側にdebug overlayで受信expression値と実適用値を表示する
