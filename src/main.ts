@@ -1263,13 +1263,13 @@ function applyRelayRuntimeState(nextState: RelayRuntimeState): void {
     relayRenderExpressionStabilizer,
     now,
     {
-      blinkHoldMs: 180,
-      mouthHoldMs: 180,
+      blinkHoldMs: 800,
+      mouthHoldMs: 800,
     },
   );
   const stablePose = stabilizeRelayPoseState(nextState.pose, relayRenderPoseStabilizer, now, {
-    headHoldMs: 180,
-    upperBodyHoldMs: 180,
+    headHoldMs: 800,
+    upperBodyHoldMs: 800,
   });
 
   relayRuntimeModeActive = true;

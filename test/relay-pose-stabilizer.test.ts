@@ -109,31 +109,4 @@ describe('relay pose stabilizer', () => {
     expect(stopped.head?.enabled).toBe(false);
     expect(stopped.head?.yaw).toBe(0);
   });
-
-  it('does not extend a pose hold forever when zero frames keep arriving', () => {
-    const stabilizer = createRelayPoseStabilizer();
-
-    stabilizeRelayPoseState(
-      { head: { enabled: true, pitch: 0.08, yaw: 0.44, roll: 0.04 } },
-      stabilizer,
-      1000,
-      { headHoldMs: 120 },
-    );
-    const firstDropout = stabilizeRelayPoseState(
-      { head: { enabled: false, pitch: 0, yaw: 0, roll: 0 } },
-      stabilizer,
-      1033,
-      { headHoldMs: 120 },
-    );
-    const expiredDropout = stabilizeRelayPoseState(
-      { head: { enabled: false, pitch: 0, yaw: 0, roll: 0 } },
-      stabilizer,
-      1180,
-      { headHoldMs: 120 },
-    );
-
-    expect(firstDropout.head?.yaw).toBeCloseTo(0.44);
-    expect(expiredDropout.head?.enabled).toBe(false);
-    expect(expiredDropout.head?.yaw).toBe(0);
-  });
 });

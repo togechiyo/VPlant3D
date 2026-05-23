@@ -2,7 +2,6 @@ import type { RelayPoseState } from './messages';
 
 export interface RelayPoseStabilizer {
   previous: RelayPoseState;
-  previousRaw: RelayPoseState;
   holdUntil: {
     head: number;
     upperBody: number;
@@ -20,7 +19,6 @@ export interface RelayPoseStabilizerOptions {
 export function createRelayPoseStabilizer(): RelayPoseStabilizer {
   return {
     previous: {},
-    previousRaw: {},
     holdUntil: {
       head: 0,
       upperBody: 0,
@@ -42,7 +40,6 @@ export function stabilizeRelayPoseState(
   next.head = stabilizePart(
     candidate.head,
     stabilizer.previous.head,
-    stabilizer.previousRaw.head,
     stabilizer.holdUntil.head,
     now,
     options.headHoldMs ?? 0,
@@ -58,7 +55,6 @@ export function stabilizeRelayPoseState(
   next.upperBody = stabilizePart(
     candidate.upperBody,
     stabilizer.previous.upperBody,
-    stabilizer.previousRaw.upperBody,
     stabilizer.holdUntil.upperBody,
     now,
     options.upperBodyHoldMs ?? 0,
@@ -72,14 +68,12 @@ export function stabilizeRelayPoseState(
   );
 
   stabilizer.previous = next;
-  stabilizer.previousRaw = candidate;
   return next;
 }
 
 function stabilizePart<T>(
   candidate: T | undefined,
   previous: T | undefined,
-  previousRaw: T | undefined,
   holdUntil: number,
   now: number,
   holdMs: number,
@@ -95,7 +89,6 @@ function stabilizePart<T>(
   }
 
   const previousMagnitude = getMagnitude(previous);
-  const previousRawMagnitude = previousRaw ? getMagnitude(previousRaw) : previousMagnitude;
   const candidateMagnitude = getMagnitude(candidate);
 
   if (candidateMagnitude >= previousMagnitude) {
@@ -104,10 +97,10 @@ function stabilizePart<T>(
   }
 
   const isSharpDrop =
-    previousRawMagnitude >= activationThreshold &&
+    previousMagnitude >= activationThreshold &&
     candidateMagnitude <= Math.max(zeroThreshold, previousMagnitude * sharpDropRatio);
 
-  const nextHoldUntil = isSharpDrop && holdUntil <= now ? now + holdMs : holdUntil;
+  const nextHoldUntil = isSharpDrop ? Math.max(holdUntil, now + holdMs) : holdUntil;
   setHoldUntil(nextHoldUntil);
 
   return nextHoldUntil > now ? previous : candidate;

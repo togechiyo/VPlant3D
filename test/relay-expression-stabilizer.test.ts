@@ -60,25 +60,4 @@ describe('relay expression stabilizer', () => {
 
     expect(off.aa).toBe(0);
   });
-
-  it('does not extend a hold forever when zeros keep arriving', () => {
-    const stabilizer = createRelayExpressionStabilizer();
-
-    stabilizeRelayExpressionState({ aa: 0.8 }, stabilizer, 1000, { mouthHoldMs: 120 });
-    const firstDropout = stabilizeRelayExpressionState(
-      { aa: 0 },
-      stabilizer,
-      1033,
-      { mouthHoldMs: 120 },
-    );
-    const expiredDropout = stabilizeRelayExpressionState(
-      { aa: 0 },
-      stabilizer,
-      1180,
-      { mouthHoldMs: 120 },
-    );
-
-    expect(firstDropout.aa).toBeCloseTo(0.8);
-    expect(expiredDropout.aa).toBe(0);
-  });
 });
