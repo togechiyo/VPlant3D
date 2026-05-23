@@ -2409,3 +2409,19 @@
 
 - OBS実機で閉眼キープ、開口キープ、閉眼＋開口の同時入力が維持されるか確認する
 - まだ片方が消える場合は、VRM側のexpression override設定や表情preset同士の競合を調べる
+
+## 2026-05-23 OBS Mocap Expression Hold Fix
+
+### Goal
+
+- OBS側だけ、閉眼/ウインク/開口が標準表情へ戻ろうとする問題を抑える
+
+### Did
+
+- Control側ですでに平滑化した表情値を送っているため、OBS Render側では追加の `smoothFaceExpressionWeights` をかけず、受信した表情値をそのまま適用するようにした
+- MediaPipeの `faceBlendshapes` が一瞬空になったフレームでは、表情をneutralへ戻さず前回値を保持するようにした
+
+### Next
+
+- OBS実機でウインク保持、閉眼保持、開口保持ができるか確認する
+- まだ戻る場合は、VRM expression override / blink表情と他表情の競合、またはRelay送信値のログ表示を追加して調べる

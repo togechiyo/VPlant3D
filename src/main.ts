@@ -1269,7 +1269,6 @@ function updateRelayRenderMotion(delta: number): void {
   const handSmoothing = hasHandTarget(relayHandTarget)
     ? activeMotionSmoothing
     : releaseMotionSmoothing;
-  const expressionSmoothing = getFrameSmoothing(delta, 55);
   headRetargetPose = smoothHeadRetargetPose(headRetargetPose, relayHeadTarget, headSmoothing);
   upperBodyRetargetPose = smoothUpperBodyRetargetPose(
     upperBodyRetargetPose,
@@ -1277,11 +1276,7 @@ function updateRelayRenderMotion(delta: number): void {
     upperBodySmoothing,
   );
   handRetargetPose = smoothHandRetargetPose(handRetargetPose, relayHandTarget, handSmoothing);
-  faceExpressionWeights = smoothFaceExpressionWeights(
-    faceExpressionWeights,
-    relayExpressionTarget,
-    expressionSmoothing,
-  );
+  faceExpressionWeights = relayExpressionTarget;
   applyHeadRetarget();
   applyRelayExpressions(faceExpressionWeights);
 }
@@ -2479,13 +2474,17 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
 
   const result = faceTracker.detect(videoFrame, frameTime);
   const categories = result.faceBlendshapes[0]?.categories ?? [];
-  const nextWeights = createVrmFaceExpressionWeights(categories, {
-    mirrorInput: appStore.getState().poseMirrorInput,
-  });
   const nextHeadPose = createHeadRetargetPose(result.facialTransformationMatrixes[0], {
     mirrorInput: appStore.getState().poseMirrorInput,
   });
-  faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights);
+
+  if (categories.length > 0) {
+    const nextWeights = createVrmFaceExpressionWeights(categories, {
+      mirrorInput: appStore.getState().poseMirrorInput,
+    });
+    faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights);
+  }
+
   headRetargetPose = smoothHeadRetargetPose(headRetargetPose, nextHeadPose);
   applyMocapFaceExpressions(faceExpressionWeights);
   applyHeadRetarget();
