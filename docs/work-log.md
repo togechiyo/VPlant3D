@@ -2747,3 +2747,32 @@
 
 - OBS実機で `?debug=1` の `runtime #` と `motion #` / `expression #` を確認する。runtime受信後にmotion/expressionが進まない、かつhead/mouth/blinkが0へ戻らないのが期待値
 - まだ0へ戻る場合は、OBS側debug overlayへ「受信直後のruntime値」と「VRMへ適用した直後の値」を別表示し、VRM update/VRMA mixer/expressionManagerのどこで戻っているかをさらに分離する
+
+## 2026-05-23 OBS Runtime Raw/Target Stabilization
+
+### Goal
+
+- OBS Render側で「有効値が入っていないフレームが0として扱われる」挙動を抑える
+
+### Findings
+
+- 送信前ガードだけでは、OBS Render側に届いたruntimeStateの0-ishフレームを十分に吸収できていない可能性が高い
+- Control側では問題が見えないため、OBS Renderの受信直後raw値と実際に使うtarget値を分けて観察する必要がある
+
+### Did
+
+- OBS Render側にも表情/pose stabilizerを追加した
+- `runtimeState` のraw値を `relayRaw*` として保持し、安定化後のtarget値とは別にdebug overlayへ表示するようにした
+- rawが0へ落ちてもtarget側は短時間保持するため、欠測フレームがそのままVRMへ適用されにくくした
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- OBS実機で `?debug=1` を確認する。rawだけ0に落ちてtargetが保持されれば欠測0の仮説が当たり
+- rawもtargetも正常なのにappliedだけ戻る場合は、`currentVrm.update()` / VRMA mixer / expressionManager内部適用順を次に分離する
