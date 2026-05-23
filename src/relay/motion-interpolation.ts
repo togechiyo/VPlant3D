@@ -8,7 +8,7 @@ import type { HeadRetargetPose } from '../mocap/head-retarget';
 import type { UpperBodyRetargetPose } from '../mocap/upper-body-retarget';
 import type { RelayExpressionState, RelayMotionState } from './messages';
 
-export const defaultRelayMotionInterpolationDelayMs = 80;
+export const defaultRelayMotionInterpolationDelayMs = 35;
 
 export interface RelayMotionFrame {
   receivedAt: number;

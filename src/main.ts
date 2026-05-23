@@ -1198,6 +1198,7 @@ function applyRelayStaticState(nextState: RelayStaticState): void {
 
 function applyRelayMotionState(nextState: RelayMotionState): void {
   relayMotionActive = true;
+  relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
   relayPreviousMotionFrame = relayCurrentMotionFrame;
   relayCurrentMotionFrame = {
     receivedAt: performance.now(),
@@ -1213,7 +1214,6 @@ function applySampledRelayMotionState(nextState: RelayMotionState): void {
   relayHeadTarget = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
   relayUpperBodyTarget = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
   relayHandTarget = nextState.pose.hands ?? createNeutralHandRetargetPose();
-  relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
 }
 
 function createRelayStaticStateSignature(state: RelayStaticState): string {
@@ -1260,7 +1260,7 @@ function updateRelayRenderMotion(delta: number): void {
     applySampledRelayMotionState(sampledMotionState);
   }
 
-  const activeMotionSmoothing = getFrameSmoothing(delta, 32);
+  const activeMotionSmoothing = getFrameSmoothing(delta, 36);
   const releaseMotionSmoothing = getFrameSmoothing(delta, 1.8);
   const headSmoothing = relayHeadTarget.enabled ? activeMotionSmoothing : releaseMotionSmoothing;
   const upperBodySmoothing = relayUpperBodyTarget.enabled
@@ -1269,7 +1269,7 @@ function updateRelayRenderMotion(delta: number): void {
   const handSmoothing = hasHandTarget(relayHandTarget)
     ? activeMotionSmoothing
     : releaseMotionSmoothing;
-  const expressionSmoothing = getFrameSmoothing(delta, 48);
+  const expressionSmoothing = getFrameSmoothing(delta, 90);
   headRetargetPose = smoothHeadRetargetPose(headRetargetPose, relayHeadTarget, headSmoothing);
   upperBodyRetargetPose = smoothUpperBodyRetargetPose(
     upperBodyRetargetPose,
@@ -1328,7 +1328,7 @@ function publishRelayState(frameTime: number): void {
     });
   }
 
-  if (frameTime - relayMotionPublishTime < 66 || relayClient.bufferedAmount > 262_144) {
+  if (frameTime - relayMotionPublishTime < 33 || relayClient.bufferedAmount > 262_144) {
     return;
   }
 

@@ -2304,3 +2304,21 @@
 
 - OBS実機で15fps送信＋補間の硬さ、遅延感、ピクつきの有無を確認する
 - まだ硬い場合は、補間遅延を `100ms` 前後へ増やす、またはhead/body/hand別に補間・追従速度を分ける
+
+## 2026-05-23 30fps Relay Motion Rebalance
+
+### Goal
+
+- 15fps送信＋80ms補間で残ったカクつきと、まばたき/口パクの追従遅れを改善する
+
+### Did
+
+- motionState送信間隔を `33ms` に戻し、30fps相当にした
+- Render側のpose補間遅延を `80ms` から `35ms` へ短くした
+- expressionは補間バッファを通さず、最新受信値をすぐtargetへ反映するようにした
+- expression smoothing speedを上げ、まばたき/口パクの戻りと追従を速くした
+
+### Next
+
+- OBS実機で30fps送信時のカクつき、表情の追従性、通信負荷を確認する
+- まだ硬い場合はposeだけ30fps送信、expressionは毎フレーム近く送るなどchannel分離を検討する
