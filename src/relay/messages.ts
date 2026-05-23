@@ -91,6 +91,7 @@ export interface RelayStaticState {
 
 export interface RelayMotionState {
   sequence: number;
+  sentAt: number;
   expressions: RelayExpressionState;
   pose: RelayPoseState;
 }

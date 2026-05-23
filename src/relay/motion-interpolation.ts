@@ -1,12 +1,10 @@
-import { createNeutralFaceExpressionWeights } from '../mocap/face-expression-retarget';
 import { createNeutralHandRetargetPose } from '../mocap/hand-landmarks';
 import { createNeutralHeadRetargetPose } from '../mocap/head-retarget';
 import { createNeutralRetargetPose } from '../mocap/upper-body-retarget';
-import type { VrmFaceExpressionWeights } from '../mocap/face-expression-retarget';
 import type { HandRetargetPose, HandRetargetTarget } from '../mocap/hand-landmarks';
 import type { HeadRetargetPose } from '../mocap/head-retarget';
 import type { UpperBodyRetargetPose } from '../mocap/upper-body-retarget';
-import type { RelayExpressionState, RelayMotionState } from './messages';
+import type { RelayMotionState } from './messages';
 
 export const defaultRelayMotionInterpolationDelayMs = 35;
 
@@ -54,7 +52,8 @@ export function interpolateRelayMotionState(
   const nextAmount = clamp01(amount);
   return {
     sequence: current.sequence,
-    expressions: interpolateRelayExpressions(previous.expressions, current.expressions, nextAmount),
+    sentAt: current.sentAt,
+    expressions: current.expressions,
     pose: {
       head: interpolateHeadPose(
         previous.pose.head ?? createNeutralHeadRetargetPose(false),
@@ -72,29 +71,6 @@ export function interpolateRelayMotionState(
         nextAmount,
       ),
     },
-  };
-}
-
-function interpolateRelayExpressions(
-  previous: RelayExpressionState,
-  current: RelayExpressionState,
-  amount: number,
-): VrmFaceExpressionWeights {
-  const neutral = createNeutralFaceExpressionWeights();
-  return {
-    blinkLeft: lerp(previous.blinkLeft ?? neutral.blinkLeft, current.blinkLeft ?? neutral.blinkLeft, amount),
-    blinkRight: lerp(previous.blinkRight ?? neutral.blinkRight, current.blinkRight ?? neutral.blinkRight, amount),
-    aa: lerp(previous.aa ?? neutral.aa, current.aa ?? neutral.aa, amount),
-    ih: lerp(previous.ih ?? neutral.ih, current.ih ?? neutral.ih, amount),
-    ou: lerp(previous.ou ?? neutral.ou, current.ou ?? neutral.ou, amount),
-    ee: lerp(previous.ee ?? neutral.ee, current.ee ?? neutral.ee, amount),
-    oh: lerp(previous.oh ?? neutral.oh, current.oh ?? neutral.oh, amount),
-    happy: lerp(previous.happy ?? neutral.happy, current.happy ?? neutral.happy, amount),
-    surprised: lerp(
-      previous.surprised ?? neutral.surprised,
-      current.surprised ?? neutral.surprised,
-      amount,
-    ),
   };
 }
 

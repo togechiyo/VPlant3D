@@ -2459,3 +2459,27 @@
 
 - OBS実機で `口=オフ` の時に `aa/ih/ou/ee/oh` が動かないか確認する
 - まだ動く場合はVRM expression presetやVRMA側の口表情上書きを確認する
+
+## 2026-05-23 Relay Motion Freshness Investigation / Fix
+
+### Goal
+
+- Control側では表情が綺麗だが、OBS側だけ標準表情へ戻る/追従が悪い原因を通信方式込みで潰す
+
+### Findings
+
+- WebSocket relayは `motionState` を受けるたび全クライアントへ順序配送していた
+- OBS側が一瞬詰まると、古い表情フレームも順番に再生され、ウインク/閉眼/開口が通常表情へ戻るように見える可能性が高い
+- Render側のpose補間関数はexpressionも補間していたが、表情はリアルタイム用途なので補間より最新値優先がよい
+
+### Did
+
+- `RelayMotionState` に `sentAt` を追加した
+- OBS Render側で古すぎるmotionStateと逆順/重複sequenceを破棄するようにした
+- Render側のmotion補間ではexpressionを補間せず、最新stateのexpressionを保持するようにした
+- relay serverでmotionState送信先のbufferが詰まっている場合、その古いmotionStateを送らず次の最新motionを待つようにした
+
+### Next
+
+- OBS実機でウインク/閉眼/開口が古い通常表情フレームへ戻らないか確認する
+- まだ戻る場合は、expressionStateをmotionStateから分離し、表情だけ最新値coalesce専用channelへ移す

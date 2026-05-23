@@ -7,6 +7,7 @@ const host = '127.0.0.1';
 const port = Number.parseInt(process.env.PORT ?? '5173', 10);
 const maxAssetBytes = 256 * 1024 * 1024;
 const assets = new Map();
+const motionBufferedBytesThreshold = 128 * 1024;
 let latestVrmAssetMessage = null;
 let latestVrmaSlotsMessage = null;
 let latestStateMessage = null;
@@ -62,9 +63,14 @@ webSocketServer.on('connection', (webSocket) => {
   webSocket.on('message', (data) => {
     const message = data.toString();
     rememberLatestMessage(message);
+    const isMotionState = message.includes('"type":"motionState"');
 
     for (const client of webSocketServer.clients) {
       if (client !== webSocket && client.readyState === 1) {
+        if (isMotionState && client.bufferedAmount > motionBufferedBytesThreshold) {
+          continue;
+        }
+
         client.send(message);
       }
     }

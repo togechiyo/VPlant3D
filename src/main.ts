@@ -300,6 +300,8 @@ let relayRenderStaticStateSignature = '';
 let relayStaticPublishSignature = '';
 let relayMotionPublishTime = 0;
 let relayMotionSequence = 0;
+let lastAppliedRelayMotionSequence = 0;
+let lastAppliedRelayMotionSentAt = 0;
 let relayPreviousMotionFrame: RelayMotionFrame | null = null;
 let relayCurrentMotionFrame: RelayMotionFrame | null = null;
 let loadingRelayVrmAssetId: string | null = null;
@@ -1168,7 +1170,8 @@ function applyRelayRenderState(nextState: RelayRenderState): void {
     vrmaLoop: nextState.vrmaLoop,
   });
   applyRelayMotionState({
-    sequence: 0,
+    sequence: lastAppliedRelayMotionSequence + 1,
+    sentAt: Date.now(),
     expressions: nextState.expressions,
     pose: nextState.pose,
   });
@@ -1198,7 +1201,13 @@ function applyRelayStaticState(nextState: RelayStaticState): void {
 }
 
 function applyRelayMotionState(nextState: RelayMotionState): void {
+  if (shouldDiscardRelayMotionState(nextState)) {
+    return;
+  }
+
   relayMotionActive = true;
+  lastAppliedRelayMotionSequence = nextState.sequence;
+  lastAppliedRelayMotionSentAt = nextState.sentAt;
   relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
   relayPreviousMotionFrame = relayCurrentMotionFrame;
   relayCurrentMotionFrame = {
@@ -1209,6 +1218,19 @@ function applyRelayMotionState(nextState: RelayMotionState): void {
   if (!relayPreviousMotionFrame) {
     applySampledRelayMotionState(nextState);
   }
+}
+
+function shouldDiscardRelayMotionState(nextState: RelayMotionState): boolean {
+  const staleAgeMs = Date.now() - nextState.sentAt;
+
+  if (staleAgeMs > 250) {
+    return true;
+  }
+
+  return (
+    nextState.sequence <= lastAppliedRelayMotionSequence &&
+    nextState.sentAt <= lastAppliedRelayMotionSentAt
+  );
 }
 
 function applySampledRelayMotionState(nextState: RelayMotionState): void {
@@ -1351,6 +1373,7 @@ function createRelayStaticState(nextState: AppState): RelayStaticState {
 function createRelayMotionState(nextState: AppState): RelayMotionState {
   return {
     sequence: ++relayMotionSequence,
+    sentAt: Date.now(),
     expressions: createRelayExpressionState(),
     pose: {
       head: roundRelayHeadPose(headRetargetPose),

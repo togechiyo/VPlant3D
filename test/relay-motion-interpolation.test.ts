@@ -17,7 +17,7 @@ describe('relay motion interpolation', () => {
     expect(sampled?.sequence).toBe(2);
     expect(sampled?.pose.head?.yaw).toBeCloseTo(0.5);
     expect(sampled?.pose.upperBody?.chestRoll).toBeCloseTo(0.25);
-    expect(sampled?.expressions.aa).toBeCloseTo(0.4);
+    expect(sampled?.expressions.aa).toBeCloseTo(0.8);
   });
 
   it('falls back to current motion when only one frame exists', () => {
@@ -96,6 +96,7 @@ function createMotionState(
 ): RelayMotionState {
   return {
     sequence,
+    sentAt: 1000 + sequence,
     expressions: {
       aa: mouthOpen,
       blinkLeft: headYaw,
