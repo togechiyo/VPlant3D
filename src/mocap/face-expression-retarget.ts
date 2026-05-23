@@ -82,11 +82,11 @@ export function smoothFaceExpressionWeights(
   return {
     blinkLeft: smoothExpressionWeight(previous.blinkLeft, next.blinkLeft, amount, 0.035, 0.03),
     blinkRight: smoothExpressionWeight(previous.blinkRight, next.blinkRight, amount, 0.035, 0.03),
-    aa: smoothExpressionWeight(previous.aa, next.aa, amount, 0.025, 0.035),
-    ih: smoothExpressionWeight(previous.ih, next.ih, amount, 0.025, 0.035),
-    ou: smoothExpressionWeight(previous.ou, next.ou, amount, 0.025, 0.035),
-    ee: smoothExpressionWeight(previous.ee, next.ee, amount, 0.02, 0.03),
-    oh: smoothExpressionWeight(previous.oh, next.oh, amount, 0.025, 0.035),
+    aa: smoothMouthExpressionWeight(previous.aa, next.aa, amount),
+    ih: smoothMouthExpressionWeight(previous.ih, next.ih, amount),
+    ou: smoothMouthExpressionWeight(previous.ou, next.ou, amount),
+    ee: smoothMouthExpressionWeight(previous.ee, next.ee, amount, 0.02, 0.03),
+    oh: smoothMouthExpressionWeight(previous.oh, next.oh, amount),
     happy: smoothExpressionWeight(previous.happy, next.happy, amount, 0.018, 0.02),
     surprised: smoothExpressionWeight(previous.surprised, next.surprised, amount, 0.018, 0.02),
   };
@@ -156,6 +156,25 @@ function smoothExpressionWeight(
   }
 
   return lerp(previous, next, amount);
+}
+
+function smoothMouthExpressionWeight(
+  previous: number,
+  next: number,
+  amount: number,
+  deadband = 0.025,
+  zeroSnapThreshold = 0.035,
+): number {
+  if (previous < zeroSnapThreshold && next < zeroSnapThreshold) {
+    return 0;
+  }
+
+  if (Math.abs(next - previous) < deadband) {
+    return previous;
+  }
+
+  const nextAmount = next < previous ? amount * 0.28 : amount;
+  return lerp(previous, next, nextAmount);
 }
 
 function lerp(previous: number, next: number, amount: number): number {

@@ -125,6 +125,35 @@ describe('smoothFaceExpressionWeights', () => {
     expect(smoothed.aa).toBe(previous.aa);
     expect(smoothed.happy).toBe(0);
   });
+
+  it('keeps an open mocap mouth from snapping shut on a brief zero frame', () => {
+    const previous = {
+      ...createNeutralFaceExpressionWeights(),
+      aa: 0.6,
+      ou: 0.3,
+    };
+    const smoothed = smoothFaceExpressionWeights(
+      previous,
+      createNeutralFaceExpressionWeights(),
+      0.8,
+    );
+
+    expect(smoothed.aa).toBeCloseTo(0.4656);
+    expect(smoothed.ou).toBeCloseTo(0.2328);
+  });
+
+  it('still opens the mocap mouth quickly', () => {
+    const smoothed = smoothFaceExpressionWeights(
+      createNeutralFaceExpressionWeights(),
+      {
+        ...createNeutralFaceExpressionWeights(),
+        aa: 0.6,
+      },
+      0.8,
+    );
+
+    expect(smoothed.aa).toBeCloseTo(0.48);
+  });
 });
 
 function category(categoryName: string, score: number): Category {
