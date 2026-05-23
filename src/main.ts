@@ -301,9 +301,6 @@ let relayHeadTarget: HeadRetargetPose = createNeutralHeadRetargetPose(false);
 let relayUpperBodyTarget: UpperBodyRetargetPose = createNeutralRetargetPose(false);
 let relayHandTarget: HandRetargetPose = createNeutralHandRetargetPose();
 let relayExpressionTarget: VrmFaceExpressionWeights = createNeutralFaceExpressionWeights();
-let relayRawHeadTarget: HeadRetargetPose = createNeutralHeadRetargetPose(false);
-let relayRawUpperBodyTarget: UpperBodyRetargetPose = createNeutralRetargetPose(false);
-let relayRawExpressionTarget: VrmFaceExpressionWeights = createNeutralFaceExpressionWeights();
 let relayAvatarTransformCurrent: RelayAvatarTransform = {
   offsetX: 0,
   offsetY: 0,
@@ -321,8 +318,6 @@ let relayMotionPublishTime = 0;
 let relayRuntimeSequence = 0;
 const relayExpressionStabilizer = createRelayExpressionStabilizer();
 const relayPoseStabilizer = createRelayPoseStabilizer();
-const relayRenderExpressionStabilizer = createRelayExpressionStabilizer();
-const relayRenderPoseStabilizer = createRelayPoseStabilizer();
 let lastAppliedRelayMotionSequence = 0;
 let lastAppliedRelayMotionSentAt = 0;
 let lastAppliedRelayExpressionSequence = 0;
@@ -1257,31 +1252,13 @@ function applyRelayRuntimeState(nextState: RelayRuntimeState): void {
     return;
   }
 
-  const now = Date.now();
-  const stableExpressions = stabilizeRelayExpressionState(
-    nextState.expressions,
-    relayRenderExpressionStabilizer,
-    now,
-    {
-      blinkHoldMs: 800,
-      mouthHoldMs: 800,
-    },
-  );
-  const stablePose = stabilizeRelayPoseState(nextState.pose, relayRenderPoseStabilizer, now, {
-    headHoldMs: 800,
-    upperBodyHoldMs: 800,
-  });
-
   relayRuntimeModeActive = true;
-  relayRawExpressionTarget = createRelayExpressionTarget(nextState.expressions);
-  relayRawHeadTarget = nextState.pose.head ?? createNeutralHeadRetargetPose(false);
-  relayRawUpperBodyTarget = nextState.pose.upperBody ?? createNeutralRetargetPose(false);
-  relayExpressionTarget = createRelayExpressionTarget(stableExpressions);
+  relayExpressionTarget = createRelayExpressionTarget(nextState.expressions);
   faceExpressionWeights = relayExpressionTarget;
   relayMotionActive = true;
-  relayHeadTarget = stablePose.head ?? relayHeadTarget;
-  relayUpperBodyTarget = stablePose.upperBody ?? relayUpperBodyTarget;
-  relayHandTarget = stablePose.hands ?? createNeutralHandRetargetPose();
+  relayHeadTarget = nextState.pose.head ?? relayHeadTarget;
+  relayUpperBodyTarget = nextState.pose.upperBody ?? relayUpperBodyTarget;
+  relayHandTarget = nextState.pose.hands ?? createNeutralHandRetargetPose();
   relayPreviousMotionFrame = null;
   relayCurrentMotionFrame = null;
   lastAppliedRelayRuntimeSequence = nextState.sequence;
@@ -1483,15 +1460,12 @@ function updateRelayDebugOverlay(): void {
     `motion #${lastAppliedRelayMotionSequence} age ${motionAge}ms`,
     `expression #${lastAppliedRelayExpressionSequence} age ${expressionAge}ms`,
     `dropped runtime/motion/expression ${relayDroppedStaleRuntimeFrames}/${relayDroppedStaleMotionFrames}/${relayDroppedStaleExpressionFrames} total ${droppedFrames}`,
-    `raw blink/aa ${formatRelayDebugValue(relayRawExpressionTarget.blinkLeft)} / ${formatRelayDebugValue(relayRawExpressionTarget.aa)}`,
-    `target blink L/R ${formatRelayDebugValue(relayExpressionTarget.blinkLeft)} / ${formatRelayDebugValue(relayExpressionTarget.blinkRight)}`,
-    `target mouth aa/ih/ou/ee/oh ${formatRelayDebugValue(relayExpressionTarget.aa)} / ${formatRelayDebugValue(relayExpressionTarget.ih)} / ${formatRelayDebugValue(relayExpressionTarget.ou)} / ${formatRelayDebugValue(relayExpressionTarget.ee)} / ${formatRelayDebugValue(relayExpressionTarget.oh)}`,
+    `blink L/R ${formatRelayDebugValue(relayExpressionTarget.blinkLeft)} / ${formatRelayDebugValue(relayExpressionTarget.blinkRight)}`,
+    `mouth aa/ih/ou/ee/oh ${formatRelayDebugValue(relayExpressionTarget.aa)} / ${formatRelayDebugValue(relayExpressionTarget.ih)} / ${formatRelayDebugValue(relayExpressionTarget.ou)} / ${formatRelayDebugValue(relayExpressionTarget.ee)} / ${formatRelayDebugValue(relayExpressionTarget.oh)}`,
     `applied blink/aa ${formatRelayDebugValue(expressionManager?.getValue('blinkLeft') ?? undefined)} / ${formatRelayDebugValue(expressionManager?.getValue('aa') ?? undefined)}`,
     `emotion happy/surprised ${formatRelayDebugValue(relayExpressionTarget.happy)} / ${formatRelayDebugValue(relayExpressionTarget.surprised)}`,
-    `raw head yaw/pitch/roll ${formatRelayDebugValue(relayRawHeadTarget.yaw)} / ${formatRelayDebugValue(relayRawHeadTarget.pitch)} / ${formatRelayDebugValue(relayRawHeadTarget.roll)} enabled ${relayRawHeadTarget.enabled ? 'yes' : 'no'}`,
-    `target head yaw/pitch/roll ${formatRelayDebugValue(relayHeadTarget.yaw)} / ${formatRelayDebugValue(relayHeadTarget.pitch)} / ${formatRelayDebugValue(relayHeadTarget.roll)} enabled ${relayHeadTarget.enabled ? 'yes' : 'no'}`,
-    `raw upper chestYaw/chestRoll ${formatRelayDebugValue(relayRawUpperBodyTarget.chestYaw)} / ${formatRelayDebugValue(relayRawUpperBodyTarget.chestRoll)} enabled ${relayRawUpperBodyTarget.enabled ? 'yes' : 'no'}`,
-    `target upper chestYaw/chestRoll ${formatRelayDebugValue(relayUpperBodyTarget.chestYaw)} / ${formatRelayDebugValue(relayUpperBodyTarget.chestRoll)} enabled ${relayUpperBodyTarget.enabled ? 'yes' : 'no'}`,
+    `head yaw/pitch/roll ${formatRelayDebugValue(relayHeadTarget.yaw)} / ${formatRelayDebugValue(relayHeadTarget.pitch)} / ${formatRelayDebugValue(relayHeadTarget.roll)} enabled ${relayHeadTarget.enabled ? 'yes' : 'no'}`,
+    `upper chestYaw/chestRoll ${formatRelayDebugValue(relayUpperBodyTarget.chestYaw)} / ${formatRelayDebugValue(relayUpperBodyTarget.chestRoll)} enabled ${relayUpperBodyTarget.enabled ? 'yes' : 'no'}`,
     `hands ${relayHandTarget.left ? 'L' : '-'}${relayHandTarget.right ? 'R' : '-'} buffered ${relayClient.bufferedAmount} bytes`,
   ].join('\n');
 }
