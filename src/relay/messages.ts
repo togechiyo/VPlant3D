@@ -109,6 +109,26 @@ export interface RelayExpressionSyncState {
   expressions: RelayExpressionState;
 }
 
+export interface RelayDebugSample {
+  role: 'render';
+  sentAt: number;
+  runtimeSequence: number;
+  runtimeAgeMs: number;
+  expressions: {
+    rx: RelayExpressionState;
+    target: RelayExpressionState;
+    set: RelayExpressionState;
+    afterUpdate: RelayExpressionState;
+  };
+  pose: RelayPoseState;
+  dropped: {
+    runtime: number;
+    motion: number;
+    expression: number;
+  };
+  bufferedAmount: number;
+}
+
 export type RelayMessage =
   | {
       type: 'hello';
@@ -142,6 +162,10 @@ export type RelayMessage =
   | {
       type: 'expressionState';
       state: RelayExpressionSyncState;
+    }
+  | {
+      type: 'debugSample';
+      sample: RelayDebugSample;
     }
   | {
       type: 'vrmaCommand';

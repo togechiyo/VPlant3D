@@ -2824,3 +2824,33 @@
 
 - OBS確認時はControlタブを1つだけ残す運用も併用する
 - まだ0が混ざる場合は、Control側の送信直前debugを追加してMediaPipe入力由来かどうかを確認する
+
+## 2026-05-23 Relay Debug Log Endpoint
+
+### Goal
+
+- 人間の目視やOBS動画確認だけに頼らず、OBS側のビクつき原因を後から追えるログを取る
+
+### Findings
+
+- 直近のOBS動画では状況が変わらず、単発の推測修正では消耗が大きい
+- 次は挙動を変える修正ではなく、Control/relay/Renderのどこで0が混ざるかをログで確定させる必要がある
+
+### Did
+
+- relay serverに `/relay/debug-log` endpointを追加した
+- WebSocket接続、`hello`、realtime stateの採用/破棄、OBS Renderからのdebug sampleをリングバッファに記録する
+- OBS Render debug modeから `rx/target/set/after update` の表情値とpose概要を `debugSample` としてrelayへ送るようにした
+- Playwrightでは既存のdebug overlay表示が壊れていないことを確認した
+
+### How To Use
+
+- OBS Renderを `?obs=1&transparent=1&debug=1` で開く
+- 問題を数秒再現する
+- ブラウザで `http://127.0.0.1:5173/relay/debug-log` を開く
+- `realtime` eventの `accepted`、`socketId`、`sequence`、`expressions` と、`renderSample` の `rx/target/set/afterUpdate` を比較する
+
+### Next
+
+- ログで `realtime` のaccepted runtime自体が0ならControl送信前の値を追加計測する
+- `renderSample.rx` は正常なのに `set/afterUpdate` が0ならOBS Render内の適用順を直す

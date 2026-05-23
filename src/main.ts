@@ -75,6 +75,7 @@ import { VPlantRelayClient } from './relay/client';
 import type {
   RelayAssetDescriptor,
   RelayAvatarTransform,
+  RelayDebugSample,
   RelayExpressionState,
   RelayExpressionSyncState,
   RelayMessage,
@@ -319,6 +320,7 @@ let relayRenderStaticStateSignature = '';
 let relayStaticPublishSignature = '';
 let relayMotionPublishTime = 0;
 let relayRuntimeSequence = 0;
+let relayDebugSamplePublishTime = 0;
 const relayExpressionStabilizer = createRelayExpressionStabilizer();
 const relayPoseStabilizer = createRelayPoseStabilizer();
 let lastAppliedRelayMotionSequence = 0;
@@ -1105,6 +1107,7 @@ function animate(frameTime = performance.now()): void {
     relayAppliedAfterUpdateSnapshot = captureExpressionManagerSnapshot();
   }
   updateRelayDebugOverlay();
+  publishRelayDebugSample(frameTime);
   renderer.render(scene, camera);
   window.requestAnimationFrame(animate);
 }
@@ -1493,6 +1496,55 @@ function updateRelayDebugOverlay(): void {
     `upper chestYaw/chestRoll ${formatRelayDebugValue(relayUpperBodyTarget.chestYaw)} / ${formatRelayDebugValue(relayUpperBodyTarget.chestRoll)} enabled ${relayUpperBodyTarget.enabled ? 'yes' : 'no'}`,
     `hands ${relayHandTarget.left ? 'L' : '-'}${relayHandTarget.right ? 'R' : '-'} buffered ${relayClient.bufferedAmount} bytes`,
   ].join('\n');
+}
+
+function publishRelayDebugSample(frameTime: number): void {
+  if (!isRenderPage || !options.debug || frameTime - relayDebugSamplePublishTime < 250) {
+    return;
+  }
+
+  relayDebugSamplePublishTime = frameTime;
+  relayClient.send({
+    type: 'debugSample',
+    sample: createRelayDebugSample(),
+  });
+}
+
+function createRelayDebugSample(): RelayDebugSample {
+  return {
+    role: 'render',
+    sentAt: Date.now(),
+    runtimeSequence: lastAppliedRelayRuntimeSequence,
+    runtimeAgeMs:
+      lastAppliedRelayRuntimeSentAt > 0 ? Math.max(Date.now() - lastAppliedRelayRuntimeSentAt, 0) : 0,
+    expressions: {
+      rx: { ...relayReceivedExpressionSnapshot },
+      target: {
+        blinkLeft: relayExpressionTarget.blinkLeft,
+        blinkRight: relayExpressionTarget.blinkRight,
+        aa: relayExpressionTarget.aa,
+        ih: relayExpressionTarget.ih,
+        ou: relayExpressionTarget.ou,
+        ee: relayExpressionTarget.ee,
+        oh: relayExpressionTarget.oh,
+        happy: relayExpressionTarget.happy,
+        surprised: relayExpressionTarget.surprised,
+      },
+      set: { ...relayAppliedBeforeUpdateSnapshot },
+      afterUpdate: { ...relayAppliedAfterUpdateSnapshot },
+    },
+    pose: {
+      head: relayHeadTarget,
+      upperBody: relayUpperBodyTarget,
+      hands: relayHandTarget,
+    },
+    dropped: {
+      runtime: relayDroppedStaleRuntimeFrames,
+      motion: relayDroppedStaleMotionFrames,
+      expression: relayDroppedStaleExpressionFrames,
+    },
+    bufferedAmount: relayClient.bufferedAmount,
+  };
 }
 
 function formatRelayDebugValue(value: number | undefined): string {

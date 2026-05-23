@@ -8,6 +8,8 @@ const port = Number.parseInt(process.env.PORT ?? '5173', 10);
 const maxAssetBytes = 256 * 1024 * 1024;
 const assets = new Map();
 const motionBufferedBytesThreshold = 128 * 1024;
+const maxDebugEvents = 2000;
+const debugEvents = [];
 let latestVrmAssetMessage = null;
 let latestVrmaSlotsMessage = null;
 let latestStateMessage = null;
@@ -18,6 +20,8 @@ let latestRuntimeStateMessage = null;
 let latestVrmaCommandMessage = null;
 let activeControlSocket = null;
 const clientRoles = new WeakMap();
+const clientIds = new WeakMap();
+let nextClientId = 1;
 
 const vite = await createViteServer({
   server: {
@@ -37,6 +41,22 @@ const server = createServer(async (request, response) => {
 
   if (request.method === 'GET' && url.pathname?.startsWith('/relay/assets/')) {
     handleAssetDownload(request, response, url.pathname);
+    return;
+  }
+
+  if (request.method === 'GET' && url.pathname === '/relay/debug-log') {
+    writeJson(response, 200, {
+      generatedAt: Date.now(),
+      activeControlId: activeControlSocket ? clientIds.get(activeControlSocket) : null,
+      clientCount: webSocketServer.clients.size,
+      events: debugEvents,
+    });
+    return;
+  }
+
+  if (request.method === 'DELETE' && url.pathname === '/relay/debug-log') {
+    debugEvents.length = 0;
+    writeJson(response, 200, { ok: true });
     return;
   }
 
@@ -62,6 +82,13 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 webSocketServer.on('connection', (webSocket) => {
+  const clientId = nextClientId;
+  nextClientId += 1;
+  clientIds.set(webSocket, clientId);
+  pushDebugEvent({
+    kind: 'connection',
+    socketId: clientId,
+  });
   sendLatestMessages(webSocket);
 
   webSocket.on('message', (data) => {
@@ -73,6 +100,22 @@ webSocketServer.on('connection', (webSocket) => {
       if (parsedMessage.role === 'control') {
         activeControlSocket = webSocket;
       }
+      pushDebugEvent({
+        kind: 'hello',
+        socketId: clientId,
+        role: parsedMessage.role,
+        activeControlId: activeControlSocket ? clientIds.get(activeControlSocket) : null,
+      });
+      return;
+    }
+
+    if (parsedMessage?.type === 'debugSample') {
+      pushDebugEvent({
+        kind: 'renderSample',
+        socketId: clientId,
+        role: clientRoles.get(webSocket) ?? 'unknown',
+        sample: summarizeDebugSample(parsedMessage.sample),
+      });
       return;
     }
 
@@ -82,10 +125,29 @@ webSocketServer.on('connection', (webSocket) => {
       message.includes('"type":"expressionState"');
 
     if (isRealtimeState && webSocket !== activeControlSocket) {
+      pushDebugEvent({
+        kind: 'realtime',
+        socketId: clientId,
+        role: clientRoles.get(webSocket) ?? 'unknown',
+        accepted: false,
+        reason: 'stale-control',
+        message: summarizeRelayMessage(parsedMessage),
+        activeControlId: activeControlSocket ? clientIds.get(activeControlSocket) : null,
+      });
       return;
     }
 
     rememberLatestMessage(message);
+    if (isRealtimeState) {
+      pushDebugEvent({
+        kind: 'realtime',
+        socketId: clientId,
+        role: clientRoles.get(webSocket) ?? 'unknown',
+        accepted: true,
+        message: summarizeRelayMessage(parsedMessage),
+        activeControlId: activeControlSocket ? clientIds.get(activeControlSocket) : null,
+      });
+    }
 
     for (const client of webSocketServer.clients) {
       if (client !== webSocket && client.readyState === 1) {
@@ -99,7 +161,13 @@ webSocketServer.on('connection', (webSocket) => {
   });
 
   webSocket.on('close', () => {
+    pushDebugEvent({
+      kind: 'close',
+      socketId: clientId,
+      role: clientRoles.get(webSocket) ?? 'unknown',
+    });
     clientRoles.delete(webSocket);
+    clientIds.delete(webSocket);
     if (activeControlSocket === webSocket) {
       activeControlSocket = null;
     }
@@ -182,6 +250,103 @@ function parseRelayMessage(message) {
   } catch {
     return null;
   }
+}
+
+function pushDebugEvent(event) {
+  debugEvents.push({
+    at: Date.now(),
+    ...event,
+  });
+
+  if (debugEvents.length > maxDebugEvents) {
+    debugEvents.splice(0, debugEvents.length - maxDebugEvents);
+  }
+}
+
+function summarizeRelayMessage(message) {
+  if (!message || typeof message !== 'object') {
+    return { type: 'unknown' };
+  }
+
+  if (
+    message.type === 'runtimeState' ||
+    message.type === 'motionState' ||
+    message.type === 'expressionState'
+  ) {
+    return summarizeStateMessage(message);
+  }
+
+  return { type: message.type ?? 'unknown' };
+}
+
+function summarizeStateMessage(message) {
+  const state = message.state ?? {};
+  return {
+    type: message.type,
+    sequence: state.sequence ?? null,
+    sentAt: state.sentAt ?? null,
+    expressions: summarizeExpressions(state.expressions),
+    pose: summarizePose(state.pose),
+  };
+}
+
+function summarizeDebugSample(sample) {
+  return {
+    sentAt: sample?.sentAt ?? null,
+    runtimeSequence: sample?.runtimeSequence ?? null,
+    runtimeAgeMs: sample?.runtimeAgeMs ?? null,
+    expressions: {
+      rx: summarizeExpressions(sample?.expressions?.rx),
+      target: summarizeExpressions(sample?.expressions?.target),
+      set: summarizeExpressions(sample?.expressions?.set),
+      afterUpdate: summarizeExpressions(sample?.expressions?.afterUpdate),
+    },
+    pose: summarizePose(sample?.pose),
+    dropped: sample?.dropped ?? null,
+    bufferedAmount: sample?.bufferedAmount ?? null,
+  };
+}
+
+function summarizeExpressions(expressions) {
+  return {
+    blinkLeft: roundDebugNumber(expressions?.blinkLeft),
+    blinkRight: roundDebugNumber(expressions?.blinkRight),
+    aa: roundDebugNumber(expressions?.aa),
+    ih: roundDebugNumber(expressions?.ih),
+    ou: roundDebugNumber(expressions?.ou),
+    ee: roundDebugNumber(expressions?.ee),
+    oh: roundDebugNumber(expressions?.oh),
+    happy: roundDebugNumber(expressions?.happy),
+    surprised: roundDebugNumber(expressions?.surprised),
+  };
+}
+
+function summarizePose(pose) {
+  return {
+    head: pose?.head
+      ? {
+          enabled: Boolean(pose.head.enabled),
+          pitch: roundDebugNumber(pose.head.pitch),
+          yaw: roundDebugNumber(pose.head.yaw),
+          roll: roundDebugNumber(pose.head.roll),
+        }
+      : null,
+    upperBody: pose?.upperBody
+      ? {
+          enabled: Boolean(pose.upperBody.enabled),
+          chestYaw: roundDebugNumber(pose.upperBody.chestYaw),
+          chestRoll: roundDebugNumber(pose.upperBody.chestRoll),
+        }
+      : null,
+    hands: {
+      left: Boolean(pose?.hands?.left),
+      right: Boolean(pose?.hands?.right),
+    },
+  };
+}
+
+function roundDebugNumber(value) {
+  return typeof value === 'number' ? Math.round(value * 1000) / 1000 : null;
 }
 
 async function handleAssetUpload(request, response, kindValue) {
