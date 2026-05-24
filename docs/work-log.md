@@ -2980,3 +2980,34 @@
 
 - Chromeで再確認し、ON直後の腕が休止姿勢から大きく飛ばないか見る
 - まだ左右や上下がおかしい場合は、次にMediaPipe座標からVRM座標へのsign/gainを調整する
+
+## 2026-05-24 Arm IK Baseline Calibration
+
+### Goal
+
+- `手の骨格` を有効にすると腕が全く上がらない問題を直す
+
+### Findings
+
+- 直前の修正でHand Landmarker検出を腕IKのgateにしたため、Pose Landmarkerでは肩・肘・手首が取れていても、Hand Landmarkerが待機の場合に腕IKまで止まっていた
+- 腕の大きな初期ズレは「Poseだけで腕を動かすこと」自体ではなく、MediaPipeの初期座標をVRMの休止姿勢へそのまま絶対適用していたことが主因と判断した
+
+### Did
+
+- 腕IKはMediaPipe Poseの肩・肘・手首で動かす方式へ戻した
+- `手の骨格` を有効化した直後、またはミラー設定を変えた直後のPose腕targetをbaselineとして保存し、以後はbaselineからの差分で手首・肘targetを作るようにした
+- Hand Landmarkerは指retarget用として扱い、Hand検出が待機でもPose由来の腕IKは止めないようにした
+- OBS Render側も最初に受け取った腕IK targetをbaselineにするようにし、Control/OBSで初期腕位置が急に飛びにくいようにした
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- Chrome/OBSでページを再読み込みし、`手の骨格` を一度off/onして正面の自然な腕位置をbaselineとしてキャリブレーションする
+- 腕が上がるが到達量が弱い場合は、baseline差分のwrist/elbow gainを調整する
+- ON直後の姿勢をユーザーが明示的に取り直せる `腕基準をリセット` ボタンを追加するか検討する

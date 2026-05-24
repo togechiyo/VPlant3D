@@ -302,6 +302,7 @@ let faceExpressionWeights = createNeutralFaceExpressionWeights();
 let headRetargetPose: HeadRetargetPose = createNeutralHeadRetargetPose(false);
 let handRetargetPose: HandRetargetPose = createNeutralHandRetargetPose();
 let armIkRetargetPose: ArmIkRetargetPose = createNeutralArmIkRetargetPose();
+let armIkBaselinePose: ArmIkRetargetPose | null = null;
 let armIkRetargetWasActive = false;
 let handRetargetWasActive = false;
 let autoBlinkState: AutoBlinkState = createAutoBlinkState(performance.now() / 1000);
@@ -785,10 +786,12 @@ if (isControlPage) {
   poseStopButton?.addEventListener('click', stopPoseDebug);
   poseMirrorInput?.addEventListener('change', () => {
     appStore.getState().setPoseMirrorInput(poseMirrorInput?.checked ?? true);
+    resetArmIkRetarget();
   });
   handTrackingInput?.addEventListener('change', () => {
     const enabled = handTrackingInput?.checked ?? true;
     appStore.getState().setHandTrackingEnabled(enabled);
+    resetArmIkRetarget();
     if (!enabled) {
       clearArmRetargetPose();
       appStore.getState().setHandTrackingStopped();
@@ -1292,6 +1295,7 @@ function applyRelayRuntimeState(nextState: RelayRuntimeState): void {
   relayHandTarget = nextState.pose.hands ?? createNeutralHandRetargetPose();
   relayArmIkTrackingEnabled = nextState.pose.arms !== undefined;
   relayArmIkTarget = nextState.pose.arms ?? createNeutralArmIkRetargetPose();
+  syncRelayArmIkBaseline();
   relayPreviousMotionFrame = null;
   relayCurrentMotionFrame = null;
   lastAppliedRelayRuntimeSequence = nextState.sequence;
@@ -1382,6 +1386,18 @@ function applySampledRelayMotionState(nextState: RelayMotionState): void {
   relayHandTarget = nextState.pose.hands ?? createNeutralHandRetargetPose();
   relayArmIkTrackingEnabled = nextState.pose.arms !== undefined;
   relayArmIkTarget = nextState.pose.arms ?? createNeutralArmIkRetargetPose();
+  syncRelayArmIkBaseline();
+}
+
+function syncRelayArmIkBaseline(): void {
+  if (!relayArmIkTrackingEnabled) {
+    resetArmIkRetarget();
+    return;
+  }
+
+  if (!armIkBaselinePose && hasArmIkTarget(relayArmIkTarget)) {
+    armIkBaselinePose = relayArmIkTarget;
+  }
 }
 
 function createRelayStaticStateSignature(state: RelayStaticState): string {
@@ -2778,9 +2794,10 @@ function runPoseDebugFrame(frameTime: number): void {
       const landmarks = result.landmarks[0] ?? [];
       const summary = summarizeUpperBodyPose(landmarks);
       updateUpperBodyRetarget(summary);
+      updateArmIkRetarget(landmarks);
       drawPoseDebugLandmarks(landmarks);
       runFaceTrackingFrame(poseVideoElement, frameTime);
-      runHandTrackingFrame(poseVideoElement, frameTime, landmarks);
+      runHandTrackingFrame(poseVideoElement, frameTime);
       appStore
         .getState()
         .setPoseFrame(
@@ -2912,14 +2929,9 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
     );
 }
 
-function runHandTrackingFrame(
-  videoFrame: HTMLVideoElement,
-  frameTime: number,
-  poseLandmarks: Parameters<typeof createArmIkRetargetPose>[0],
-): void {
+function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): void {
   const nextState = appStore.getState();
   if (!nextState.handTrackingEnabled || !handTracker || nextState.handTrackingStatus !== 'active') {
-    resetArmIkRetarget();
     return;
   }
 
@@ -2929,7 +2941,6 @@ function runHandTrackingFrame(
     mirrorInput: appStore.getState().poseMirrorInput,
   });
   handRetargetPose = smoothHandRetargetPose(handRetargetPose, nextHandPose);
-  updateArmIkRetarget(poseLandmarks, nextHandPose);
   drawHandDebugLandmarks(result.landmarks);
   const gripAmount = getHandPoseGripAmount(handRetargetPose);
   const armIkSummary = formatArmIkStatus(armIkRetargetPose);
@@ -3107,11 +3118,10 @@ function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
 
 function updateArmIkRetarget(
   landmarks: Parameters<typeof createArmIkRetargetPose>[0],
-  detectedHands: HandRetargetPose,
 ): void {
   const nextState = appStore.getState();
 
-  if (!nextState.handTrackingEnabled || !hasHandTarget(detectedHands)) {
+  if (!nextState.handTrackingEnabled) {
     resetArmIkRetarget();
     return;
   }
@@ -3120,12 +3130,15 @@ function updateArmIkRetarget(
     mirrorInput: nextState.poseMirrorInput,
   });
 
-  if (!detectedHands.left) {
-    nextPose.left = null;
+  if (!hasArmIkTarget(nextPose)) {
+    resetArmIkRetarget();
+    return;
   }
 
-  if (!detectedHands.right) {
-    nextPose.right = null;
+  if (!armIkBaselinePose) {
+    armIkBaselinePose = nextPose;
+    armIkRetargetPose = createNeutralArmIkRetargetPose();
+    return;
   }
 
   armIkRetargetPose = smoothArmIkRetargetPose(armIkRetargetPose, nextPose);
@@ -3239,10 +3252,18 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
   const upperLength = upperPosition.distanceTo(lowerPosition);
   const lowerLength = lowerPosition.distanceTo(handPosition);
   const armReach = Math.max(upperLength + lowerLength, 0.0001);
-  const targetWrist = toThreeVector(subtractIkVector(target.wrist, target.shoulder)).multiplyScalar(
-    armReach * 0.72,
-  );
-  const pole = toThreeVector(target.pole);
+  const baselineTarget = getArmIkSideTarget(armIkBaselinePose, side);
+
+  if (!baselineTarget) {
+    return;
+  }
+
+  const restWrist = handPosition.clone().sub(upperPosition);
+  const restElbow = lowerPosition.clone().sub(upperPosition);
+  const targetWristDelta = toThreeVector(subtractIkVector(target.wrist, baselineTarget.wrist));
+  const targetElbowDelta = toThreeVector(subtractIkVector(target.elbow, baselineTarget.elbow));
+  const targetWrist = restWrist.add(targetWristDelta.multiplyScalar(armReach * 1.05));
+  const pole = restElbow.add(targetElbowDelta.multiplyScalar(armReach * 0.9));
   const solved = solveTwoBoneArmIk({
     targetWrist: targetWrist,
     pole,
@@ -3275,6 +3296,13 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
 
 function toThreeVector(vector: Vector3Like): THREE.Vector3 {
   return new THREE.Vector3(vector.x, vector.y, vector.z);
+}
+
+function getArmIkSideTarget(
+  pose: ArmIkRetargetPose | null,
+  side: 'left' | 'right',
+): ArmIkSideTarget | null {
+  return side === 'left' ? (pose?.left ?? null) : (pose?.right ?? null);
 }
 
 function applyHandRetarget(): void {
@@ -3400,6 +3428,7 @@ function resetHandRetarget(): void {
 }
 
 function resetArmIkRetarget(): void {
+  armIkBaselinePose = null;
   armIkRetargetPose = createNeutralArmIkRetargetPose();
   restoreArmIkBones();
   armIkRetargetWasActive = false;
