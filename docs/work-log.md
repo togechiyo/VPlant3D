@@ -2854,3 +2854,25 @@
 
 - ログで `realtime` のaccepted runtime自体が0ならControl送信前の値を追加計測する
 - `renderSample.rx` は正常なのに `set/afterUpdate` が0ならOBS Render内の適用順を直す
+
+## 2026-05-24 OBS Relay Debugging Retrospective
+
+### Goal
+
+- OBS Renderだけで瞬き・口・頭・体が0へ戻るように見えた問題について、試行錯誤と判断材料をあとから読み返せる形に整理する
+
+### Findings
+
+- 最終的に一番効いた対処は、relayのactive controlを `hello` の新しさではなく、実際にrealtime stateを送っているsocketへ追従させることだった
+- OBS側で保持補正を増やす実験は追従性を悪化させたため、先にdebug overlayと `/relay/debug-log` で値の発生源を特定する方針が重要
+- ユーザー確認では、relay serverつきで動かした状態ではピクつきがかなり改善した
+
+### Did
+
+- [OBS Relay Debugging Retrospective](./obs-relay-debugging-retrospective.md) を追加した
+- 効いた調査方法、効かなかった補正、現在のdebug手順、ログの読み方、関連コミットをまとめた
+
+### Next
+
+- 同じ症状が再発した場合は、まず `?debug=1` と `/relay/debug-log` でruntime sequence / socketId / expression pipelineを確認する
+- 補正やsmoothingを増やす前に、Control送信前、relay採用、OBS受信、VRM適用後のどこで値が崩れたかを確定させる
