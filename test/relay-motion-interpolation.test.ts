@@ -53,6 +53,38 @@ describe('relay motion interpolation', () => {
     expect(sampled.pose.hands?.right).toBeNull();
   });
 
+  it('interpolates arm IK targets only when a motion frame includes them', () => {
+    const previous = createMotionState(1, 0, 0, 0);
+    const current = createMotionState(2, 0, 0, 0);
+    current.pose.arms = {
+      left: {
+        enabled: true,
+        side: 'left',
+        shoulder: { x: 0.5, y: 0, z: 0 },
+        elbow: { x: 0.8, y: -0.5, z: 0 },
+        wrist: { x: 1.1, y: -1, z: 0 },
+        pole: { x: 0.3, y: -0.5, z: 0 },
+        confidence: 0.9,
+      },
+      right: null,
+    };
+
+    const sampled = interpolateRelayMotionState(previous, current, 0.5);
+
+    expect(sampled.pose.arms?.left?.wrist.y).toBeCloseTo(-1);
+    expect(sampled.pose.arms?.left?.confidence).toBeCloseTo(0.9);
+    expect(sampled.pose.arms?.right).toBeNull();
+  });
+
+  it('leaves arm IK undefined for legacy motion frames without arm payloads', () => {
+    const previous = createMotionState(1, 0, 0, 0);
+    const current = createMotionState(2, 0, 0, 0);
+
+    const sampled = interpolateRelayMotionState(previous, current, 0.5);
+
+    expect(sampled.pose.arms).toBeUndefined();
+  });
+
   it('holds head and body pose instead of interpolating toward neutral during brief tracking loss', () => {
     const previous = createMotionState(1, 0.8, 0.4, 0);
     const current = createMotionState(2, 0, 0, 0);

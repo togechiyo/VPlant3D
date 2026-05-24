@@ -2915,3 +2915,40 @@
 
 - 次の実装タスクでは、まず `arm-ik-target` と `two-bone-arm-ik` の純粋ロジックとテストから始める
 - VRMへの適用はControl previewのみで試し、OBS relayへ広げるのは挙動確認後にする
+
+## 2026-05-24 First Arm IK Retarget Implementation
+
+### Goal
+
+- roll量だけで腕を動かす方式をやめ、MediaPipe Poseの肩・肘・手首から手首targetを作る腕IKの初期実装を入れる
+
+### Did
+
+- `src/mocap/arm-ik-target.ts` を追加し、MediaPipe Pose landmarksから左右の肩・肘・手首targetを作る純粋ロジックを実装した
+- `src/mocap/two-bone-arm-ik.ts` を追加し、到達可能距離clampつきの2ボーンIK solverを実装した
+- `src/main.ts` に腕IK適用を追加し、`手の骨格` がonの時だけ腕IKと指retargetを動かすようにした
+- 旧来の上半身retargetでは腕rollを出さず、胸/首と腕IKが競合しないようにした
+- `runtimeState.pose.arms` を追加し、ControlからOBS Renderへ腕IK targetをrelayするようにした
+- OBS debug overlayに `armIK` の左右confidenceとwrist target概要を表示するようにした
+- `test/arm-ik-target.test.ts`、`test/two-bone-arm-ik.test.ts`、relay補間テストを追加した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+- Browserで `http://127.0.0.1:5173/?control=1` を開き、Control UIとcanvasが表示されること、`手の骨格` がデフォルトoffであることを確認した
+- Browserで `http://127.0.0.1:5173/?obs=1&transparent=1&debug=1` を開き、Setup UIが隠れたまま `armIK` debug行が表示されることを確認した
+
+### Notes
+
+- 実カメラで手首位置が期待通りかはCodexだけでは判断できないため、確認項目を [Human Handoff Board](./human-handoff-board.md) に追加した
+- 初回実装は2.5D screen-space寄り。奥行きは浅くclampしており、配信画面での見た目を優先している
+- VRMの腕ローカル軸や左右signはモデル差が出る可能性がある。Alicia以外のVRMでも確認が必要
+
+### Next
+
+- 人間がChromeでカメラ確認し、手首が狙った位置へ近づくか、左右や上下の向きが合うかを見る
+- 手首位置が合うが肘が不自然な場合は、pole方向とside別signを調整する
+- 手首位置自体が大きく外れる場合は、2.5D座標変換のscale/gainを調整する

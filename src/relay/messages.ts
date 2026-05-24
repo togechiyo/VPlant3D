@@ -58,6 +58,16 @@ export interface RelayPoseState {
     left: RelayHandTarget | null;
     right: RelayHandTarget | null;
   };
+  arms?: {
+    left: RelayArmIkTarget | null;
+    right: RelayArmIkTarget | null;
+  };
+}
+
+export interface RelayVector3 {
+  x: number;
+  y: number;
+  z: number;
 }
 
 export interface RelayFingerCurl {
@@ -73,6 +83,16 @@ export interface RelayHandTarget {
   wristPitch: number;
   wristYaw: number;
   wristRoll: number;
+}
+
+export interface RelayArmIkTarget {
+  enabled: boolean;
+  side: 'left' | 'right';
+  shoulder: RelayVector3;
+  elbow: RelayVector3;
+  wrist: RelayVector3;
+  pole: RelayVector3;
+  confidence: number;
 }
 
 export interface RelayRenderState {

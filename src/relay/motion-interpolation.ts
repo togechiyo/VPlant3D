@@ -1,9 +1,11 @@
 import { createNeutralHandRetargetPose } from '../mocap/hand-landmarks';
 import { createNeutralHeadRetargetPose } from '../mocap/head-retarget';
 import { createNeutralRetargetPose } from '../mocap/upper-body-retarget';
+import { createNeutralArmIkRetargetPose } from '../mocap/arm-ik-target';
 import type { HandRetargetPose, HandRetargetTarget } from '../mocap/hand-landmarks';
 import type { HeadRetargetPose } from '../mocap/head-retarget';
 import type { UpperBodyRetargetPose } from '../mocap/upper-body-retarget';
+import type { ArmIkRetargetPose, ArmIkSideTarget, Vector3Like } from '../mocap/arm-ik-target';
 import type { RelayMotionState } from './messages';
 
 export const defaultRelayMotionInterpolationDelayMs = 35;
@@ -50,6 +52,15 @@ export function interpolateRelayMotionState(
   amount: number,
 ): RelayMotionState {
   const nextAmount = clamp01(amount);
+  const arms =
+    previous.pose.arms || current.pose.arms
+      ? interpolateArmIkPose(
+          previous.pose.arms ?? createNeutralArmIkRetargetPose(),
+          current.pose.arms ?? createNeutralArmIkRetargetPose(),
+          nextAmount,
+        )
+      : undefined;
+
   return {
     sequence: current.sequence,
     sentAt: current.sentAt,
@@ -70,6 +81,7 @@ export function interpolateRelayMotionState(
         current.pose.hands ?? createNeutralHandRetargetPose(),
         nextAmount,
       ),
+      arms,
     },
   };
 }
@@ -152,6 +164,49 @@ function interpolateHandTarget(
     wristPitch: lerp(previous.wristPitch, current.wristPitch, amount),
     wristYaw: lerp(previous.wristYaw, current.wristYaw, amount),
     wristRoll: lerp(previous.wristRoll, current.wristRoll, amount),
+  };
+}
+
+function interpolateArmIkPose(
+  previous: ArmIkRetargetPose,
+  current: ArmIkRetargetPose,
+  amount: number,
+): ArmIkRetargetPose {
+  return {
+    left: interpolateArmIkTarget(previous.left, current.left, amount),
+    right: interpolateArmIkTarget(previous.right, current.right, amount),
+  };
+}
+
+function interpolateArmIkTarget(
+  previous: ArmIkSideTarget | null,
+  current: ArmIkSideTarget | null,
+  amount: number,
+): ArmIkSideTarget | null {
+  if (!previous || !current) {
+    return current ?? previous;
+  }
+
+  return {
+    enabled: current.enabled,
+    side: current.side,
+    shoulder: interpolateVector3(previous.shoulder, current.shoulder, amount),
+    elbow: interpolateVector3(previous.elbow, current.elbow, amount),
+    wrist: interpolateVector3(previous.wrist, current.wrist, amount),
+    pole: interpolateVector3(previous.pole, current.pole, amount),
+    confidence: lerp(previous.confidence, current.confidence, amount),
+  };
+}
+
+function interpolateVector3(
+  previous: Vector3Like,
+  current: Vector3Like,
+  amount: number,
+): Vector3Like {
+  return {
+    x: lerp(previous.x, current.x, amount),
+    y: lerp(previous.y, current.y, amount),
+    z: lerp(previous.z, current.z, amount),
   };
 }
 

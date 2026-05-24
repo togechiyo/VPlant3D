@@ -1,6 +1,6 @@
 # Human Handoff Board
 
-最終更新日: 2026-05-21
+最終更新日: 2026-05-24
 
 ## 目的
 
@@ -27,6 +27,28 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 | Dropped | 今回はやらない |
 
 ## Human Tasks
+
+### Todo: 人間のGoogle Chromeで腕IKハンドトラッキングを確認
+
+- Owner: Human
+- Needed by: ハンドトラッキングをMVP採用するか決める前
+- Why: 手首位置、肘の曲がり、左右ミラー方向は実カメラと人間の動きで確認する必要があるため
+- What to check:
+  - `npm run dev` で `http://127.0.0.1:5173/?control=1` を開く
+  - VRMを読み込む
+  - `カメラ開始` を押す
+  - `手の骨格` をonにする
+  - 左右それぞれの手を上げる、下げる、左右へ動かす
+  - 緑の手骨格/青い腕骨格に対して、VRMの手首が前より狙った位置へ近づくか見る
+  - 肘が逆に曲がる、腕が反対側へ飛ぶ、左右が逆になる、手首だけ置いていかれる挙動がないか見る
+  - `ミラー` on/offで直感に合う方向を確認する
+  - `手の骨格` offで腕と指が止まり、変に動き続けないことを確認する
+  - OBS Render `http://127.0.0.1:5173/?obs=1&transparent=1&debug=1` でも `armIK` debug行が出て、Control側の動きに追従するか見る
+
+Notes:
+
+- 初回実装は2.5D screen-space寄りの腕IK。奥行きの完全再現ではなく、配信画面上で手首位置が自然に見えることを優先している
+- 大きく外れる場合は `arm-ik-target` のscale/gain、肘が裏返る場合はpole方向と左右signを調整する
 
 ### Todo: OBS Render debug overlayで表情同期を確認
 
