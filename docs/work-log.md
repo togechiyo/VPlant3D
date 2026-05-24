@@ -3011,3 +3011,28 @@
 - Chrome/OBSでページを再読み込みし、`手の骨格` を一度off/onして正面の自然な腕位置をbaselineとしてキャリブレーションする
 - 腕が上がるが到達量が弱い場合は、baseline差分のwrist/elbow gainを調整する
 - ON直後の姿勢をユーザーが明示的に取り直せる `腕基準をリセット` ボタンを追加するか検討する
+
+## 2026-05-24 Arm IK Front Bias
+
+### Goal
+
+- 腕IKで腕の曲がる方向や角度が不自然になり、手が体の横や後ろへ回り込みやすい問題を軽減する
+
+### Did
+
+- 腕IK targetへ前方バイアスをかける `src/mocap/arm-ik-constraints.ts` を追加した
+- 手首targetと肘poleがVRMの休止腕平面より後ろへ行きすぎないようにし、手が基本的に体の前側へ来るようにした
+- `test/arm-ik-constraints.test.ts` を追加し、前方補正が後ろ向きtargetだけを押し戻し、すでに前にあるtargetは戻さないことを確認した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで腕上げ・横出し・胸前に手を置く動きを確認する
+- まだ手が奥へ回る場合は `wristForwardRatio` と `poleForwardRatio` を少し上げる
+- 手が常に前へ出すぎる場合は比率を下げるか、UIで「腕の前方補正」を調整できるようにする

@@ -49,6 +49,7 @@ import {
   hasArmIkTarget,
   smoothArmIkRetargetPose,
 } from './mocap/arm-ik-target';
+import { biasArmIkTargetToFront } from './mocap/arm-ik-constraints';
 import {
   createHeadRetargetPose,
   createNeutralHeadRetargetPose,
@@ -3262,8 +3263,15 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
   const restElbow = lowerPosition.clone().sub(upperPosition);
   const targetWristDelta = toThreeVector(subtractIkVector(target.wrist, baselineTarget.wrist));
   const targetElbowDelta = toThreeVector(subtractIkVector(target.elbow, baselineTarget.elbow));
-  const targetWrist = restWrist.add(targetWristDelta.multiplyScalar(armReach * 1.05));
-  const pole = restElbow.add(targetElbowDelta.multiplyScalar(armReach * 0.9));
+  const biasedTarget = biasArmIkTargetToFront({
+    targetWrist: restWrist.clone().add(targetWristDelta.multiplyScalar(armReach * 1.05)),
+    pole: restElbow.clone().add(targetElbowDelta.multiplyScalar(armReach * 0.9)),
+    restWrist,
+    restElbow,
+    armReach,
+  });
+  const targetWrist = toThreeVector(biasedTarget.targetWrist);
+  const pole = toThreeVector(biasedTarget.pole);
   const solved = solveTwoBoneArmIk({
     targetWrist: targetWrist,
     pole,
