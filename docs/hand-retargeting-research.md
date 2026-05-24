@@ -280,3 +280,259 @@ The next implementation should be a small arm IK spike:
 4. Add debug overlay values for target wrist, solved wrist, and confidence
 
 This gives us a much clearer path to "手首が意図した位置へ来る" behavior.
+
+## Implementation Plan
+
+### Goal
+
+Replace the current roll-based arm retarget with a first wrist-targeted arm IK path that is good enough for human verification.
+
+The first success condition is not perfect finger animation. It is:
+
+- when the user raises, lowers, or moves a tracked hand sideways, the avatar wrist moves toward the intended screen-space position
+- elbow bend follows the MediaPipe elbow direction instead of staying in a fixed decorative pose
+- hand tracking off stops arm/hand tracking cleanly
+- OBS Render receives the same arm target state as Control preview
+
+### Non-Goals For The First Pass
+
+- full 3D body reconstruction
+- perfect depth placement from a single webcam
+- physically exact shoulder/clavicle solving
+- per-model hand calibration UI
+- gesture recognition
+- replacing Face/Pose/Hand tasks with Holistic immediately
+
+### File-Level Plan
+
+Add pure logic modules:
+
+- `src/mocap/arm-ik-target.ts`
+  - convert MediaPipe pose landmarks into side-specific arm targets
+  - handle mirror input
+  - calculate shoulder-centered 2.5D coordinates
+  - calculate confidence from shoulder/elbow/wrist visibility
+  - avoid creating a target when wrist visibility is too low
+
+- `src/mocap/two-bone-arm-ik.ts`
+  - clamp wrist target to reachable arm length
+  - solve elbow position from target wrist and pole direction
+  - expose small math helpers that are easy to unit test
+
+- `src/vrm/apply-arm-ik.ts` or a local `src/main.ts` section at first
+  - read VRM normalized bone rest/world positions
+  - apply upper/lower arm quaternions from solved target
+  - keep the first implementation close to existing rest quaternion handling
+
+Extend existing modules:
+
+- `src/mocap/pose-landmarks.ts`
+  - expose raw arm landmark triplets or a `createArmLandmarkSummary` helper
+  - include per-side visibility so IK can gate left/right independently
+
+- `src/mocap/hand-landmarks.ts`
+  - keep finger curl
+  - keep wrist/palm orientation, but stop treating hand-only output as an arm position source
+
+- `src/relay/messages.ts`
+  - add an optional arm IK target payload only after the Control preview path works
+  - keep backward compatibility with the current `upperBody` and `hands` payloads
+
+- `src/relay/runtime-state.ts`
+  - include the new arm target in `runtimeState` once the local path is stable
+
+- `src/main.ts`
+  - replace `trackArms: nextState.handTrackingEnabled` roll application with the new arm IK path
+  - when hand tracking is off, call a single reset path for arm IK and finger tracking
+  - display debug values in the hand/pose panel
+
+### Data Shape
+
+First pass target shape:
+
+```ts
+interface Vector3Like {
+  x: number;
+  y: number;
+  z: number;
+}
+
+interface ArmIkSideTarget {
+  enabled: boolean;
+  side: 'left' | 'right';
+  shoulder: Vector3Like;
+  elbow: Vector3Like;
+  wrist: Vector3Like;
+  pole: Vector3Like;
+  confidence: number;
+}
+
+interface ArmIkRetargetPose {
+  left: ArmIkSideTarget | null;
+  right: ArmIkSideTarget | null;
+}
+```
+
+Relay payload can later use a rounded version:
+
+```ts
+interface RelayArmIkTarget {
+  wrist: Vector3Like;
+  pole: Vector3Like;
+  confidence: number;
+}
+```
+
+Do not send raw 21-point hand landmarks through relay. Send only the retarget result needed by OBS Render.
+
+### Coordinate Mapping Plan
+
+Use Pose Landmarker normalized landmarks first. They are less physically exact than world landmarks, but they are visually predictable for OBS upper-body framing.
+
+Mapping:
+
+- origin: shoulder center
+- scale: inverse shoulder span, clamped to avoid huge jumps
+- x: landmark.x relative to shoulder center
+- y: landmark.y relative to shoulder center, inverted for avatar space
+- z: landmark.z relative to shoulder center, clamped to a shallow range
+- mirror: swap left/right inputs and invert x in one explicit step
+
+Suggested first values:
+
+- min visibility: `0.35`
+- min shoulder span: `0.08`
+- max wrist reach scale: `1.0`
+- z gain: `0.35`
+- z clamp: `-0.25..0.25`
+- target smoothing: `0.35`
+- lost target hold: `120ms`
+
+These should be constants in the pure module so tests can lock the behavior.
+
+### IK Application Plan
+
+For the first implementation, prefer a simple and stable solver over a beautiful one.
+
+1. Capture rest world positions for:
+   - shoulder: upperArm bone world position
+   - elbow: lowerArm bone world position
+   - wrist: hand bone world position
+
+2. Compute rest lengths:
+   - upper length: shoulder to elbow
+   - lower length: elbow to wrist
+
+3. Convert MediaPipe target into a local offset from the VRM shoulder.
+
+4. Clamp target wrist distance:
+   - max distance: `(upper + lower) * 0.98`
+   - min distance: `abs(upper - lower) + small epsilon`
+
+5. Use MediaPipe elbow as pole direction when confidence is good.
+
+6. Solve a two-bone plane:
+   - target direction from shoulder to wrist
+   - pole projected onto plane perpendicular to target direction
+   - elbow bend distance from law of cosines
+   - solved elbow position
+
+7. Apply rotations:
+   - upper arm rotates from rest shoulder-to-elbow direction to solved shoulder-to-elbow direction
+   - lower arm rotates from rest elbow-to-wrist direction to solved elbow-to-wrist direction
+   - multiply each delta by the saved rest quaternion
+
+8. Apply hand wrist orientation after arm IK.
+
+If this first version has axis issues, keep the pure target solver and add a temporary debug mode that draws target wrist/solved wrist before applying bone rotations.
+
+### UI Plan
+
+Keep the user-facing control simple:
+
+- default: `手の骨格` off
+- when `手の骨格` is on:
+  - enable arm IK
+  - enable finger retarget
+  - show skeleton overlay
+
+Add compact debug/status text:
+
+- `左手: 追跡中 0.72`
+- `右手: 未検出`
+- `手首IK: on`
+
+Avoid adding more explanatory text to the main panel. Detailed instructions belong in docs or debug overlay.
+
+### Test Plan
+
+Add unit tests before wiring to VRM:
+
+- `test/arm-ik-target.test.ts`
+  - creates no target when wrist visibility is low
+  - mirrors left/right consistently
+  - normalizes around shoulder center
+  - clamps shoulder span
+  - produces stable z within configured clamp
+
+- `test/two-bone-arm-ik.test.ts`
+  - clamps unreachable wrist target
+  - keeps solved wrist close to target after clamp
+  - places elbow on the pole side
+  - handles too-close wrist target without NaN
+  - handles zero-length defensive inputs
+
+Existing tests to keep green:
+
+- `test/hand-landmarks.test.ts`
+- `test/pose-landmarks.test.ts`
+- `test/relay-runtime-state.test.ts`
+- `test/relay-motion-interpolation.test.ts`
+
+Run after implementation:
+
+```bash
+npm run test
+npm run lint
+npm run build
+npm run test:e2e
+```
+
+### Browser Verification Plan
+
+Automated tests cannot fully verify camera tracking quality. Use browser/OBS checks for the human-facing behavior.
+
+Chrome Control page:
+
+- open `http://127.0.0.1:5173/?control=1`
+- load local VRM
+- enable camera
+- enable `手の骨格`
+- raise left and right hand separately
+- confirm avatar wrist follows the visible skeleton wrist better than the old roll-based behavior
+- turn `手の骨格` off and confirm arms stop moving
+
+OBS Render page:
+
+- open `http://127.0.0.1:5173/?obs=1&transparent=1&debug=1`
+- confirm runtime sequence advances
+- confirm arm IK target state is present when enabled
+- confirm target state disappears or becomes disabled when `手の骨格` is off
+
+### Rollout Steps
+
+1. Add pure arm target extraction and tests.
+2. Add pure two-bone IK math and tests.
+3. Wire Control preview only, behind the existing `手の骨格` toggle.
+4. Add debug drawing/status for target wrist and solved wrist.
+5. Replace OBS runtime payload for arms after Control behavior is plausible.
+6. Run full checks.
+7. Ask for human camera verification.
+
+### Risk Notes
+
+- VRM arm bone local axes vary enough that quaternion application may need per-side sign correction.
+- Single-camera depth is inherently weak; first pass should optimize for screen-space wrist position.
+- Hand and Pose tasks can disagree on wrist location. Use Pose wrist for arm position, Hand wrist only for palm orientation.
+- If performance drops, evaluate Holistic Landmarker or reduce hand detection frequency.
+- If arms flip when crossing the torso, add pole hysteresis and side-specific elbow constraints.

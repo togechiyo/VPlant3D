@@ -2899,3 +2899,19 @@
 
 - `src/mocap/arm-ik-retarget.ts` のような純粋ロジックから作り、肩・肘・手首targetと到達可能距離clampのテストを書く
 - 現在のroll-based arm retargetを置き換える前に、debug overlayへtarget wrist / solved wrist / confidenceを表示する
+
+## 2026-05-24 Hand IK Implementation Plan
+
+### Goal
+
+- ハンドトラッキング改善に向けて、腕IK実装の段階計画をドキュメントへ追記する
+
+### Did
+
+- [Hand Retargeting Research](./hand-retargeting-research.md) に `Implementation Plan` を追加した
+- 追加予定ファイル、データ構造、座標変換、IK適用、UI、テスト、ブラウザ確認、段階的rollout、リスクを整理した
+
+### Next
+
+- 次の実装タスクでは、まず `arm-ik-target` と `two-bone-arm-ik` の純粋ロジックとテストから始める
+- VRMへの適用はControl previewのみで試し、OBS relayへ広げるのは挙動確認後にする
