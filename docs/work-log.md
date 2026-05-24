@@ -3036,3 +3036,31 @@
 - 実カメラで腕上げ・横出し・胸前に手を置く動きを確認する
 - まだ手が奥へ回る場合は `wristForwardRatio` と `poleForwardRatio` を少し上げる
 - 手が常に前へ出すぎる場合は比率を下げるか、UIで「腕の前方補正」を調整できるようにする
+
+## 2026-05-24 Arm IK Stable Pole
+
+### Goal
+
+- Controller側でも腕の曲がる方向が不自然な問題を優先して直す
+
+### Findings
+
+- 問題はOBS同期だけではなく、Controller側の腕IK target/pole生成にもある
+- MediaPipeの肘位置をそのままIK poleへ強く反映すると、肘が体の横や奥へ逃げ、手が体の前に来ない姿勢になりやすい
+
+### Did
+
+- `biasArmIkTargetToFront` の補正を強め、手首をより体の前に置くようにした
+- 肘poleはMediaPipe肘の生値より、VRMの休止腕方向を基準に「前・下・外側」へ安定させるようにした
+- 左右の腕でpoleが内側へ寄りすぎないテストを追加した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+
+### Next
+
+- Controller側だけで、腕を横に出す、前に出す、胸前に置く動きを確認する
+- まだ不自然な場合は、次はMediaPipe肘の使用比率をさらに下げ、肩から手首への2ボーンIK + 固定pole寄りへ倒す
