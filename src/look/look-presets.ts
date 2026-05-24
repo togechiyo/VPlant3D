@@ -51,10 +51,10 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.6, 1.9, 2.25],
     fillTarget: [0, 1.12, 0],
     rimColor: 0x38d5ff,
-    rimIntensity: 1.05,
-    rimPosition: [2.9, 2.65, -3.4],
-    rimTarget: [0, 1.42, 0],
-    exposure: 0.88,
+    rimIntensity: 1.55,
+    rimPosition: [0.9, 4.55, -2.65],
+    rimTarget: [0, 1.52, 0],
+    exposure: 0.86,
   },
   bright: {
     id: 'bright',
@@ -68,10 +68,10 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.5, 1.95, 2.45],
     fillTarget: [0, 1.12, 0],
     rimColor: 0xf4fbff,
-    rimIntensity: 1.02,
-    rimPosition: [2.9, 2.7, -3.35],
-    rimTarget: [0, 1.42, 0],
-    exposure: 0.9,
+    rimIntensity: 1.6,
+    rimPosition: [0.85, 4.6, -2.65],
+    rimTarget: [0, 1.52, 0],
+    exposure: 0.88,
   },
   'front-top': {
     id: 'front-top',
@@ -85,10 +85,10 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.35, 1.85, 2.25],
     fillTarget: [0, 1.1, 0],
     rimColor: 0x38d5ff,
-    rimIntensity: 0.98,
-    rimPosition: [2.8, 2.65, -3.35],
-    rimTarget: [0, 1.42, 0],
-    exposure: 0.88,
+    rimIntensity: 1.55,
+    rimPosition: [0.8, 4.75, -2.55],
+    rimTarget: [0, 1.54, 0],
+    exposure: 0.86,
   },
   neon: {
     id: 'neon',
@@ -102,10 +102,10 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.85, 1.9, 2.1],
     fillTarget: [0, 1.08, 0],
     rimColor: 0x6dff9a,
-    rimIntensity: 2.15,
-    rimPosition: [3.2, 2.65, -3.55],
-    rimTarget: [0, 1.42, 0],
-    exposure: 0.84,
+    rimIntensity: 3.1,
+    rimPosition: [1.15, 4.7, -2.7],
+    rimTarget: [0, 1.54, 0],
+    exposure: 0.82,
   },
   edge: {
     id: 'edge',
@@ -119,10 +119,10 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     fillPosition: [2.7, 1.85, 2.05],
     fillTarget: [0, 1.08, 0],
     rimColor: 0x38d5ff,
-    rimIntensity: 2.55,
-    rimPosition: [3.35, 2.75, -3.6],
-    rimTarget: [0, 1.44, 0],
-    exposure: 0.84,
+    rimIntensity: 4.1,
+    rimPosition: [1.25, 4.9, -2.9],
+    rimTarget: [0, 1.56, 0],
+    exposure: 0.8,
   },
 };
 
@@ -131,9 +131,9 @@ export function createDefaultLookSettings(): LookSettings {
     preset: 'standard',
     keyIntensityScale: 1,
     fillIntensityScale: 1,
-    rimStrength: 'soft',
+    rimStrength: 'medium',
     rimColor: 'blue',
-    rimDirection: 'right-back',
+    rimDirection: 'top-back',
   };
 }
 
@@ -173,11 +173,11 @@ function getRimIntensity(strength: RimLightStrength, presetIntensity: number): n
     case 'off':
       return 0;
     case 'soft':
-      return Math.min(presetIntensity, 1.05);
+      return Math.min(presetIntensity, 1.45);
     case 'medium':
-      return Math.max(presetIntensity, 1.45);
+      return Math.max(presetIntensity, 2.35);
     case 'strong':
-      return Math.max(presetIntensity, 2.4);
+      return Math.max(presetIntensity, 3.8);
   }
 }
 
@@ -200,11 +200,11 @@ function getRimPosition(
 ): [number, number, number] {
   switch (direction) {
     case 'left-back':
-      return [-3.2, 2.65, -3.55];
+      return [-2.35, 3.85, -2.75];
     case 'right-back':
-      return [3.2, 2.65, -3.55];
+      return [2.35, 3.85, -2.75];
     case 'top-back':
-      return [0, 5.2, -1.15];
+      return [0, 5.65, -1.05];
     default:
       return fallback;
   }

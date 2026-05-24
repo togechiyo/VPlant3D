@@ -43,9 +43,9 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#look-preset-select')).toHaveValue('standard');
   await expect(page.locator('#key-light-scale-input')).toHaveValue('1');
   await expect(page.locator('#fill-light-scale-input')).toHaveValue('1');
-  await expect(page.locator('#rim-light-strength-select')).toHaveValue('soft');
+  await expect(page.locator('#rim-light-strength-select')).toHaveValue('medium');
   await expect(page.locator('#rim-light-color-select')).toHaveValue('blue');
-  await expect(page.locator('#rim-light-direction-select')).toHaveValue('right-back');
+  await expect(page.locator('#rim-light-direction-select')).toHaveValue('top-back');
   await expect(page.getByText('位置調整')).toBeVisible();
   await expect(page.locator('#avatar-offset-x-input')).toHaveValue('0');
   await expect(page.locator('#avatar-scale-input')).toHaveValue('1');

@@ -476,8 +476,8 @@ if (isControlPage) {
           <span>Rim</span>
           <select id="rim-light-strength-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
             <option value="off">OFF</option>
-            <option value="soft" selected>弱</option>
-            <option value="medium">中</option>
+            <option value="soft">弱</option>
+            <option value="medium" selected>中</option>
             <option value="strong">強</option>
           </select>
         </label>
@@ -493,8 +493,8 @@ if (isControlPage) {
           <span>方向</span>
           <select id="rim-light-direction-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
             <option value="left-back">左後</option>
-            <option value="right-back" selected>右後</option>
-            <option value="top-back">上後</option>
+            <option value="right-back">右後</option>
+            <option value="top-back" selected>上後</option>
           </select>
         </label>
       </div>

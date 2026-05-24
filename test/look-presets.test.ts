@@ -17,10 +17,10 @@ describe('look presets', () => {
     expect(lights.fillIntensity).toBeCloseTo(0.26);
     expect(lights.fillPosition[0]).toBeGreaterThan(0);
     expect(lights.fillPosition[2]).toBeGreaterThan(0);
-    expect(lights.rimIntensity).toBeCloseTo(1.05);
+    expect(lights.rimIntensity).toBeCloseTo(2.35);
     expect(lights.rimColor).toBe(0x38d5ff);
-    expect(lights.rimPosition).toEqual([3.2, 2.65, -3.55]);
-    expect(lights.rimTarget).toEqual([0, 1.42, 0]);
+    expect(lights.rimPosition).toEqual([0, 5.65, -1.05]);
+    expect(lights.rimTarget).toEqual([0, 1.52, 0]);
   });
 
   it('applies key and fill intensity scales with clamping', () => {
@@ -42,9 +42,9 @@ describe('look presets', () => {
       rimDirection: 'left-back',
     });
 
-    expect(lights.rimIntensity).toBeCloseTo(2.4);
+    expect(lights.rimIntensity).toBeCloseTo(3.8);
     expect(lights.rimColor).toBe(0x6dff9a);
-    expect(lights.rimPosition).toEqual([-3.2, 2.65, -3.55]);
+    expect(lights.rimPosition).toEqual([-2.35, 3.85, -2.75]);
   });
 
   it('normalizes partial or invalid settings', () => {
