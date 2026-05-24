@@ -2952,3 +2952,31 @@
 - 人間がChromeでカメラ確認し、手首が狙った位置へ近づくか、左右や上下の向きが合うかを見る
 - 手首位置が合うが肘が不自然な場合は、pole方向とside別signを調整する
 - 手首位置自体が大きく外れる場合は、2.5D座標変換のscale/gainを調整する
+
+## 2026-05-24 Arm IK Initial Pose Fix
+
+### Goal
+
+- `手の骨格` を有効にしただけで腕が初期姿勢から大きくずれる問題を直す
+
+### Findings
+
+- 腕IKがMediaPipe Poseの手首だけで発火しており、Hand Landmarkerで手が検出されたかをgateしていなかった
+- VRMの実際の休止腕方向を見ず、左右固定のX方向をrest directionとして使っていたため、モデルによって有効化直後から腕が大きくずれる可能性があった
+
+### Did
+
+- Hand Landmarkerで検出された側だけ腕IKを適用するようにした
+- 手が未検出の場合は腕IKをresetし、Pose wristだけでは腕を動かさないようにした
+- VRMロード時にrest bone world positionを保存し、`upperArm -> lowerArm -> hand` の実際の休止方向をIKの基準にするようにした
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+
+### Next
+
+- Chromeで再確認し、ON直後の腕が休止姿勢から大きく飛ばないか見る
+- まだ左右や上下がおかしい場合は、次にMediaPipe座標からVRM座標へのsign/gainを調整する

@@ -362,6 +362,7 @@ const relayClient = new VPlantRelayClient(
   handleRelayMessage,
 );
 const restBoneQuaternions = new Map<string, THREE.Quaternion>();
+const restBoneWorldPositions = new Map<string, THREE.Vector3>();
 const avatarBasePosition = new THREE.Vector3();
 const avatarBaseScale = new THREE.Vector3(1, 1, 1);
 let avatarBaseRotationY = 0;
@@ -2028,6 +2029,8 @@ function rotateNormalizedBone(
 
 function captureRestBoneQuaternions(vrm: VRM): void {
   restBoneQuaternions.clear();
+  restBoneWorldPositions.clear();
+  vrm.scene.updateWorldMatrix(true, true);
 
   for (const boneName of [
     VRMHumanBoneName.Chest,
@@ -2041,6 +2044,7 @@ function captureRestBoneQuaternions(vrm: VRM): void {
 
     if (bone) {
       restBoneQuaternions.set(boneName, bone.quaternion.clone());
+      restBoneWorldPositions.set(boneName, bone.getWorldPosition(new THREE.Vector3()));
     }
   }
 }
@@ -2774,10 +2778,9 @@ function runPoseDebugFrame(frameTime: number): void {
       const landmarks = result.landmarks[0] ?? [];
       const summary = summarizeUpperBodyPose(landmarks);
       updateUpperBodyRetarget(summary);
-      updateArmIkRetarget(landmarks);
       drawPoseDebugLandmarks(landmarks);
       runFaceTrackingFrame(poseVideoElement, frameTime);
-      runHandTrackingFrame(poseVideoElement, frameTime);
+      runHandTrackingFrame(poseVideoElement, frameTime, landmarks);
       appStore
         .getState()
         .setPoseFrame(
@@ -2909,9 +2912,14 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
     );
 }
 
-function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): void {
+function runHandTrackingFrame(
+  videoFrame: HTMLVideoElement,
+  frameTime: number,
+  poseLandmarks: Parameters<typeof createArmIkRetargetPose>[0],
+): void {
   const nextState = appStore.getState();
   if (!nextState.handTrackingEnabled || !handTracker || nextState.handTrackingStatus !== 'active') {
+    resetArmIkRetarget();
     return;
   }
 
@@ -2921,6 +2929,7 @@ function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
     mirrorInput: appStore.getState().poseMirrorInput,
   });
   handRetargetPose = smoothHandRetargetPose(handRetargetPose, nextHandPose);
+  updateArmIkRetarget(poseLandmarks, nextHandPose);
   drawHandDebugLandmarks(result.landmarks);
   const gripAmount = getHandPoseGripAmount(handRetargetPose);
   const armIkSummary = formatArmIkStatus(armIkRetargetPose);
@@ -3096,20 +3105,30 @@ function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
   }
 }
 
-function updateArmIkRetarget(landmarks: Parameters<typeof createArmIkRetargetPose>[0]): void {
+function updateArmIkRetarget(
+  landmarks: Parameters<typeof createArmIkRetargetPose>[0],
+  detectedHands: HandRetargetPose,
+): void {
   const nextState = appStore.getState();
 
-  if (!nextState.handTrackingEnabled) {
+  if (!nextState.handTrackingEnabled || !hasHandTarget(detectedHands)) {
     resetArmIkRetarget();
     return;
   }
 
-  armIkRetargetPose = smoothArmIkRetargetPose(
-    armIkRetargetPose,
-    createArmIkRetargetPose(landmarks, {
-      mirrorInput: nextState.poseMirrorInput,
-    }),
-  );
+  const nextPose = createArmIkRetargetPose(landmarks, {
+    mirrorInput: nextState.poseMirrorInput,
+  });
+
+  if (!detectedHands.left) {
+    nextPose.left = null;
+  }
+
+  if (!detectedHands.right) {
+    nextPose.right = null;
+  }
+
+  armIkRetargetPose = smoothArmIkRetargetPose(armIkRetargetPose, nextPose);
 }
 
 function applyUpperBodyRetarget(): void {
@@ -3209,9 +3228,14 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
     return;
   }
 
-  const upperPosition = upperBone.getWorldPosition(new THREE.Vector3());
-  const lowerPosition = lowerBone.getWorldPosition(new THREE.Vector3());
-  const handPosition = handBone.getWorldPosition(new THREE.Vector3());
+  const upperPosition = restBoneWorldPositions.get(upperBoneName);
+  const lowerPosition = restBoneWorldPositions.get(lowerBoneName);
+  const handPosition = restBoneWorldPositions.get(handBoneName);
+
+  if (!upperPosition || !lowerPosition || !handPosition) {
+    return;
+  }
+
   const upperLength = upperPosition.distanceTo(lowerPosition);
   const lowerLength = lowerPosition.distanceTo(handPosition);
   const armReach = Math.max(upperLength + lowerLength, 0.0001);
@@ -3225,21 +3249,21 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
     upperLength,
     lowerLength,
   });
-  const sideSign = side === 'left' ? 1 : -1;
-  const restDirection = new THREE.Vector3(sideSign, 0, 0);
+  const restUpperDirection = lowerPosition.clone().sub(upperPosition).normalize();
+  const restLowerDirection = handPosition.clone().sub(lowerPosition).normalize();
   const solvedElbow = toThreeVector(solved.elbow);
   const solvedWrist = toThreeVector(solved.wrist);
   const upperDirection = solvedElbow.lengthSq() > 0.000001
     ? solvedElbow.clone().normalize()
-    : restDirection.clone();
+    : restUpperDirection.clone();
   const lowerWorldDirection = solvedWrist.sub(solvedElbow);
   const lowerDirection = lowerWorldDirection.lengthSq() > 0.000001
     ? lowerWorldDirection.normalize()
-    : restDirection.clone();
-  const upperDelta = new THREE.Quaternion().setFromUnitVectors(restDirection, upperDirection);
+    : restLowerDirection.clone();
+  const upperDelta = new THREE.Quaternion().setFromUnitVectors(restUpperDirection, upperDirection);
   const lowerLocalDirection = lowerDirection.clone().applyQuaternion(upperDelta.clone().invert());
   const lowerDelta = new THREE.Quaternion().setFromUnitVectors(
-    restDirection,
+    restLowerDirection,
     lowerLocalDirection.normalize(),
   );
 
