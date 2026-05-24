@@ -21,6 +21,7 @@ let latestVrmaCommandMessage = null;
 let activeControlSocket = null;
 const clientRoles = new WeakMap();
 const clientIds = new WeakMap();
+const clientLastRealtimeAt = new WeakMap();
 let nextClientId = 1;
 
 const vite = await createViteServer({
@@ -124,7 +125,7 @@ webSocketServer.on('connection', (webSocket) => {
       message.includes('"type":"motionState"') ||
       message.includes('"type":"expressionState"');
 
-    if (isRealtimeState && webSocket !== activeControlSocket) {
+    if (isRealtimeState && shouldRejectRealtimeFrom(webSocket)) {
       pushDebugEvent({
         kind: 'realtime',
         socketId: clientId,
@@ -135,6 +136,11 @@ webSocketServer.on('connection', (webSocket) => {
         activeControlId: activeControlSocket ? clientIds.get(activeControlSocket) : null,
       });
       return;
+    }
+
+    if (isRealtimeState && clientRoles.get(webSocket) === 'control') {
+      activeControlSocket = webSocket;
+      clientLastRealtimeAt.set(webSocket, Date.now());
     }
 
     rememberLatestMessage(message);
@@ -168,6 +174,7 @@ webSocketServer.on('connection', (webSocket) => {
     });
     clientRoles.delete(webSocket);
     clientIds.delete(webSocket);
+    clientLastRealtimeAt.delete(webSocket);
     if (activeControlSocket === webSocket) {
       activeControlSocket = null;
     }
@@ -250,6 +257,23 @@ function parseRelayMessage(message) {
   } catch {
     return null;
   }
+}
+
+function shouldRejectRealtimeFrom(webSocket) {
+  if (clientRoles.get(webSocket) !== 'control') {
+    return false;
+  }
+
+  if (!activeControlSocket || activeControlSocket === webSocket) {
+    return false;
+  }
+
+  if (activeControlSocket.readyState !== 1) {
+    return false;
+  }
+
+  const lastActiveRealtimeAt = clientLastRealtimeAt.get(activeControlSocket) ?? 0;
+  return Date.now() - lastActiveRealtimeAt <= 1000;
 }
 
 function pushDebugEvent(event) {
