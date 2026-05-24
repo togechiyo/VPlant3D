@@ -122,6 +122,7 @@ Setup Mode also includes Avatar Framing sliders for X/Y position, scale, and Y-a
 - [Mic Reactive Mouth notes](./docs/mic-reactive-mouth-notes.md)
 - [MediaPipe Pose Debug notes](./docs/mediapipe-pose-debug-notes.md)
 - [Face and Hand Tracking notes](./docs/face-hand-tracking-notes.md)
+- [Hand Retargeting Research](./docs/hand-retargeting-research.md)
 - [MMD_modoki reference notes](./docs/mmd-modoki-reference.md)
 - [Codex usage notes](./docs/codex-usage-2026-05-20.md)
 - [Human handoff board](./docs/human-handoff-board.md)

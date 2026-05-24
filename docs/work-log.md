@@ -2876,3 +2876,26 @@
 
 - 同じ症状が再発した場合は、まず `?debug=1` と `/relay/debug-log` でruntime sequence / socketId / expression pipelineを確認する
 - 補正やsmoothingを増やす前に、Control送信前、relay採用、OBS受信、VRM適用後のどこで値が崩れたかを確定させる
+
+## 2026-05-24 Hand Retargeting Research
+
+### Goal
+
+- 現在のハンドトラッキングで手首が意図した位置へ来ない原因を調べ、MediaPipeからVRMへ流し込む一般的な実装方針を整理する
+
+### Findings
+
+- MediaPipe Hand Landmarkerのworld landmarksは手の幾何中心がoriginなので、手指形状や掌向きには使えるが、腕全体の手首位置決めには向かない
+- 手首位置はMediaPipe Poseの肩・肘・手首から作り、VRM側では `upperArm -> lowerArm -> hand` の2ボーンIKとして解くのが妥当
+- 現在のVPlant3Dは腕をroll量で近似しており、手首到達点を解いていないため、手首位置が合わないのは設計上の限界
+
+### Did
+
+- [Hand Retargeting Research](./hand-retargeting-research.md) を追加した
+- MediaPipe Hand / Pose / Holistic、VRM humanoid、three-vrm normalized bone APIを確認した
+- 次の実装方針として、Pose wrist targetによる腕IK、Hand landmarksによる掌向き/指カール、Holistic Landmarkerの後日評価を提案した
+
+### Next
+
+- `src/mocap/arm-ik-retarget.ts` のような純粋ロジックから作り、肩・肘・手首targetと到達可能距離clampのテストを書く
+- 現在のroll-based arm retargetを置き換える前に、debug overlayへtarget wrist / solved wrist / confidenceを表示する
