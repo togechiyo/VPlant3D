@@ -3157,3 +3157,28 @@
 
 - 依存追加は行わない
 - 手指を再開する場合は、Human/KalidoKitの考え方を参考に、指curlだけを純ロジックとして小さく再実装する
+
+## 2026-05-25 HolisticMotionCapture Research
+
+### Goal
+
+- HolisticMotionCaptureがVPlant3DのMediaPipe/VRMリターゲット改善候補になるか調べる
+
+### Did
+
+- HolisticMotionCapture GitHub、README、Unity package、npm情報、主要C# sourceを確認した
+- [HolisticMotionCapture 調査メモ](./holistic-motion-capture-research.md) を追加した
+
+### Findings
+
+- HolisticMotionCaptureはUnity app/packageで、`HolisticBarracuda`、UniVRM、Unity Animator前提
+- packageはApache-2.0だが、最終更新は2023年で、VRM 1.0非対応
+- VPlant3Dへ直接導入はできない
+- 参考価値が高いのは速度適応型LowPassFilter、手指ボーンの初期姿勢補正、blink/mouthのlandmark距離ベース計算
+- 手首位置や腕IKの自然さは、この実装でも根本解決していない
+
+### Next
+
+- 依存追加は行わない
+- 表情や頭/体の追従改善で、HolisticMotionCaptureのLowPassFilter方式を参考にするか検討する
+- 手指を再開する場合は、手首位置ではなく指curlだけに限定する
