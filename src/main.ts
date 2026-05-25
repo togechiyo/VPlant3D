@@ -589,13 +589,13 @@ if (isControlPage) {
     </div>
     <div class="grid gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
       <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">手 / 指</span>
-        <strong class="text-sm font-bold text-[#eef4f2]">指トラック</strong>
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">腕 / 手首</span>
+        <strong class="text-sm font-bold text-[#eef4f2]">PoseLandmarker</strong>
         <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">手: 待機</span>
       </div>
       <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
         <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" />
-        手 / 指
+        腕 / 手首
       </label>
     </div>
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/25 bg-black/20 p-2">
@@ -796,7 +796,7 @@ if (isControlPage) {
     if (!enabled) {
       clearArmRetargetPose();
       appStore.getState().setHandTrackingStopped();
-    } else if (handTracker && appStore.getState().poseStatus === 'active') {
+    } else if (appStore.getState().poseStatus === 'active') {
       appStore.getState().setHandTrackingActive();
     }
   });
@@ -2718,23 +2718,20 @@ async function startPoseDebug(): Promise<void> {
 
     const { MediaPipePoseDebug } = await import('./mocap/mediapipe-pose-debug');
     const faceHandModule = await import('./mocap/mediapipe-face-hand');
-    const [nextPoseController, nextFaceTracker, nextHandTracker] = await Promise.all([
+    const [nextPoseController, nextFaceTracker] = await Promise.all([
       MediaPipePoseDebug.create(),
       nextState.faceTrackingEnabled
         ? faceHandModule.MediaPipeFaceTracker.create()
         : Promise.resolve(null),
-      nextState.handTrackingEnabled
-        ? faceHandModule.MediaPipeHandTracker.create()
-        : Promise.resolve(null),
     ]);
     poseController = nextPoseController;
     faceTracker = nextFaceTracker;
-    handTracker = nextHandTracker;
+    handTracker = null;
     appStore.getState().setPoseActive();
     if (faceTracker) {
       appStore.getState().setFaceTrackingActive();
     }
-    if (handTracker) {
+    if (nextState.handTrackingEnabled) {
       appStore.getState().setHandTrackingActive();
     }
     lastPoseVideoTime = -1;
@@ -3133,16 +3130,12 @@ function updateArmIkRetarget(
 
   if (!hasArmIkTarget(nextPose)) {
     resetArmIkRetarget();
-    return;
-  }
-
-  if (!armIkBaselinePose) {
-    armIkBaselinePose = nextPose;
-    armIkRetargetPose = createNeutralArmIkRetargetPose();
+    appStore.getState().setHandTrackingFrame('腕: 未検出');
     return;
   }
 
   armIkRetargetPose = smoothArmIkRetargetPose(armIkRetargetPose, nextPose);
+  appStore.getState().setHandTrackingFrame(formatArmIkStatus(armIkRetargetPose));
 }
 
 function applyUpperBodyRetarget(): void {
@@ -3253,19 +3246,15 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
   const upperLength = upperPosition.distanceTo(lowerPosition);
   const lowerLength = lowerPosition.distanceTo(handPosition);
   const armReach = Math.max(upperLength + lowerLength, 0.0001);
-  const baselineTarget = getArmIkSideTarget(armIkBaselinePose, side);
-
-  if (!baselineTarget) {
-    return;
-  }
-
   const restWrist = handPosition.clone().sub(upperPosition);
   const restElbow = lowerPosition.clone().sub(upperPosition);
-  const targetWristDelta = toThreeVector(subtractIkVector(target.wrist, baselineTarget.wrist));
-  const targetElbowDelta = toThreeVector(subtractIkVector(target.elbow, baselineTarget.elbow));
+  const poseWrist = subtractIkVector(target.wrist, target.shoulder);
+  const poseElbow = subtractIkVector(target.elbow, target.shoulder);
+  const targetWristFromPose = createArmVectorFromPose(poseWrist, restWrist, armReach);
+  const targetElbowFromPose = createArmVectorFromPose(poseElbow, restElbow, armReach * 0.52);
   const biasedTarget = biasArmIkTargetToFront({
-    targetWrist: restWrist.clone().add(targetWristDelta.multiplyScalar(armReach * 1.05)),
-    pole: restElbow.clone().add(targetElbowDelta.multiplyScalar(armReach * 0.9)),
+    targetWrist: targetWristFromPose,
+    pole: targetElbowFromPose,
     restWrist,
     restElbow,
     armReach,
@@ -3302,15 +3291,27 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
   lowerBone.userData.vplant3dArmIkActive = true;
 }
 
-function toThreeVector(vector: Vector3Like): THREE.Vector3 {
-  return new THREE.Vector3(vector.x, vector.y, vector.z);
+function createArmVectorFromPose(
+  poseVector: Vector3Like,
+  fallback: THREE.Vector3,
+  targetLength: number,
+): THREE.Vector3 {
+  const pose = toThreeVector(poseVector);
+
+  if (pose.lengthSq() <= 0.000001) {
+    return fallback.clone();
+  }
+
+  const reachRatio = clamp(pose.length() * 0.58, 0.34, 0.98);
+  return pose.normalize().multiplyScalar(targetLength * reachRatio);
 }
 
-function getArmIkSideTarget(
-  pose: ArmIkRetargetPose | null,
-  side: 'left' | 'right',
-): ArmIkSideTarget | null {
-  return side === 'left' ? (pose?.left ?? null) : (pose?.right ?? null);
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function toThreeVector(vector: Vector3Like): THREE.Vector3 {
+  return new THREE.Vector3(vector.x, vector.y, vector.z);
 }
 
 function applyHandRetarget(): void {

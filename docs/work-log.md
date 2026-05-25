@@ -3215,3 +3215,34 @@
 
 - ハンドトラッキングUIはまだしまったままにする
 - 再開する場合は、KalidoKit-style arm rotationと既存IK targetのどちらを使うか切り替え可能にして、腕上げ、肘曲げ、体の前の手首位置だけを確認する
+
+## 2026-05-26 PoseLandmarker Arm / Wrist Retarget
+
+### Goal
+
+- HandLandmarkerを使わず、PoseLandmarkerの肩・肘・手首だけで腕と手首位置を安定して反映する方向へ切り替える
+
+### Did
+
+- `手 / 指` UIを `腕 / 手首` に変更し、PoseLandmarkerベースの腕トラックとして扱うようにした
+- `手 / 指` チェックON時も HandLandmarker は起動しないようにした
+- 腕IKを初期キャリブレーション差分方式から、PoseLandmarkerの shoulder -> elbow / wrist ベクトルを直接使う方式へ変更した
+- 手が体の前に来やすい既存のfront biasは維持した
+
+### Findings
+
+- 以前の方式は初期フレームをbaselineにして差分だけを入れていたため、初期姿勢がずれると腕全体がずれやすい
+- 今回はabsoluteなPoseLandmarkerベクトルから腕方向を作るため、初期姿勢依存は減るはず
+- まだモデルごとの腕軸差、MediaPipe z軸、手首向きは人力確認が必要
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで、腕を下げる、横に上げる、前に出す、肘を曲げる、の4ケースを確認する
+- 手首位置がまだ合わない場合は、KalidoKit-style arm rotation方式を別経路として実装して比較する
