@@ -3134,3 +3134,26 @@
 - 依存追加は行わない
 - KalidoKitは必要に応じてアルゴリズム参考として読む
 - カメラなし操作、マイク口パク、表情、VRMA、ライト調整の安定化を優先する
+
+## 2026-05-25 @vladmandic/human + three-vrm Research
+
+### Goal
+
+- `@vladmandic/human` と `three-vrm` 連携が、VPlant3Dの手・体・顔トラッキング改善に使えるか調べる
+
+### Did
+
+- `@vladmandic/human` GitHub/Wiki/TypeDoc/npm、`human-three-vrm` GitHubと主要sourceを確認した
+- [@vladmandic/human + three-vrm 調査メモ](./vladmandic-human-three-vrm-research.md) を追加した
+
+### Findings
+
+- `@vladmandic/human` 本体はMITで、顔・体・手・ジェスチャーを統合的に扱える
+- `human-three-vrm` は `Human + Three.js + @pixiv/three-vrm` の実例だが、2024-09-06にarchive済み
+- `human-three-vrm` でも手は主に手首回転とfinger curlで、VPlant3Dが詰まった手首位置・腕IKの自然さは解決していない
+- 短期MVPでは導入せず、手指curlや補間設計の参考に留める
+
+### Next
+
+- 依存追加は行わない
+- 手指を再開する場合は、Human/KalidoKitの考え方を参考に、指curlだけを純ロジックとして小さく再実装する
