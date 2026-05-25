@@ -587,6 +587,17 @@ if (isControlPage) {
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">体 / 腕</span>
       </div>
     </div>
+    <div class="grid gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">手 / 指</span>
+        <strong class="text-sm font-bold text-[#eef4f2]">指トラック</strong>
+        <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">手: 待機</span>
+      </div>
+      <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+        <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" />
+        手 / 指
+      </label>
+    </div>
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/25 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">位置調整</span>
