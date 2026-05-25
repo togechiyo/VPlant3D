@@ -3111,3 +3111,26 @@
 
 - 実モデルで `標準` と `輪郭強調` の見え方を確認する
 - エッジが飛びすぎる場合は `strong` の下限か `edge` presetのrimIntensityを少し下げる
+
+## 2026-05-25 KalidoKit / TensorFlow.js Pose Detection Research
+
+### Goal
+
+- KalidoKit と TensorFlow.js Pose Detection が、VPlant3DのMediaPipe/VRMリターゲット改善に使えるか調べる
+
+### Did
+
+- KalidoKit GitHub/npm、TensorFlow.js Pose Detection README、TensorFlow.js Models、TensorFlow Blog、npm package情報を確認した
+- [KalidoKit / TensorFlow.js Pose Detection 調査メモ](./kalidokit-tfjs-pose-detection-research.md) を追加した
+
+### Findings
+
+- KalidoKitはVRM/Live2D向けのsolve実装として参考になるが、公式READMEで非推奨化が明記されているため依存追加は避ける
+- TensorFlow.js Pose DetectionはMoveNet/BlazePose/PoseNetを扱えるが、既存MediaPipe Tasks Visionを置き換えてもVRM腕IKや手の自然な流し込み問題は残る
+- 短期MVPでは導入せず、必要なら別ブランチでControl Pageのskeleton overlay比較スパイクに限定する
+
+### Next
+
+- 依存追加は行わない
+- KalidoKitは必要に応じてアルゴリズム参考として読む
+- カメラなし操作、マイク口パク、表情、VRMA、ライト調整の安定化を優先する
