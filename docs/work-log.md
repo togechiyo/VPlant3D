@@ -3182,3 +3182,36 @@
 - 依存追加は行わない
 - 表情や頭/体の追従改善で、HolisticMotionCaptureのLowPassFilter方式を参考にするか検討する
 - 手指を再開する場合は、手首位置ではなく指curlだけに限定する
+
+## 2026-05-25 KalidoKit Hand Retarget Adaptation
+
+### Goal
+
+- 自前のハンド流し込みが不安定だったため、KalidoKitの腕・手リターゲット実装を確認し、借りられる範囲を小さく取り込む
+
+### Did
+
+- `kalidokit@1.1.5` のnpm packageを確認した
+- `Hand.solve`、`PoseSolver.calcArms`、vector utility、MIT licenseを確認した
+- `Hand.solve` の手のひら平面から手首回転を出す方式を `src/mocap/hand-landmarks.ts` に反映した
+- 指カールとrelay payload形式は既存のまま維持した
+- [KalidoKit リターゲット移植メモ](./kalidokit-adaptation-notes.md) を追加した
+- [third-party-libraries.md](./third-party-libraries.md) にKalidoKitを「依存ではなくアルゴリズム参考」として追記した
+
+### Findings
+
+- KalidoKitのハンドは手首・指の回転ソルバであり、手首位置IKそのものではない
+- `PoseSolver.calcArms` も肩・肘・手首から回転を作る実装で、VPlant3Dで詰まっていた「手首を意図位置へ持っていく」問題は別途IK/補正が必要
+- ただし、手首回転は既存の簡易2D推定よりKalidoKit方式の方が根拠が明確
+
+### Verified
+
+- `npm run test -- hand-landmarks`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+
+### Next
+
+- ハンドトラッキングUIはまだしまったままにする
+- 再開する場合は、KalidoKit-style arm rotationと既存IK targetのどちらを使うか切り替え可能にして、腕上げ、肘曲げ、体の前の手首位置だけを確認する

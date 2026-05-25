@@ -45,6 +45,7 @@ Versions and licenses below were verified from installed package metadata in `no
 | Package / API | Version | License | Role |
 | --- | ---: | --- | --- |
 | `@mediapipe/tasks-vision` | `0.10.35` | Apache-2.0 | Camera-based tracking. Current implementation uses Pose Landmarker for upper-body mocap, Face Landmarker for VRM expressions/lip sync, and Hand Landmarker for hand skeleton plus first-pass VRM finger curl retargeting. |
+| `kalidokit` | `1.1.5` | MIT | Not installed as a runtime dependency. Used as an algorithm reference for hand/wrist retargeting math; adapted code paths must keep MIT attribution. See [KalidoKit リターゲット移植メモ](./kalidokit-adaptation-notes.md). |
 | Web Audio API | n/a | n/a | Browser API for microphone input and RMS volume analysis for Mic Reactive Mouth. Uses `AudioContext`, `MediaStreamAudioSourceNode`, and `AnalyserNode.getFloatTimeDomainData`. |
 | MediaDevices API | n/a | n/a | Browser API for microphone and camera devices. |
 

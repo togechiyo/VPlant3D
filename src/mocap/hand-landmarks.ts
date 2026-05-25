@@ -84,7 +84,7 @@ export function createHandRetargetPose(
     }
 
     const targetSide = options.mirrorInput ? getOppositeHandSide(sourceSide) : sourceSide;
-    pose[targetSide] = createHandTarget(hand, options);
+    pose[targetSide] = createHandTarget(hand, targetSide, options);
   }
 
   return pose;
@@ -122,12 +122,13 @@ export function getHandPoseGripAmount(pose: HandRetargetPose): number {
 
 function createHandTarget(
   hand: NormalizedLandmark[],
+  targetSide: 'left' | 'right',
   options: HandRetargetOptions,
 ): HandRetargetTarget {
   const motionHand = options.mirrorInput ? mirrorHandX(hand) : hand;
   return {
-    fingers: createFingerCurl(hand),
-    ...createWristRotation(motionHand),
+    fingers: createFingerCurl(motionHand),
+    ...createWristRotation(motionHand, targetSide),
   };
 }
 
@@ -187,17 +188,18 @@ function calculateJointAngle(
   return Math.acos(clamp(dot / (aLength * bLength), -1, 1));
 }
 
-function createWristRotation(hand: NormalizedLandmark[]): Pick<
+function createWristRotation(
+  hand: NormalizedLandmark[],
+  targetSide: 'left' | 'right',
+): Pick<
   HandRetargetTarget,
   'wristPitch' | 'wristYaw' | 'wristRoll'
 > {
   const wrist = hand[0];
-  const middleMcp = hand[9];
-  const middleTip = hand[12];
   const indexMcp = hand[5];
   const littleMcp = hand[17];
 
-  if (!wrist || !middleMcp || !middleTip || !indexMcp || !littleMcp) {
+  if (!wrist || !indexMcp || !littleMcp) {
     return {
       wristPitch: 0,
       wristYaw: 0,
@@ -205,15 +207,22 @@ function createWristRotation(hand: NormalizedLandmark[]): Pick<
     };
   }
 
-  const fingerDirectionX = middleMcp.x - wrist.x;
-  const fingerDirectionY = middleMcp.y - wrist.y;
-  const fingerAngle = Math.atan2(fingerDirectionY, fingerDirectionX);
-  const wristRoll = clamp(normalizeAngle(fingerAngle + Math.PI / 2), -0.95, 0.95);
-  const palmCenterX = (indexMcp.x + middleMcp.x + littleMcp.x) / 3;
-  const palmCenterZ = ((indexMcp.z ?? 0) + (middleMcp.z ?? 0) + (littleMcp.z ?? 0)) / 3;
-  const wristYaw = clamp((palmCenterX - wrist.x) * 3.2 + palmCenterZ * 0.8, -0.55, 0.55);
-  const fingerLength = Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y);
-  const wristPitch = clamp((0.42 - fingerLength) * 1.6, -0.42, 0.42);
+  // KalidoKit-inspired wrist solve. KalidoKit is MIT licensed by yeemachine;
+  // see docs/kalidokit-adaptation-notes.md for attribution and scope.
+  const palmA = toVector(wrist);
+  const palmB = toVector(targetSide === 'right' ? littleMcp : indexMcp);
+  const palmC = toVector(targetSide === 'right' ? indexMcp : littleMcp);
+  const palmRotation = rollPitchYaw(palmA, palmB, palmC);
+  const invert = targetSide === 'right' ? 1 : -1;
+  const kalidoYaw = palmRotation.z - 0.4;
+
+  const wristPitch = clamp(palmRotation.x * 2 * invert, -0.3, 0.3);
+  const wristYaw = clamp(
+    kalidoYaw * 2.3,
+    targetSide === 'right' ? -1.2 : -0.6,
+    targetSide === 'right' ? 0.6 : 1.6,
+  );
+  const wristRoll = clamp(palmRotation.z * -2.3 * invert, -1.2, 1.2);
 
   return {
     wristPitch,
@@ -256,6 +265,68 @@ function mirrorHandX(hand: NormalizedLandmark[]): NormalizedLandmark[] {
   }));
 }
 
+interface Vector3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+function toVector(landmark: NormalizedLandmark): Vector3 {
+  return {
+    x: landmark.x,
+    y: landmark.y,
+    z: landmark.z ?? 0,
+  };
+}
+
+function rollPitchYaw(a: Vector3, b: Vector3, c: Vector3): Vector3 {
+  const qb = subtractVector(b, a);
+  const qc = subtractVector(c, a);
+  const normal = crossVector(qb, qc);
+  const unitZ = unitVector(normal);
+  const unitX = unitVector(qb);
+  const unitY = crossVector(unitZ, unitX);
+  const beta = Math.asin(unitZ.x) || 0;
+  const alpha = Math.atan2(-unitZ.y, unitZ.z) || 0;
+  const gamma = Math.atan2(-unitY.x, unitX.x) || 0;
+
+  return {
+    x: normalizeAngleUnit(alpha),
+    y: normalizeAngleUnit(beta),
+    z: normalizeAngleUnit(gamma),
+  };
+}
+
+function subtractVector(first: Vector3, second: Vector3): Vector3 {
+  return {
+    x: first.x - second.x,
+    y: first.y - second.y,
+    z: first.z - second.z,
+  };
+}
+
+function crossVector(first: Vector3, second: Vector3): Vector3 {
+  return {
+    x: first.y * second.z - first.z * second.y,
+    y: first.z * second.x - first.x * second.z,
+    z: first.x * second.y - first.y * second.x,
+  };
+}
+
+function unitVector(vector: Vector3): Vector3 {
+  const vectorLength = Math.hypot(vector.x, vector.y, vector.z);
+
+  if (vectorLength <= 0.000001) {
+    return { x: 0, y: 0, z: 0 };
+  }
+
+  return {
+    x: vector.x / vectorLength,
+    y: vector.y / vectorLength,
+    z: vector.z / vectorLength,
+  };
+}
+
 function normalizeAngle(value: number): number {
   let nextValue = value;
 
@@ -268,6 +339,10 @@ function normalizeAngle(value: number): number {
   }
 
   return nextValue;
+}
+
+function normalizeAngleUnit(value: number): number {
+  return normalizeAngle(value) / Math.PI;
 }
 
 function parseHandSide(categoryName: string | undefined): 'left' | 'right' | null {
