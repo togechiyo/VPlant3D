@@ -223,7 +223,7 @@ function calculateUpperArmRaise(
   shoulderSpan: number,
 ): number {
   const verticalDrop = (elbow.y - shoulder.y) / shoulderSpan;
-  return clamp01((0.72 - verticalDrop) / 0.72);
+  return clamp01((0.62 - verticalDrop) / 0.62);
 }
 
 function calculateUpperArmSpread(
@@ -232,7 +232,7 @@ function calculateUpperArmSpread(
   side: ArmIkSide,
 ): number {
   const outwardSign = side === 'left' ? 1 : -1;
-  return clamp01(((elbow.x - shoulder.x) * outwardSign) / 0.72);
+  return clamp01(((elbow.x - shoulder.x) * outwardSign) / 0.56);
 }
 
 function calculateLowerArmRaise(elbow: Vector3Like, wrist: Vector3Like): number {

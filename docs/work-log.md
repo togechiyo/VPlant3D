@@ -3306,3 +3306,29 @@
 - 実カメラで前腕の追従が強すぎないか確認する
 - まだ弱い場合は `lowerArmSpread` 係数を少し上げる
 - 手首が暴れる場合は `wristHint` を下げるか一旦0にする
+
+## 2026-05-27 Upper Arm Axis Tuning
+
+### Goal
+
+- 上腕の追従が弱く、肘曲げや回転軸が不自然に見えるため、簡易腕トラックのVRM反映係数を調整する
+
+### Did
+
+- 上腕の横開き検出を少し敏感にした
+- VRM反映側で、上腕の横開き、持ち上げ、奥行き方向の微調整を別軸へ分けた
+- 前腕は肘曲げを少し抑え、elbow -> wrist方向の補助回転を残しつつ暴れにくい係数へ寄せた
+
+### Verified
+
+- `npm run test -- arm-ik-target relay-motion-interpolation`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで、腕を横に上げる、肘を曲げる、片腕だけ動かすケースを確認する
+- 上腕がまだ弱い場合は `upperRoll` の上限と `upperSpread` 係数を少しだけ上げる
+- 肘が曲がりすぎる場合は `lowerBend` 係数をさらに下げる

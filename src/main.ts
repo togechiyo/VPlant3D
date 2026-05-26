@@ -3236,24 +3236,44 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
   }
 
   const sideSign = side === 'left' ? -1 : 1;
+  const upperRaise = clamp(target.upperArmRaise, 0, 1);
+  const upperSpread = clamp(target.upperArmSpread, 0, 1);
+  const lowerBend = clamp(target.lowerArmBend, 0, 1);
+  const lowerRaise = clamp(target.lowerArmRaise, -1, 1);
+  const lowerSpread = clamp(target.lowerArmSpread, -1, 1);
+  const elbowDepth = clamp(target.elbow.z - target.shoulder.z, -0.45, 0.45);
   const upperRoll = sideSign * clamp(
-    target.upperArmRaise * 0.5 + target.upperArmSpread * 0.28,
+    upperSpread * 0.72 + upperRaise * 0.2,
     0,
-    0.72,
+    0.92,
   );
-  const upperPitch = -target.upperArmRaise * 0.12;
+  const upperPitch = -clamp(
+    upperRaise * 0.28 + Math.max(0, lowerRaise) * 0.08,
+    0,
+    0.42,
+  );
+  const upperYaw = sideSign * clamp(
+    upperSpread * 0.12 - elbowDepth * 0.18,
+    -0.18,
+    0.18,
+  );
   const lowerRoll = sideSign * clamp(
-    target.lowerArmBend * 0.72 + target.lowerArmSpread * 0.42,
-    -0.35,
-    1.05,
+    lowerBend * 0.62 + lowerSpread * 0.34,
+    -0.28,
+    0.95,
   );
-  const lowerPitch = -target.lowerArmRaise * 0.18;
+  const lowerPitch = -lowerRaise * 0.26;
+  const lowerYaw = sideSign * clamp(
+    lowerSpread * 0.12,
+    -0.12,
+    0.12,
+  );
   const handRoll = sideSign * target.wristHint * 0.28;
   const upperDelta = new THREE.Quaternion().setFromEuler(
-    new THREE.Euler(upperPitch, 0, upperRoll, 'XYZ'),
+    new THREE.Euler(upperPitch, upperYaw, upperRoll, 'XYZ'),
   );
   const lowerDelta = new THREE.Quaternion().setFromEuler(
-    new THREE.Euler(lowerPitch, 0, lowerRoll, 'XYZ'),
+    new THREE.Euler(lowerPitch, lowerYaw, lowerRoll, 'XYZ'),
   );
   const handDelta = new THREE.Quaternion().setFromEuler(
     new THREE.Euler(0, 0, handRoll, 'XYZ'),
