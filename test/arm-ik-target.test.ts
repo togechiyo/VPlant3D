@@ -34,6 +34,13 @@ describe('createArmIkRetargetPose', () => {
     expect(pose.left?.lowerArmBend).toBeGreaterThan(0.65);
   });
 
+  it('uses elbow-to-wrist direction as lower arm controls', () => {
+    const pose = createArmIkRetargetPose(createRaisedPose(), { mirrorInput: false });
+
+    expect(pose.left?.lowerArmSpread).toBeGreaterThan(0.35);
+    expect(Math.abs(pose.left?.lowerArmRaise ?? 0)).toBeLessThan(0.12);
+  });
+
   it('does not create a target when wrist visibility is too low', () => {
     const landmarks = createLoweredPose();
     landmarks[15] = point(0.6, 0.72, 0, 0.1);

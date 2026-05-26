@@ -3279,3 +3279,30 @@
 - 実カメラで腕下げ、横上げ、肘曲げ、片腕だけ動かすケースを確認する
 - 腕が弱すぎる場合は `upperRoll` / `lowerRoll` の係数だけ少し上げる
 - 破綻が残る場合は、手首反映を完全に切って上腕・前腕だけにする
+
+## 2026-05-26 Forearm Direction Follow-Up
+
+### Goal
+
+- 肘までの動きは改善したが、前腕の角度と追従が弱いため、肘から手首への方向を追加で反映する
+
+### Did
+
+- `ArmIkSideTarget` に `lowerArmRaise` と `lowerArmSpread` を追加した
+- PoseLandmarkerの elbow -> wrist 方向を、前腕の補助回転として使うようにした
+- Control側の腕トラック smoothing を少し速くした
+- relayの `arms` payloadと補間にも前腕方向値を追加した
+- 前腕方向の単体テストを追加した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで前腕の追従が強すぎないか確認する
+- まだ弱い場合は `lowerArmSpread` 係数を少し上げる
+- 手首が暴れる場合は `wristHint` を下げるか一旦0にする

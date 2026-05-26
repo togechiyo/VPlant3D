@@ -1769,6 +1769,8 @@ function roundRelayArmIkTarget(target: ArmIkSideTarget): ArmIkSideTarget {
     pole: roundRelayVector3(target.pole),
     upperArmRaise: roundRelayValue(target.upperArmRaise, 4),
     upperArmSpread: roundRelayValue(target.upperArmSpread, 4),
+    lowerArmRaise: roundRelayValue(target.lowerArmRaise, 4),
+    lowerArmSpread: roundRelayValue(target.lowerArmSpread, 4),
     lowerArmBend: roundRelayValue(target.lowerArmBend, 4),
     wristHint: roundRelayValue(target.wristHint, 4),
     confidence: roundRelayValue(target.confidence, 3),
@@ -3131,7 +3133,7 @@ function updateArmIkRetarget(
     return;
   }
 
-  armIkRetargetPose = smoothArmIkRetargetPose(armIkRetargetPose, nextPose);
+  armIkRetargetPose = smoothArmIkRetargetPose(armIkRetargetPose, nextPose, 0.56);
   appStore.getState().setHandTrackingFrame(formatArmIkStatus(armIkRetargetPose));
 }
 
@@ -3240,13 +3242,18 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
     0.72,
   );
   const upperPitch = -target.upperArmRaise * 0.12;
-  const lowerRoll = sideSign * clamp(target.lowerArmBend * 0.92, 0, 1.0);
+  const lowerRoll = sideSign * clamp(
+    target.lowerArmBend * 0.72 + target.lowerArmSpread * 0.42,
+    -0.35,
+    1.05,
+  );
+  const lowerPitch = -target.lowerArmRaise * 0.18;
   const handRoll = sideSign * target.wristHint * 0.28;
   const upperDelta = new THREE.Quaternion().setFromEuler(
     new THREE.Euler(upperPitch, 0, upperRoll, 'XYZ'),
   );
   const lowerDelta = new THREE.Quaternion().setFromEuler(
-    new THREE.Euler(0, 0, lowerRoll, 'XYZ'),
+    new THREE.Euler(lowerPitch, 0, lowerRoll, 'XYZ'),
   );
   const handDelta = new THREE.Quaternion().setFromEuler(
     new THREE.Euler(0, 0, handRoll, 'XYZ'),

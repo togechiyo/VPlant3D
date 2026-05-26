@@ -17,6 +17,8 @@ export interface ArmIkSideTarget {
   pole: Vector3Like;
   upperArmRaise: number;
   upperArmSpread: number;
+  lowerArmRaise: number;
+  lowerArmSpread: number;
   lowerArmBend: number;
   wristHint: number;
   confidence: number;
@@ -140,6 +142,8 @@ function createSideTarget(
   const mappedWrist = mapLandmark(wrist, origin, shoulderSpan, options);
   const upperArmRaise = calculateUpperArmRaise(shoulder, elbow, shoulderSpan);
   const upperArmSpread = calculateUpperArmSpread(mappedShoulder, mappedElbow, targetSide);
+  const lowerArmRaise = calculateLowerArmRaise(mappedElbow, mappedWrist);
+  const lowerArmSpread = calculateLowerArmSpread(mappedElbow, mappedWrist, targetSide);
   const lowerArmBend = calculateLowerArmBend(shoulder, elbow, wrist);
   const wristHint = calculateWristHint(mappedElbow, mappedWrist, targetSide);
 
@@ -152,6 +156,8 @@ function createSideTarget(
     pole: subtract(mappedElbow, mappedShoulder),
     upperArmRaise,
     upperArmSpread,
+    lowerArmRaise,
+    lowerArmSpread,
     lowerArmBend,
     wristHint,
     confidence,
@@ -203,6 +209,8 @@ function smoothArmIkSideTarget(
     pole: lerpPoint(previous.pole, next.pole, amount),
     upperArmRaise: lerpWithDeadband(previous.upperArmRaise, next.upperArmRaise, amount, 0.015),
     upperArmSpread: lerpWithDeadband(previous.upperArmSpread, next.upperArmSpread, amount, 0.015),
+    lowerArmRaise: lerpWithDeadband(previous.lowerArmRaise, next.lowerArmRaise, amount, 0.012),
+    lowerArmSpread: lerpWithDeadband(previous.lowerArmSpread, next.lowerArmSpread, amount, 0.012),
     lowerArmBend: lerpWithDeadband(previous.lowerArmBend, next.lowerArmBend, amount, 0.015),
     wristHint: lerpWithDeadband(previous.wristHint, next.wristHint, amount, 0.015),
     confidence: lerp(previous.confidence, next.confidence, amount),
@@ -225,6 +233,19 @@ function calculateUpperArmSpread(
 ): number {
   const outwardSign = side === 'left' ? 1 : -1;
   return clamp01(((elbow.x - shoulder.x) * outwardSign) / 0.72);
+}
+
+function calculateLowerArmRaise(elbow: Vector3Like, wrist: Vector3Like): number {
+  return clamp((wrist.y - elbow.y) * 0.72, -0.45, 0.45);
+}
+
+function calculateLowerArmSpread(
+  elbow: Vector3Like,
+  wrist: Vector3Like,
+  side: ArmIkSide,
+): number {
+  const outwardSign = side === 'left' ? 1 : -1;
+  return clamp((wrist.x - elbow.x) * outwardSign * 0.72, -0.45, 0.45);
 }
 
 function calculateLowerArmBend(
