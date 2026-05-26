@@ -3246,3 +3246,36 @@
 
 - 実カメラで、腕を下げる、横に上げる、前に出す、肘を曲げる、の4ケースを確認する
 - 手首位置がまだ合わない場合は、KalidoKit-style arm rotation方式を別経路として実装して比較する
+
+## 2026-05-26 PoseLandmarker Safe Arm Retarget
+
+### Goal
+
+- 本格IKを外し、PoseLandmarkerの肩・肘・手首から破綻しにくい簡易腕トラックへ立て直す
+
+### Did
+
+- `ArmIkSideTarget` に `upperArmRaise`、`upperArmSpread`、`lowerArmBend`、`wristHint` を追加した
+- PoseLandmarkerの肩・肘・手首から、腕上げ、腕の左右開き、肘曲げを抽出する純ロジックに変更した
+- VRM反映では `solveTwoBoneArmIk` とfront biasの本線使用をやめ、上腕・前腕・手首へ制限付き回転だけを入れるようにした
+- relayの `arms` payloadは維持しつつ、簡易腕の値も送るようにした
+- 単体テストを、下げ腕、横上げ、肘曲げ、visibility低下時保持、mirror確認へ更新した
+
+### Findings
+
+- 手首位置を無理に合わせるより、上腕・前腕の小さな回転に制限した方が破綻しにくい
+- この方式では「手首完全一致」は目標にしない
+- 実カメラでの見え方はまだ人力確認が必要
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで腕下げ、横上げ、肘曲げ、片腕だけ動かすケースを確認する
+- 腕が弱すぎる場合は `upperRoll` / `lowerRoll` の係数だけ少し上げる
+- 破綻が残る場合は、手首反映を完全に切って上腕・前腕だけにする

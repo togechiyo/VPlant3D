@@ -194,6 +194,10 @@ function interpolateArmIkTarget(
     elbow: interpolateVector3(previous.elbow, current.elbow, amount),
     wrist: interpolateVector3(previous.wrist, current.wrist, amount),
     pole: interpolateVector3(previous.pole, current.pole, amount),
+    upperArmRaise: lerp(previous.upperArmRaise, current.upperArmRaise, amount),
+    upperArmSpread: lerp(previous.upperArmSpread, current.upperArmSpread, amount),
+    lowerArmBend: lerp(previous.lowerArmBend, current.lowerArmBend, amount),
+    wristHint: lerp(previous.wristHint, current.wristHint, amount),
     confidence: lerp(previous.confidence, current.confidence, amount),
   };
 }

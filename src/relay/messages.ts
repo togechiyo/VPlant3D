@@ -92,6 +92,10 @@ export interface RelayArmIkTarget {
   elbow: RelayVector3;
   wrist: RelayVector3;
   pole: RelayVector3;
+  upperArmRaise: number;
+  upperArmSpread: number;
+  lowerArmBend: number;
+  wristHint: number;
   confidence: number;
 }
 

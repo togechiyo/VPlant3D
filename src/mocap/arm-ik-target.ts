@@ -15,6 +15,10 @@ export interface ArmIkSideTarget {
   elbow: Vector3Like;
   wrist: Vector3Like;
   pole: Vector3Like;
+  upperArmRaise: number;
+  upperArmSpread: number;
+  lowerArmBend: number;
+  wristHint: number;
   confidence: number;
 }
 
@@ -134,6 +138,10 @@ function createSideTarget(
   const mappedShoulder = mapLandmark(shoulder, origin, shoulderSpan, options);
   const mappedElbow = mapLandmark(elbow, origin, shoulderSpan, options);
   const mappedWrist = mapLandmark(wrist, origin, shoulderSpan, options);
+  const upperArmRaise = calculateUpperArmRaise(shoulder, elbow, shoulderSpan);
+  const upperArmSpread = calculateUpperArmSpread(mappedShoulder, mappedElbow, targetSide);
+  const lowerArmBend = calculateLowerArmBend(shoulder, elbow, wrist);
+  const wristHint = calculateWristHint(mappedElbow, mappedWrist, targetSide);
 
   return {
     enabled: true,
@@ -142,6 +150,10 @@ function createSideTarget(
     elbow: mappedElbow,
     wrist: mappedWrist,
     pole: subtract(mappedElbow, mappedShoulder),
+    upperArmRaise,
+    upperArmSpread,
+    lowerArmBend,
+    wristHint,
     confidence,
   };
 }
@@ -189,8 +201,65 @@ function smoothArmIkSideTarget(
     elbow: lerpPoint(previous.elbow, next.elbow, amount),
     wrist: lerpPoint(previous.wrist, next.wrist, amount),
     pole: lerpPoint(previous.pole, next.pole, amount),
+    upperArmRaise: lerpWithDeadband(previous.upperArmRaise, next.upperArmRaise, amount, 0.015),
+    upperArmSpread: lerpWithDeadband(previous.upperArmSpread, next.upperArmSpread, amount, 0.015),
+    lowerArmBend: lerpWithDeadband(previous.lowerArmBend, next.lowerArmBend, amount, 0.015),
+    wristHint: lerpWithDeadband(previous.wristHint, next.wristHint, amount, 0.015),
     confidence: lerp(previous.confidence, next.confidence, amount),
   };
+}
+
+function calculateUpperArmRaise(
+  shoulder: NormalizedLandmark,
+  elbow: NormalizedLandmark,
+  shoulderSpan: number,
+): number {
+  const verticalDrop = (elbow.y - shoulder.y) / shoulderSpan;
+  return clamp01((0.72 - verticalDrop) / 0.72);
+}
+
+function calculateUpperArmSpread(
+  shoulder: Vector3Like,
+  elbow: Vector3Like,
+  side: ArmIkSide,
+): number {
+  const outwardSign = side === 'left' ? 1 : -1;
+  return clamp01(((elbow.x - shoulder.x) * outwardSign) / 0.72);
+}
+
+function calculateLowerArmBend(
+  shoulder: NormalizedLandmark,
+  elbow: NormalizedLandmark,
+  wrist: NormalizedLandmark,
+): number {
+  const upperArmX = shoulder.x - elbow.x;
+  const upperArmY = shoulder.y - elbow.y;
+  const upperArmZ = (shoulder.z ?? 0) - (elbow.z ?? 0);
+  const lowerArmX = wrist.x - elbow.x;
+  const lowerArmY = wrist.y - elbow.y;
+  const lowerArmZ = (wrist.z ?? 0) - (elbow.z ?? 0);
+  const upperLength = Math.hypot(upperArmX, upperArmY, upperArmZ);
+  const lowerLength = Math.hypot(lowerArmX, lowerArmY, lowerArmZ);
+
+  if (upperLength <= 0.0001 || lowerLength <= 0.0001) {
+    return 0;
+  }
+
+  const dot =
+    upperArmX * lowerArmX +
+    upperArmY * lowerArmY +
+    upperArmZ * lowerArmZ;
+  const angle = Math.acos(clamp(dot / (upperLength * lowerLength), -1, 1));
+  return clamp01((Math.PI - angle) / 1.45);
+}
+
+function calculateWristHint(
+  elbow: Vector3Like,
+  wrist: Vector3Like,
+  side: ArmIkSide,
+): number {
+  const outwardSign = side === 'left' ? 1 : -1;
+  return clamp((wrist.x - elbow.x) * outwardSign * 0.65, -0.35, 0.35);
 }
 
 function lerpPoint(previous: Vector3Like, next: Vector3Like, amount: number): Vector3Like {
@@ -223,6 +292,19 @@ function getVisibility(landmark: NormalizedLandmark): number {
 
 function lerp(previous: number, next: number, amount: number): number {
   return previous + (next - previous) * amount;
+}
+
+function lerpWithDeadband(
+  previous: number,
+  next: number,
+  amount: number,
+  deadband: number,
+): number {
+  return Math.abs(next - previous) < deadband ? previous : lerp(previous, next, amount);
+}
+
+function clamp01(value: number): number {
+  return clamp(value, 0, 1);
 }
 
 function clamp(value: number, min: number, max: number): number {

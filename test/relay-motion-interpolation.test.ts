@@ -64,6 +64,10 @@ describe('relay motion interpolation', () => {
         elbow: { x: 0.8, y: -0.5, z: 0 },
         wrist: { x: 1.1, y: -1, z: 0 },
         pole: { x: 0.3, y: -0.5, z: 0 },
+        upperArmRaise: 0.7,
+        upperArmSpread: 0.4,
+        lowerArmBend: 0.8,
+        wristHint: 0.2,
         confidence: 0.9,
       },
       right: null,
@@ -72,6 +76,8 @@ describe('relay motion interpolation', () => {
     const sampled = interpolateRelayMotionState(previous, current, 0.5);
 
     expect(sampled.pose.arms?.left?.wrist.y).toBeCloseTo(-1);
+    expect(sampled.pose.arms?.left?.upperArmRaise).toBeCloseTo(0.7);
+    expect(sampled.pose.arms?.left?.lowerArmBend).toBeCloseTo(0.8);
     expect(sampled.pose.arms?.left?.confidence).toBeCloseTo(0.9);
     expect(sampled.pose.arms?.right).toBeNull();
   });

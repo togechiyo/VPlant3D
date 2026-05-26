@@ -49,16 +49,11 @@ import {
   hasArmIkTarget,
   smoothArmIkRetargetPose,
 } from './mocap/arm-ik-target';
-import { biasArmIkTargetToFront } from './mocap/arm-ik-constraints';
 import {
   createHeadRetargetPose,
   createNeutralHeadRetargetPose,
   smoothHeadRetargetPose,
 } from './mocap/head-retarget';
-import {
-  solveTwoBoneArmIk,
-  subtract as subtractIkVector,
-} from './mocap/two-bone-arm-ik';
 import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
 import {
   createNeutralRetargetPose,
@@ -303,7 +298,6 @@ let faceExpressionWeights = createNeutralFaceExpressionWeights();
 let headRetargetPose: HeadRetargetPose = createNeutralHeadRetargetPose(false);
 let handRetargetPose: HandRetargetPose = createNeutralHandRetargetPose();
 let armIkRetargetPose: ArmIkRetargetPose = createNeutralArmIkRetargetPose();
-let armIkBaselinePose: ArmIkRetargetPose | null = null;
 let armIkRetargetWasActive = false;
 let handRetargetWasActive = false;
 let autoBlinkState: AutoBlinkState = createAutoBlinkState(performance.now() / 1000);
@@ -1393,11 +1387,6 @@ function applySampledRelayMotionState(nextState: RelayMotionState): void {
 function syncRelayArmIkBaseline(): void {
   if (!relayArmIkTrackingEnabled) {
     resetArmIkRetarget();
-    return;
-  }
-
-  if (!armIkBaselinePose && hasArmIkTarget(relayArmIkTarget)) {
-    armIkBaselinePose = relayArmIkTarget;
   }
 }
 
@@ -1603,10 +1592,10 @@ function formatRelayDebugValue(value: number | undefined): string {
 
 function formatRelayArmIkDebug(pose: ArmIkRetargetPose): string {
   const left = pose.left
-    ? `L ${pose.left.confidence.toFixed(2)} (${pose.left.wrist.x.toFixed(2)},${pose.left.wrist.y.toFixed(2)})`
+    ? `L ${pose.left.confidence.toFixed(2)} raise ${pose.left.upperArmRaise.toFixed(2)} bend ${pose.left.lowerArmBend.toFixed(2)}`
     : 'L -';
   const right = pose.right
-    ? `R ${pose.right.confidence.toFixed(2)} (${pose.right.wrist.x.toFixed(2)},${pose.right.wrist.y.toFixed(2)})`
+    ? `R ${pose.right.confidence.toFixed(2)} raise ${pose.right.upperArmRaise.toFixed(2)} bend ${pose.right.lowerArmBend.toFixed(2)}`
     : 'R -';
 
   return `${left} ${right}`;
@@ -1778,6 +1767,10 @@ function roundRelayArmIkTarget(target: ArmIkSideTarget): ArmIkSideTarget {
     elbow: roundRelayVector3(target.elbow),
     wrist: roundRelayVector3(target.wrist),
     pole: roundRelayVector3(target.pole),
+    upperArmRaise: roundRelayValue(target.upperArmRaise, 4),
+    upperArmSpread: roundRelayValue(target.upperArmSpread, 4),
+    lowerArmBend: roundRelayValue(target.lowerArmBend, 4),
+    wristHint: roundRelayValue(target.wristHint, 4),
     confidence: roundRelayValue(target.confidence, 3),
   };
 }
@@ -2953,11 +2946,15 @@ function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
 
 function formatArmIkStatus(pose: ArmIkRetargetPose): string {
   const sides = [
-    pose.left ? `左${pose.left.confidence.toFixed(2)}` : null,
-    pose.right ? `右${pose.right.confidence.toFixed(2)}` : null,
+    pose.left
+      ? `左 上げ${pose.left.upperArmRaise.toFixed(2)} 肘${pose.left.lowerArmBend.toFixed(2)}`
+      : null,
+    pose.right
+      ? `右 上げ${pose.right.upperArmRaise.toFixed(2)} 肘${pose.right.lowerArmBend.toFixed(2)}`
+      : null,
   ].filter((side): side is string => side !== null);
 
-  return sides.length > 0 ? `腕IK ${sides.join(' ')}` : '腕IK 待機';
+  return sides.length > 0 ? `簡易腕 ${sides.join(' ')}` : '簡易腕 待機';
 }
 
 function applyManualControlPose(): void {
@@ -3230,88 +3227,41 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
   const handBone = currentVrm.humanoid.getNormalizedBoneNode(handBoneName);
   const upperRest = restBoneQuaternions.get(upperBoneName);
   const lowerRest = restBoneQuaternions.get(lowerBoneName);
+  const handRest = restBoneQuaternions.get(handBoneName);
 
-  if (!upperBone || !lowerBone || !handBone || !upperRest || !lowerRest) {
+  if (!upperBone || !lowerBone || !handBone || !upperRest || !lowerRest || !handRest) {
     return;
   }
 
-  const upperPosition = restBoneWorldPositions.get(upperBoneName);
-  const lowerPosition = restBoneWorldPositions.get(lowerBoneName);
-  const handPosition = restBoneWorldPositions.get(handBoneName);
-
-  if (!upperPosition || !lowerPosition || !handPosition) {
-    return;
-  }
-
-  const upperLength = upperPosition.distanceTo(lowerPosition);
-  const lowerLength = lowerPosition.distanceTo(handPosition);
-  const armReach = Math.max(upperLength + lowerLength, 0.0001);
-  const restWrist = handPosition.clone().sub(upperPosition);
-  const restElbow = lowerPosition.clone().sub(upperPosition);
-  const poseWrist = subtractIkVector(target.wrist, target.shoulder);
-  const poseElbow = subtractIkVector(target.elbow, target.shoulder);
-  const targetWristFromPose = createArmVectorFromPose(poseWrist, restWrist, armReach);
-  const targetElbowFromPose = createArmVectorFromPose(poseElbow, restElbow, armReach * 0.52);
-  const biasedTarget = biasArmIkTargetToFront({
-    targetWrist: targetWristFromPose,
-    pole: targetElbowFromPose,
-    restWrist,
-    restElbow,
-    armReach,
-  });
-  const targetWrist = toThreeVector(biasedTarget.targetWrist);
-  const pole = toThreeVector(biasedTarget.pole);
-  const solved = solveTwoBoneArmIk({
-    targetWrist: targetWrist,
-    pole,
-    upperLength,
-    lowerLength,
-  });
-  const restUpperDirection = lowerPosition.clone().sub(upperPosition).normalize();
-  const restLowerDirection = handPosition.clone().sub(lowerPosition).normalize();
-  const solvedElbow = toThreeVector(solved.elbow);
-  const solvedWrist = toThreeVector(solved.wrist);
-  const upperDirection = solvedElbow.lengthSq() > 0.000001
-    ? solvedElbow.clone().normalize()
-    : restUpperDirection.clone();
-  const lowerWorldDirection = solvedWrist.sub(solvedElbow);
-  const lowerDirection = lowerWorldDirection.lengthSq() > 0.000001
-    ? lowerWorldDirection.normalize()
-    : restLowerDirection.clone();
-  const upperDelta = new THREE.Quaternion().setFromUnitVectors(restUpperDirection, upperDirection);
-  const lowerLocalDirection = lowerDirection.clone().applyQuaternion(upperDelta.clone().invert());
-  const lowerDelta = new THREE.Quaternion().setFromUnitVectors(
-    restLowerDirection,
-    lowerLocalDirection.normalize(),
+  const sideSign = side === 'left' ? -1 : 1;
+  const upperRoll = sideSign * clamp(
+    target.upperArmRaise * 0.5 + target.upperArmSpread * 0.28,
+    0,
+    0.72,
+  );
+  const upperPitch = -target.upperArmRaise * 0.12;
+  const lowerRoll = sideSign * clamp(target.lowerArmBend * 0.92, 0, 1.0);
+  const handRoll = sideSign * target.wristHint * 0.28;
+  const upperDelta = new THREE.Quaternion().setFromEuler(
+    new THREE.Euler(upperPitch, 0, upperRoll, 'XYZ'),
+  );
+  const lowerDelta = new THREE.Quaternion().setFromEuler(
+    new THREE.Euler(0, 0, lowerRoll, 'XYZ'),
+  );
+  const handDelta = new THREE.Quaternion().setFromEuler(
+    new THREE.Euler(0, 0, handRoll, 'XYZ'),
   );
 
   upperBone.quaternion.copy(upperRest).multiply(upperDelta);
   lowerBone.quaternion.copy(lowerRest).multiply(lowerDelta);
+  handBone.quaternion.copy(handRest).multiply(handDelta);
   upperBone.userData.vplant3dArmIkActive = true;
   lowerBone.userData.vplant3dArmIkActive = true;
-}
-
-function createArmVectorFromPose(
-  poseVector: Vector3Like,
-  fallback: THREE.Vector3,
-  targetLength: number,
-): THREE.Vector3 {
-  const pose = toThreeVector(poseVector);
-
-  if (pose.lengthSq() <= 0.000001) {
-    return fallback.clone();
-  }
-
-  const reachRatio = clamp(pose.length() * 0.58, 0.34, 0.98);
-  return pose.normalize().multiplyScalar(targetLength * reachRatio);
+  handBone.userData.vplant3dArmIkActive = true;
 }
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
-}
-
-function toThreeVector(vector: Vector3Like): THREE.Vector3 {
-  return new THREE.Vector3(vector.x, vector.y, vector.z);
 }
 
 function applyHandRetarget(): void {
@@ -3437,7 +3387,6 @@ function resetHandRetarget(): void {
 }
 
 function resetArmIkRetarget(): void {
-  armIkBaselinePose = null;
   armIkRetargetPose = createNeutralArmIkRetargetPose();
   restoreArmIkBones();
   armIkRetargetWasActive = false;
@@ -3455,8 +3404,8 @@ function restoreArmIkSideBones(side: 'left' | 'right'): void {
 
   const boneNames =
     side === 'left'
-      ? [VRMHumanBoneName.LeftUpperArm, VRMHumanBoneName.LeftLowerArm]
-      : [VRMHumanBoneName.RightUpperArm, VRMHumanBoneName.RightLowerArm];
+      ? [VRMHumanBoneName.LeftUpperArm, VRMHumanBoneName.LeftLowerArm, VRMHumanBoneName.LeftHand]
+      : [VRMHumanBoneName.RightUpperArm, VRMHumanBoneName.RightLowerArm, VRMHumanBoneName.RightHand];
 
   for (const boneName of boneNames) {
     const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
