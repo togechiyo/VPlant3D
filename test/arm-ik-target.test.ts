@@ -26,12 +26,15 @@ describe('createArmIkRetargetPose', () => {
 
     expect(pose.left?.upperArmRaise).toBeGreaterThan(0.85);
     expect(pose.left?.upperArmSpread).toBeGreaterThan(0.75);
+    expect(pose.left?.upperArmRotation?.x).toBeLessThan(-0.2);
+    expect(pose.left?.upperArmRotation?.z).toBeLessThan(-0.65);
   });
 
   it('increases lower arm bend when the wrist folds toward the shoulder', () => {
     const pose = createArmIkRetargetPose(createBentElbowPose(), { mirrorInput: false });
 
     expect(pose.left?.lowerArmBend).toBeGreaterThan(0.65);
+    expect(Math.abs(pose.left?.lowerArmRotation?.z ?? 0)).toBeGreaterThan(0.3);
   });
 
   it('uses elbow-to-wrist direction as lower arm controls', () => {
@@ -74,6 +77,9 @@ describe('smoothArmIkRetargetPose', () => {
 
     expect(smoothed.left?.upperArmRaise).toBeCloseTo(
       ((previous.left?.upperArmRaise ?? 0) + (next.left?.upperArmRaise ?? 0)) / 2,
+    );
+    expect(smoothed.left?.upperArmRotation?.z).toBeCloseTo(
+      ((previous.left?.upperArmRotation?.z ?? 0) + (next.left?.upperArmRotation?.z ?? 0)) / 2,
     );
   });
 });

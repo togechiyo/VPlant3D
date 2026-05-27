@@ -3326,9 +3326,37 @@
 - `npm run lint`
 - `npm run build`
 - `npm run test:e2e`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
 
 ### Next
 
 - 実カメラで、腕を横に上げる、肘を曲げる、片腕だけ動かすケースを確認する
 - 上腕がまだ弱い場合は `upperRoll` の上限と `upperSpread` 係数を少しだけ上げる
 - 肘が曲がりすぎる場合は `lowerBend` 係数をさらに下げる
+
+## 2026-05-27 KalidoKit-Style Arm Solver Structure
+
+### Goal
+
+- 自前のscalar調整だけでは腕トラックが安定しないため、依存追加なしでKalidoKitの腕ソルバ構造を参考にした回転値生成へ寄せる
+
+### Did
+
+- `ArmIkSideTarget` に `upperArmRotation` と `lowerArmRotation` を追加した
+- PoseLandmarkerの肩 -> 肘、肘 -> 手首ベクトルから、KalidoKit-styleの上腕・前腕回転を作る純ロジックを追加した
+- OBS relay payloadは既存scalar値を残し、rotation値も任意で送れる形にした
+- OBS Render側はrotation値があればそれを優先し、古いpayloadでは旧scalar fallbackを使うようにした
+- [KalidoKit リターゲット移植メモ](./kalidokit-adaptation-notes.md) に今回の適用範囲を追記した
+
+### Verified
+
+- `npm run test -- arm-ik-target relay-motion-interpolation`
+
+### Next
+
+- 実カメラで、腕を横に上げる、肘を曲げる、片腕だけ動かすケースを確認する
+- まだ腕が弱い場合は `upperArmRotation.z` と `upperArmRotation.x` の係数を少し上げる
+- 前腕が手首へ引っ張られすぎる場合は `lowerArmRotation.y` / `lowerArmRotation.z` を下げる

@@ -98,6 +98,8 @@ export interface RelayArmIkTarget {
   lowerArmSpread: number;
   lowerArmBend: number;
   wristHint: number;
+  upperArmRotation?: RelayVector3;
+  lowerArmRotation?: RelayVector3;
   confidence: number;
 }
 

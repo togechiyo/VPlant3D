@@ -21,6 +21,8 @@ export interface ArmIkSideTarget {
   lowerArmSpread: number;
   lowerArmBend: number;
   wristHint: number;
+  upperArmRotation?: Vector3Like;
+  lowerArmRotation?: Vector3Like;
   confidence: number;
 }
 
@@ -146,6 +148,17 @@ function createSideTarget(
   const lowerArmSpread = calculateLowerArmSpread(mappedElbow, mappedWrist, targetSide);
   const lowerArmBend = calculateLowerArmBend(shoulder, elbow, wrist);
   const wristHint = calculateWristHint(mappedElbow, mappedWrist, targetSide);
+  const rotations = solveKalidoStyleArmRotations({
+    shoulder: mappedShoulder,
+    elbow: mappedElbow,
+    wrist: mappedWrist,
+    side: targetSide,
+    upperArmRaise,
+    upperArmSpread,
+    lowerArmRaise,
+    lowerArmSpread,
+    lowerArmBend,
+  });
 
   return {
     enabled: true,
@@ -160,6 +173,8 @@ function createSideTarget(
     lowerArmSpread,
     lowerArmBend,
     wristHint,
+    upperArmRotation: rotations.upperArmRotation,
+    lowerArmRotation: rotations.lowerArmRotation,
     confidence,
   };
 }
@@ -213,7 +228,53 @@ function smoothArmIkSideTarget(
     lowerArmSpread: lerpWithDeadband(previous.lowerArmSpread, next.lowerArmSpread, amount, 0.012),
     lowerArmBend: lerpWithDeadband(previous.lowerArmBend, next.lowerArmBend, amount, 0.015),
     wristHint: lerpWithDeadband(previous.wristHint, next.wristHint, amount, 0.015),
+    upperArmRotation: lerpOptionalPoint(previous.upperArmRotation, next.upperArmRotation, amount),
+    lowerArmRotation: lerpOptionalPoint(previous.lowerArmRotation, next.lowerArmRotation, amount),
     confidence: lerp(previous.confidence, next.confidence, amount),
+  };
+}
+
+interface KalidoStyleArmRotationInput {
+  shoulder: Vector3Like;
+  elbow: Vector3Like;
+  wrist: Vector3Like;
+  side: ArmIkSide;
+  upperArmRaise: number;
+  upperArmSpread: number;
+  lowerArmRaise: number;
+  lowerArmSpread: number;
+  lowerArmBend: number;
+}
+
+function solveKalidoStyleArmRotations(input: KalidoStyleArmRotationInput): {
+  upperArmRotation: Vector3Like;
+  lowerArmRotation: Vector3Like;
+} {
+  const sideSign = input.side === 'left' ? -1 : 1;
+  const outwardSign = input.side === 'left' ? 1 : -1;
+  const upperDirection = normalize(subtract(input.elbow, input.shoulder));
+  const lowerDirection = normalize(subtract(input.wrist, input.elbow));
+  const upperOutward = clamp01(upperDirection.x * outwardSign);
+  const upperLift = clamp01(upperDirection.y);
+  const upperDepth = clamp(upperDirection.z, -1, 1);
+  const lowerOutward = clamp(lowerDirection.x * outwardSign, -1, 1);
+  const lowerLift = clamp(lowerDirection.y, -1, 1);
+  // KalidoKit-style: derive constrained bone rotations from adjacent landmark
+  // vectors, then damp the axes that tend to flip on webcam pose input.
+  const upperArmRotation = {
+    x: -clamp(upperLift * 0.42 + input.upperArmRaise * 0.3, 0, 0.62),
+    y: sideSign * clamp(-upperDepth * 0.22 + upperOutward * 0.08, -0.22, 0.22),
+    z: sideSign * clamp(upperOutward * 0.9 + input.upperArmSpread * 0.22, 0, 1.08),
+  };
+  const lowerArmRotation = {
+    x: -clamp(lowerLift * 0.34 + input.lowerArmRaise * 0.18, -0.42, 0.42),
+    y: sideSign * clamp(lowerOutward * 0.16 + input.lowerArmSpread * 0.12, -0.22, 0.22),
+    z: sideSign * clamp(input.lowerArmBend * 0.52 + Math.max(0, lowerOutward) * 0.22, -0.18, 0.9),
+  };
+
+  return {
+    upperArmRotation,
+    lowerArmRotation,
   };
 }
 
@@ -291,11 +352,37 @@ function lerpPoint(previous: Vector3Like, next: Vector3Like, amount: number): Ve
   };
 }
 
+function lerpOptionalPoint(
+  previous: Vector3Like | undefined,
+  next: Vector3Like | undefined,
+  amount: number,
+): Vector3Like | undefined {
+  if (!previous || !next) {
+    return next ?? previous;
+  }
+
+  return lerpPoint(previous, next, amount);
+}
+
 function subtract(first: Vector3Like, second: Vector3Like): Vector3Like {
   return {
     x: first.x - second.x,
     y: first.y - second.y,
     z: first.z - second.z,
+  };
+}
+
+function normalize(vector: Vector3Like): Vector3Like {
+  const length = Math.hypot(vector.x, vector.y, vector.z);
+
+  if (length <= 0.0001) {
+    return { x: 0, y: 0, z: 0 };
+  }
+
+  return {
+    x: vector.x / length,
+    y: vector.y / length,
+    z: vector.z / length,
   };
 }
 

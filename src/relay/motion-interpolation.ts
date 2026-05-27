@@ -200,8 +200,30 @@ function interpolateArmIkTarget(
     lowerArmSpread: lerp(previous.lowerArmSpread, current.lowerArmSpread, amount),
     lowerArmBend: lerp(previous.lowerArmBend, current.lowerArmBend, amount),
     wristHint: lerp(previous.wristHint, current.wristHint, amount),
+    upperArmRotation: interpolateOptionalVector3(
+      previous.upperArmRotation,
+      current.upperArmRotation,
+      amount,
+    ),
+    lowerArmRotation: interpolateOptionalVector3(
+      previous.lowerArmRotation,
+      current.lowerArmRotation,
+      amount,
+    ),
     confidence: lerp(previous.confidence, current.confidence, amount),
   };
+}
+
+function interpolateOptionalVector3(
+  previous: Vector3Like | undefined,
+  current: Vector3Like | undefined,
+  amount: number,
+): Vector3Like | undefined {
+  if (!previous || !current) {
+    return current ?? previous;
+  }
+
+  return interpolateVector3(previous, current, amount);
 }
 
 function interpolateVector3(

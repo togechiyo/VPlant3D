@@ -10,6 +10,7 @@ KalidoKit は依存追加せず、MITライセンス表記つきで必要な計�
 
 - `Hand.solve` の「手のひら平面から手首回転を出す」考え方
 - `Hand.solve` の左右手で index / little MCP を入れ替える手のひら方向判定
+- `Pose.solve` / arm計算の「肩・肘・手首の隣接ベクトルから上腕・前腕の回転量を作り、最後にclampする」構造
 
 今回採用しない範囲:
 
@@ -17,6 +18,7 @@ KalidoKit は依存追加せず、MITライセンス表記つきで必要な計�
 - `Pose.solve` 全体の置き換え
 - VRMボーン名へ直接対応するKalidoKitのfinger map
 - 手首位置IKの解決
+- KalidoKitの値をそのままVRMへ適用すること
 
 ## 参照
 
@@ -44,6 +46,21 @@ KalidoKitの `Hand.solve` は、HandLandmarker 21点から手首・指ボーン�
 - KalidoKitの腕計算は基本的に回転ソルバで、手首位置IKではない
 - PoseLandmarkerの肩・肘・手首だけで自然な手首位置を作るには、キャリブレーション、腕長、ポール方向、体の前に出す制約が別途必要
 - VPlant3DのハンドトラッキングUIは現在しまっているため、この変更は再有効化前の下準備
+
+## 2026-05-27 腕ソルバへの適用
+
+`src/mocap/arm-ik-target.ts` で、既存の `upperArmRaise` / `upperArmSpread` / `lowerArmBend` などの小さなscalar payloadに加えて、`upperArmRotation` と `lowerArmRotation` を作るようにした。
+
+方針:
+
+- 依存追加はしない
+- 肩 -> 肘、肘 -> 手首の正規化ベクトルを作る
+- 上腕は lift / outward / depth を x / z / y 回転へ分配する
+- 前腕は elbow bend と wrist方向を混ぜる
+- 値はWebカメラ入力で破綻しにくい範囲へ強めにclampする
+- OBS relay payloadは後方互換のため既存scalar値を残し、rotation値がない場合は旧方式fallbackを使う
+
+これはKalidoKitの実装構造を参考にしたVPlant3D用の再実装であり、KalidoKitのpackage依存は追加していない。
 
 ## 次の実装候補
 

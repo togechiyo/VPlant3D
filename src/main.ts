@@ -1773,6 +1773,12 @@ function roundRelayArmIkTarget(target: ArmIkSideTarget): ArmIkSideTarget {
     lowerArmSpread: roundRelayValue(target.lowerArmSpread, 4),
     lowerArmBend: roundRelayValue(target.lowerArmBend, 4),
     wristHint: roundRelayValue(target.wristHint, 4),
+    upperArmRotation: target.upperArmRotation
+      ? roundRelayVector3(target.upperArmRotation)
+      : undefined,
+    lowerArmRotation: target.lowerArmRotation
+      ? roundRelayVector3(target.lowerArmRotation)
+      : undefined,
     confidence: roundRelayValue(target.confidence, 3),
   };
 }
@@ -3236,44 +3242,15 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
   }
 
   const sideSign = side === 'left' ? -1 : 1;
-  const upperRaise = clamp(target.upperArmRaise, 0, 1);
-  const upperSpread = clamp(target.upperArmSpread, 0, 1);
-  const lowerBend = clamp(target.lowerArmBend, 0, 1);
-  const lowerRaise = clamp(target.lowerArmRaise, -1, 1);
-  const lowerSpread = clamp(target.lowerArmSpread, -1, 1);
-  const elbowDepth = clamp(target.elbow.z - target.shoulder.z, -0.45, 0.45);
-  const upperRoll = sideSign * clamp(
-    upperSpread * 0.72 + upperRaise * 0.2,
-    0,
-    0.92,
-  );
-  const upperPitch = -clamp(
-    upperRaise * 0.28 + Math.max(0, lowerRaise) * 0.08,
-    0,
-    0.42,
-  );
-  const upperYaw = sideSign * clamp(
-    upperSpread * 0.12 - elbowDepth * 0.18,
-    -0.18,
-    0.18,
-  );
-  const lowerRoll = sideSign * clamp(
-    lowerBend * 0.62 + lowerSpread * 0.34,
-    -0.28,
-    0.95,
-  );
-  const lowerPitch = -lowerRaise * 0.26;
-  const lowerYaw = sideSign * clamp(
-    lowerSpread * 0.12,
-    -0.12,
-    0.12,
-  );
+  const fallbackRotation = createFallbackArmRotations(side, target);
+  const upperRotation = target.upperArmRotation ?? fallbackRotation.upperArmRotation;
+  const lowerRotation = target.lowerArmRotation ?? fallbackRotation.lowerArmRotation;
   const handRoll = sideSign * target.wristHint * 0.28;
   const upperDelta = new THREE.Quaternion().setFromEuler(
-    new THREE.Euler(upperPitch, upperYaw, upperRoll, 'XYZ'),
+    new THREE.Euler(upperRotation.x, upperRotation.y, upperRotation.z, 'XYZ'),
   );
   const lowerDelta = new THREE.Quaternion().setFromEuler(
-    new THREE.Euler(lowerPitch, lowerYaw, lowerRoll, 'XYZ'),
+    new THREE.Euler(lowerRotation.x, lowerRotation.y, lowerRotation.z, 'XYZ'),
   );
   const handDelta = new THREE.Quaternion().setFromEuler(
     new THREE.Euler(0, 0, handRoll, 'XYZ'),
@@ -3285,6 +3262,35 @@ function applyArmIkSideTarget(side: 'left' | 'right', target: ArmIkSideTarget | 
   upperBone.userData.vplant3dArmIkActive = true;
   lowerBone.userData.vplant3dArmIkActive = true;
   handBone.userData.vplant3dArmIkActive = true;
+}
+
+function createFallbackArmRotations(
+  side: 'left' | 'right',
+  target: ArmIkSideTarget,
+): {
+  upperArmRotation: Vector3Like;
+  lowerArmRotation: Vector3Like;
+} {
+  const sideSign = side === 'left' ? -1 : 1;
+  const upperRaise = clamp(target.upperArmRaise, 0, 1);
+  const upperSpread = clamp(target.upperArmSpread, 0, 1);
+  const lowerBend = clamp(target.lowerArmBend, 0, 1);
+  const lowerRaise = clamp(target.lowerArmRaise, -1, 1);
+  const lowerSpread = clamp(target.lowerArmSpread, -1, 1);
+  const elbowDepth = clamp(target.elbow.z - target.shoulder.z, -0.45, 0.45);
+
+  return {
+    upperArmRotation: {
+      x: -clamp(upperRaise * 0.28 + Math.max(0, lowerRaise) * 0.08, 0, 0.42),
+      y: sideSign * clamp(upperSpread * 0.12 - elbowDepth * 0.18, -0.18, 0.18),
+      z: sideSign * clamp(upperSpread * 0.72 + upperRaise * 0.2, 0, 0.92),
+    },
+    lowerArmRotation: {
+      x: -lowerRaise * 0.26,
+      y: sideSign * clamp(lowerSpread * 0.12, -0.12, 0.12),
+      z: sideSign * clamp(lowerBend * 0.62 + lowerSpread * 0.34, -0.28, 0.95),
+    },
+  };
 }
 
 function clamp(value: number, min: number, max: number): number {
