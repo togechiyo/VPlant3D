@@ -269,7 +269,7 @@ function solveKalidoStyleArmRotations(input: KalidoStyleArmRotationInput): {
     z: sideSign * clamp(upperOutward * 0.72 + input.upperArmSpread * 0.18, 0, 0.9),
   };
   const lowerArmRotation = {
-    x: -clamp(lowerLift * 0.58 + input.lowerArmRaise * 0.32, -0.68, 0.68),
+    x: clamp(lowerLift * 0.78 + input.lowerArmRaise * 0.42, -0.82, 0.82),
     y: sideSign * clamp(lowerOutward * 0.34 + input.lowerArmSpread * 0.2, -0.38, 0.38),
     z:
       -sideSign * clamp(input.lowerArmBend * 0.74 + lowerInward * 0.26, 0, 1.02) +

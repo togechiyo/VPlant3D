@@ -34,6 +34,7 @@ describe('createArmIkRetargetPose', () => {
     const pose = createArmIkRetargetPose(createBentElbowPose(), { mirrorInput: false });
 
     expect(pose.left?.lowerArmBend).toBeGreaterThan(0.65);
+    expect(pose.left?.lowerArmRotation?.x).toBeGreaterThan(0.45);
     expect(pose.left?.lowerArmRotation?.z).toBeGreaterThan(0.8);
     expect(Math.sign(pose.left?.lowerArmRotation?.z ?? 0)).not.toBe(
       Math.sign(pose.left?.upperArmRotation?.z ?? 0),
