@@ -264,15 +264,15 @@ function solveKalidoStyleArmRotations(input: KalidoStyleArmRotationInput): {
   // KalidoKit-style: derive constrained bone rotations from adjacent landmark
   // vectors, then damp the axes that tend to flip on webcam pose input.
   const upperArmRotation = {
-    x: -clamp(upperLift * 0.55 + input.upperArmRaise * 0.35, 0, 0.85),
-    y: sideSign * clamp(-upperDepth * 0.22 + upperOutward * 0.08, -0.22, 0.22),
-    z: sideSign * clamp(upperOutward * 1.15 + input.upperArmSpread * 0.3, 0, 1.35),
+    x: -clamp(upperLift * 0.34 + input.upperArmRaise * 0.2, 0, 0.48),
+    y: sideSign * clamp(-upperDepth * 0.18 + upperOutward * 0.06, -0.18, 0.18),
+    z: sideSign * clamp(upperOutward * 0.72 + input.upperArmSpread * 0.18, 0, 0.9),
   };
   const lowerArmRotation = {
-    x: -clamp(lowerLift * 0.45 + input.lowerArmRaise * 0.25, -0.55, 0.55),
-    y: sideSign * clamp(lowerOutward * 0.16 + input.lowerArmSpread * 0.12, -0.22, 0.22),
+    x: -clamp(lowerLift * 0.58 + input.lowerArmRaise * 0.32, -0.68, 0.68),
+    y: sideSign * clamp(lowerOutward * 0.34 + input.lowerArmSpread * 0.2, -0.38, 0.38),
     z:
-      -sideSign * clamp(input.lowerArmBend * 1.05 + lowerInward * 0.45, 0, 1.45) +
+      -sideSign * clamp(input.lowerArmBend * 0.74 + lowerInward * 0.26, 0, 1.02) +
       sideSign * clamp(lowerOutwardOnly * 0.12, 0, 0.18),
   };
 

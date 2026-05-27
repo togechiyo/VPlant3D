@@ -3387,3 +3387,28 @@
 - 実カメラで、顔前へ手を持ってくる動きができるか確認する
 - まだ肘が甘い場合は `lowerArmRotation.z` の上限を上げる
 - 曲がりすぎる場合は `lowerInward` の係数を下げる
+
+## 2026-05-27 Arm Lift Clamp And Forearm Direction
+
+### Goal
+
+- 上腕が上がりすぎ、前腕の肘回転目標がMediaPipeの肘 -> 手首方向と違って見える問題を抑える
+
+### Did
+
+- 上腕の持ち上げ・横開き係数と上限を下げた
+- 前腕は肘曲げ量だけで折るのを弱め、肘 -> 手首方向のpitch/yaw寄与を強めた
+- 旧payload fallback側も同じ方向へ調整した
+- テストの上腕回転期待値を、上げすぎ前提にならない値へ更新した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで、二の腕が上がりすぎないか確認する
+- 肘の向きがまだ違う場合は、前腕の `y` 軸寄与をさらに上げ、`z` 軸の肘曲げを下げる

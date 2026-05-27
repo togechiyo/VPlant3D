@@ -26,8 +26,8 @@ describe('createArmIkRetargetPose', () => {
 
     expect(pose.left?.upperArmRaise).toBeGreaterThan(0.85);
     expect(pose.left?.upperArmSpread).toBeGreaterThan(0.75);
-    expect(pose.left?.upperArmRotation?.x).toBeLessThan(-0.2);
-    expect(pose.left?.upperArmRotation?.z).toBeLessThan(-0.65);
+    expect(pose.left?.upperArmRotation?.x).toBeLessThanOrEqual(-0.18);
+    expect(pose.left?.upperArmRotation?.z).toBeLessThan(-0.5);
   });
 
   it('increases lower arm bend when the wrist folds toward the shoulder', () => {

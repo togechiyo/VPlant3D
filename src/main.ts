@@ -3281,14 +3281,14 @@ function createFallbackArmRotations(
 
   return {
     upperArmRotation: {
-      x: -clamp(upperRaise * 0.42 + Math.max(0, lowerRaise) * 0.08, 0, 0.7),
-      y: sideSign * clamp(upperSpread * 0.12 - elbowDepth * 0.18, -0.18, 0.18),
-      z: sideSign * clamp(upperSpread * 0.95 + upperRaise * 0.22, 0, 1.2),
+      x: -clamp(upperRaise * 0.26 + Math.max(0, lowerRaise) * 0.06, 0, 0.48),
+      y: sideSign * clamp(upperSpread * 0.08 - elbowDepth * 0.16, -0.16, 0.16),
+      z: sideSign * clamp(upperSpread * 0.66 + upperRaise * 0.14, 0, 0.9),
     },
     lowerArmRotation: {
-      x: -lowerRaise * 0.36,
-      y: sideSign * clamp(lowerSpread * 0.12, -0.12, 0.12),
-      z: -sideSign * clamp(lowerBend * 1.05 + Math.max(0, -lowerSpread) * 0.35, 0, 1.4),
+      x: -lowerRaise * 0.5,
+      y: sideSign * clamp(lowerSpread * 0.22, -0.28, 0.28),
+      z: -sideSign * clamp(lowerBend * 0.74 + Math.max(0, -lowerSpread) * 0.24, 0, 1.02),
     },
   };
 }
