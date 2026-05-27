@@ -3360,3 +3360,30 @@
 - 実カメラで、腕を横に上げる、肘を曲げる、片腕だけ動かすケースを確認する
 - まだ腕が弱い場合は `upperArmRotation.z` と `upperArmRotation.x` の係数を少し上げる
 - 前腕が手首へ引っ張られすぎる場合は `lowerArmRotation.y` / `lowerArmRotation.z` を下げる
+
+## 2026-05-27 Arm Bend Direction Fix
+
+### Goal
+
+- MediaPipeの肘曲げ方向とモデルの前腕回転が合っておらず、顔前へ手首を持ってくる動きができない問題を直す
+
+### Did
+
+- 前腕の肘曲げ回転を、上腕の横開きと逆向きに入れるよう修正した
+- 手首が内側へ戻る姿勢では、前腕の曲げを強めるようにした
+- 上腕の持ち上げと横開きの係数を強め、MediaPipeの上腕角度へ近づきやすくした
+- 旧payload fallback側も同じ肘曲げ方向へ揃えた
+- 単体テストに「肘曲げ時の前腕回転は上腕と逆符号になる」確認を追加した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで、顔前へ手を持ってくる動きができるか確認する
+- まだ肘が甘い場合は `lowerArmRotation.z` の上限を上げる
+- 曲がりすぎる場合は `lowerInward` の係数を下げる
