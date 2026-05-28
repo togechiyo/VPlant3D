@@ -56,6 +56,12 @@ describe('createArmIkRetargetPose', () => {
     expect(Math.abs(pose.left?.lowerArmRotation?.y ?? 0)).toBeGreaterThan(0.2);
   });
 
+  it('adds upper arm twist from the arm plane', () => {
+    const pose = createArmIkRetargetPose(createBentElbowPose(), { mirrorInput: false });
+
+    expect(Math.abs(pose.left?.upperArmRotation?.y ?? 0)).toBeGreaterThan(0.16);
+  });
+
   it('adds forearm bend when the wrist is above the elbow for W poses', () => {
     const pose = createArmIkRetargetPose(createWristUpPose(), { mirrorInput: false });
 

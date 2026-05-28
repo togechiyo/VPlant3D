@@ -3541,3 +3541,30 @@
 
 - 実カメラで、外側へ腕を上げた時に前腕が胸前へ巻き込みすぎないか確認する
 - まだ内側に入る場合は `lowerOutwardOnly` 時の `z` 減衰をさらに強める
+
+## 2026-05-28 Arm Plane Twist Retarget
+
+### Goal
+
+- 前腕だけで向きを作る調整に限界が出ているため、腕平面から上腕twistを作り、前腕方向の自由度を増やす
+
+### Did
+
+- [腕平面twistリターゲット計画](./arm-plane-twist-retarget-plan.md) を追加した
+- `shoulder -> elbow` と `elbow -> wrist` のcross productから腕平面法線を作るようにした
+- 腕平面法線のz成分を `upperArmRotation.y` へ補助twistとして足した
+- 外側へ手首が上がる姿勢では、上腕の横開きも少し補助するようにした
+- 単体テストに「腕平面から上腕twistが出る」確認を追加した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで、外側上げ、Wポーズ、顔前に手を持ってくる動きの3ケースを確認する
+- twistが逆方向なら `upperPlaneTwist` の符号を反転する
+- twistが強すぎる場合は `0.34` 係数を下げる

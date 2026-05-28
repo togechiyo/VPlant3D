@@ -254,6 +254,7 @@ function solveKalidoStyleArmRotations(input: KalidoStyleArmRotationInput): {
   const outwardSign = input.side === 'left' ? 1 : -1;
   const upperDirection = normalize(subtract(input.elbow, input.shoulder));
   const lowerDirection = normalize(subtract(input.wrist, input.elbow));
+  const armPlaneNormal = normalize(cross(upperDirection, lowerDirection));
   const upperOutward = clamp01(upperDirection.x * outwardSign);
   const upperLift = clamp01(upperDirection.y);
   const upperDepth = clamp(upperDirection.z, -1, 1);
@@ -264,12 +265,18 @@ function solveKalidoStyleArmRotations(input: KalidoStyleArmRotationInput): {
   const lowerLiftUp = clamp01(lowerLift);
   const inwardGate = clamp(0.65 + lowerInward * 0.35 - lowerOutwardOnly * 0.55, 0.2, 1);
   const forearmForwardBias = clamp(lowerInward * 0.46 + lowerLiftUp * 0.32, 0, 0.58);
+  const upperPlaneTwist = sideSign * clamp(armPlaneNormal.z * 0.34, -0.42, 0.42);
+  const outwardLiftAssist = clamp(lowerOutwardOnly * lowerLiftUp * 0.72, 0, 0.58);
   // KalidoKit-style: derive constrained bone rotations from adjacent landmark
   // vectors, then damp the axes that tend to flip on webcam pose input.
   const upperArmRotation = {
     x: -clamp(upperLift * 0.34 + input.upperArmRaise * 0.2, 0, 0.48),
-    y: sideSign * clamp(-upperDepth * 0.18 + upperOutward * 0.06, -0.18, 0.18),
-    z: sideSign * clamp(upperOutward * 0.72 + input.upperArmSpread * 0.18, 0, 0.9),
+    y: sideSign * clamp(-upperDepth * 0.18 + upperOutward * 0.06, -0.18, 0.18) + upperPlaneTwist,
+    z: sideSign * clamp(
+      upperOutward * 0.72 + input.upperArmSpread * 0.18 + outwardLiftAssist * 0.24,
+      0,
+      1.02,
+    ),
   };
   const lowerArmRotation = {
     x: clamp(lowerLift * 0.24 + input.lowerArmRaise * 0.18, -0.32, 0.32),
@@ -383,6 +390,14 @@ function subtract(first: Vector3Like, second: Vector3Like): Vector3Like {
     x: first.x - second.x,
     y: first.y - second.y,
     z: first.z - second.z,
+  };
+}
+
+function cross(first: Vector3Like, second: Vector3Like): Vector3Like {
+  return {
+    x: first.y * second.z - first.z * second.y,
+    y: first.z * second.x - first.x * second.z,
+    z: first.x * second.y - first.y * second.x,
   };
 }
 
