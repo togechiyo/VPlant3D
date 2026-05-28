@@ -3286,12 +3286,13 @@ function createFallbackArmRotations(
     0,
     0.5,
   );
+  const torsoClearance = clamp(lowerInward * 0.55 + Math.max(0, lowerRaise) * 0.16, 0, 0.62);
 
   return {
     upperArmRotation: {
       x: -clamp(upperRaise * 0.26 + Math.max(0, lowerRaise) * 0.06, 0, 0.48),
       y: sideSign * clamp(upperSpread * 0.08 - elbowDepth * 0.16, -0.16, 0.16),
-      z: sideSign * clamp(upperSpread * 0.66 + upperRaise * 0.14, 0, 0.9),
+      z: sideSign * clamp(upperSpread * 0.66 + upperRaise * 0.14 + torsoClearance * 0.38, 0, 1.16),
     },
     lowerArmRotation: {
       x: lowerRaise * 0.22,
@@ -3299,7 +3300,7 @@ function createFallbackArmRotations(
       z: -sideSign * clamp(
         lowerBend * 1.08 + Math.max(0, lowerRaise) * 1.42 * inwardGate + lowerInward * 0.5,
         0,
-        2.62,
+        2.42,
       ),
     },
   };

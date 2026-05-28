@@ -70,6 +70,14 @@ describe('createArmIkRetargetPose', () => {
     expect(Math.abs(pose.left?.lowerArmRotation?.y ?? 0)).toBeGreaterThan(0.18);
   });
 
+  it('adds upper arm clearance when the wrist crosses toward the torso', () => {
+    const pose = createArmIkRetargetPose(createTorsoCrossingPose(), { mirrorInput: false });
+
+    expect(pose.left?.lowerArmSpread).toBeLessThan(-0.2);
+    expect(Math.abs(pose.left?.upperArmRotation?.z ?? 0)).toBeGreaterThan(0.78);
+    expect(Math.abs(pose.left?.lowerArmRotation?.z ?? 0)).toBeLessThan(2.5);
+  });
+
   it('does not create a target when wrist visibility is too low', () => {
     const landmarks = createLoweredPose();
     landmarks[15] = point(0.6, 0.72, 0, 0.1);
@@ -142,6 +150,13 @@ function createOutwardForearmPose(): NormalizedLandmark[] {
   const landmarks = createBasePose();
   landmarks[13] = point(0.73, 0.43, 0.02, 0.9);
   landmarks[15] = point(0.9, 0.35, 0.04, 0.9);
+  return landmarks;
+}
+
+function createTorsoCrossingPose(): NormalizedLandmark[] {
+  const landmarks = createBasePose();
+  landmarks[13] = point(0.72, 0.43, 0.02, 0.9);
+  landmarks[15] = point(0.57, 0.36, 0.04, 0.9);
   return landmarks;
 }
 

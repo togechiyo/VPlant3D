@@ -265,6 +265,7 @@ function solveKalidoStyleArmRotations(input: KalidoStyleArmRotationInput): {
   const lowerLiftUp = clamp01(lowerLift);
   const inwardGate = clamp(0.65 + lowerInward * 0.35 - lowerOutwardOnly * 0.55, 0.2, 1);
   const forearmForwardBias = clamp(lowerInward * 0.46 + lowerLiftUp * 0.32, 0, 0.58);
+  const torsoClearance = clamp(lowerInward * 0.62 + lowerLiftUp * 0.18, 0, 0.68);
   const upperPlaneTwist = sideSign * clamp(armPlaneNormal.z * 0.34, -0.42, 0.42);
   const outwardLiftAssist = clamp(lowerOutwardOnly * lowerLiftUp * 0.72, 0, 0.58);
   // KalidoKit-style: derive constrained bone rotations from adjacent landmark
@@ -273,9 +274,12 @@ function solveKalidoStyleArmRotations(input: KalidoStyleArmRotationInput): {
     x: -clamp(upperLift * 0.34 + input.upperArmRaise * 0.2, 0, 0.48),
     y: sideSign * clamp(-upperDepth * 0.18 + upperOutward * 0.06, -0.18, 0.18) + upperPlaneTwist,
     z: sideSign * clamp(
-      upperOutward * 0.72 + input.upperArmSpread * 0.18 + outwardLiftAssist * 0.24,
+      upperOutward * 0.72 +
+        input.upperArmSpread * 0.18 +
+        outwardLiftAssist * 0.24 +
+        torsoClearance * 0.42,
       0,
-      1.02,
+      1.28,
     ),
   };
   const lowerArmRotation = {
@@ -288,7 +292,7 @@ function solveKalidoStyleArmRotations(input: KalidoStyleArmRotationInput): {
         clamp(
           input.lowerArmBend * 1.08 + lowerLiftUp * 1.58 * inwardGate + lowerInward * 0.58,
           0,
-          2.62,
+          2.42,
         ) +
       sideSign * clamp(lowerOutwardOnly * 0.12, 0, 0.18),
   };
