@@ -34,7 +34,7 @@ describe('createArmIkRetargetPose', () => {
     const pose = createArmIkRetargetPose(createBentElbowPose(), { mirrorInput: false });
 
     expect(pose.left?.lowerArmBend).toBeGreaterThan(0.65);
-    expect(pose.left?.lowerArmRotation?.x).toBeGreaterThan(0.45);
+    expect(pose.left?.lowerArmRotation?.x).toBeGreaterThan(0.15);
     expect(pose.left?.lowerArmRotation?.z).toBeGreaterThan(0.8);
     expect(Math.sign(pose.left?.lowerArmRotation?.z ?? 0)).not.toBe(
       Math.sign(pose.left?.upperArmRotation?.z ?? 0),
@@ -46,6 +46,13 @@ describe('createArmIkRetargetPose', () => {
 
     expect(pose.left?.lowerArmSpread).toBeGreaterThan(0.35);
     expect(Math.abs(pose.left?.lowerArmRaise ?? 0)).toBeLessThan(0.12);
+  });
+
+  it('adds forearm bend when the wrist is above the elbow for W poses', () => {
+    const pose = createArmIkRetargetPose(createWristUpPose(), { mirrorInput: false });
+
+    expect(pose.left?.lowerArmRaise).toBeGreaterThan(0.3);
+    expect(pose.left?.lowerArmRotation?.z).toBeGreaterThan(1.1);
   });
 
   it('does not create a target when wrist visibility is too low', () => {
@@ -106,6 +113,13 @@ function createBentElbowPose(): NormalizedLandmark[] {
   const landmarks = createBasePose();
   landmarks[13] = point(0.73, 0.43, 0.02, 0.9);
   landmarks[15] = point(0.61, 0.34, 0.04, 0.9);
+  return landmarks;
+}
+
+function createWristUpPose(): NormalizedLandmark[] {
+  const landmarks = createBasePose();
+  landmarks[13] = point(0.73, 0.43, 0.02, 0.9);
+  landmarks[15] = point(0.73, 0.28, 0.04, 0.9);
   return landmarks;
 }
 

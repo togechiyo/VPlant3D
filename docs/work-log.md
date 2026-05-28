@@ -3438,3 +3438,28 @@
 - 実カメラでWポーズが成立するか確認する
 - 上がりすぎる場合は `lowerArmRotation.x` 係数を下げる
 - 横方向の折れが残る場合は `lowerArmRotation.y` / `z` を分けて再調整する
+
+## 2026-05-28 W Pose Forearm Bend Boost
+
+### Goal
+
+- 肘 -> 手首が上向きでも前腕が上がらず、VTuberらしいWポーズが成立しない問題を直す
+
+### Did
+
+- 前腕の上下成分を、見た目に効きにくい `lowerArmRotation.x` ではなく、肘曲げに効く `lowerArmRotation.z` へ強く足すようにした
+- `lowerArmRotation.x` は補助程度に下げ、前腕の上げ下げは `z` を主軸にした
+- 旧payload fallback側も同じ方針へ揃えた
+- 「手首が肘より上にあるWポーズ入力では、前腕の肘曲げ回転が強く出る」単体テストを追加した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラでWポーズが成立するか確認する
+- まだ上がらない場合は、VRMボーンの実ローカル軸を可視化して、前腕の見た目に効く軸をモデルから直接推定する
