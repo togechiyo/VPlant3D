@@ -3490,3 +3490,28 @@
 - 実カメラで肘曲げ量と体への刺さりが改善したか確認する
 - まだ浅い場合は `lowerArmRotation.z` の係数をさらに上げる
 - 前方逃がしが逆方向なら `forearmForwardBias` の符号を反転する
+
+## 2026-05-28 Stronger W Pose Forearm Bend
+
+### Goal
+
+- Wポーズに近づいてきたが、まだ肘の曲がりが浅いため、前腕の曲げと前方逃がしをさらに強める
+
+### Did
+
+- Wポーズ系入力の `lowerArmRotation.z` 係数をさらに上げ、上限を 2.62rad まで広げた
+- 手首が内側・上側に来る時の `forearmForwardBias` を強めた
+- 旧payload fallback側も同じ係数・上限へ揃えた
+- Wポーズの単体テストを、`lowerArmRotation.z > 2` と前方逃がしの強さを確認する内容へ更新した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで、Wポーズの肘角度と腕の体めり込みが許容範囲か確認する
+- まだ浅い場合は係数調整の限界に近いため、VRM前腕ボーン軸を可視化して実効軸を確認する

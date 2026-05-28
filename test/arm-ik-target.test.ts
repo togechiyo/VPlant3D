@@ -52,8 +52,8 @@ describe('createArmIkRetargetPose', () => {
     const pose = createArmIkRetargetPose(createWristUpPose(), { mirrorInput: false });
 
     expect(pose.left?.lowerArmRaise).toBeGreaterThan(0.3);
-    expect(pose.left?.lowerArmRotation?.z).toBeGreaterThan(1.55);
-    expect(Math.abs(pose.left?.lowerArmRotation?.y ?? 0)).toBeGreaterThan(0.1);
+    expect(pose.left?.lowerArmRotation?.z).toBeGreaterThan(2);
+    expect(Math.abs(pose.left?.lowerArmRotation?.y ?? 0)).toBeGreaterThan(0.18);
   });
 
   it('does not create a target when wrist visibility is too low', () => {
