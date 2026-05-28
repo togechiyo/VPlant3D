@@ -3568,3 +3568,27 @@
 - 実カメラで、外側上げ、Wポーズ、顔前に手を持ってくる動きの3ケースを確認する
 - twistが逆方向なら `upperPlaneTwist` の符号を反転する
 - twistが強すぎる場合は `0.34` 係数を下げる
+
+## 2026-05-28 Forearm Lateral Sign Fix
+
+### Goal
+
+- 腕平面twist追加後、前腕が入力と真反対に近い方向へ向く問題を直す
+
+### Did
+
+- 前腕の横方向回転 `lowerArmRotation.y` の符号を反転した
+- 旧payload fallback側も同じ符号へ揃えた
+- 外向き前腕の単体テストを、左腕では `lowerArmRotation.y` が正方向へ出ることを確認する内容に更新した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで、外側へ腕を出した時の前腕方向が入力と一致するか確認する
+- まだ逆なら、次は `upperPlaneTwist` 側の符号を反転する

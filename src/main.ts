@@ -3295,7 +3295,7 @@ function createFallbackArmRotations(
     },
     lowerArmRotation: {
       x: lowerRaise * 0.22,
-      y: sideSign * clamp(lowerSpread * 0.28, -0.36, 0.36) - sideSign * forearmForwardBias * inwardGate,
+      y: -sideSign * clamp(lowerSpread * 0.28, -0.36, 0.36) + sideSign * forearmForwardBias * inwardGate,
       z: -sideSign * clamp(
         lowerBend * 1.08 + Math.max(0, lowerRaise) * 1.42 * inwardGate + lowerInward * 0.5,
         0,

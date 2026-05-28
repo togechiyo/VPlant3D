@@ -53,7 +53,7 @@ describe('createArmIkRetargetPose', () => {
 
     expect(pose.left?.lowerArmSpread).toBeGreaterThan(0.25);
     expect(Math.abs(pose.left?.lowerArmRotation?.z ?? 0)).toBeLessThan(1.25);
-    expect(Math.abs(pose.left?.lowerArmRotation?.y ?? 0)).toBeGreaterThan(0.2);
+    expect(pose.left?.lowerArmRotation?.y).toBeGreaterThan(0.2);
   });
 
   it('adds upper arm twist from the arm plane', () => {
