@@ -3463,3 +3463,30 @@
 
 - 実カメラでWポーズが成立するか確認する
 - まだ上がらない場合は、VRMボーンの実ローカル軸を可視化して、前腕の見た目に効く軸をモデルから直接推定する
+
+## 2026-05-28 Forearm Bend Limit And Forward Bias
+
+### Goal
+
+- 肘の曲がりがまだ甘く、前腕が体に刺さりがちなため、Wポーズ向けの曲げ上限と前方逃がしを調整する
+
+### Did
+
+- `lowerArmRotation.z` の上限を 2.18rad まで広げた
+- 手首が肘より上にあるWポーズ入力で、肘曲げがさらに強く出るよう係数を上げた
+- 前腕が体側へ入りやすい内側・上側の入力では、`lowerArmRotation.y` に前方逃がしのbiasを足した
+- 旧payload fallback側も同じ上限・前方逃がしへ揃えた
+- Wポーズの単体テストを、より強い肘曲げと前方逃がしを確認する内容に更新した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実カメラで肘曲げ量と体への刺さりが改善したか確認する
+- まだ浅い場合は `lowerArmRotation.z` の係数をさらに上げる
+- 前方逃がしが逆方向なら `forearmForwardBias` の符号を反転する
