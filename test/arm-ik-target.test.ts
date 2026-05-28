@@ -48,6 +48,14 @@ describe('createArmIkRetargetPose', () => {
     expect(Math.abs(pose.left?.lowerArmRaise ?? 0)).toBeLessThan(0.12);
   });
 
+  it('does not fold the forearm inward when the wrist moves outward', () => {
+    const pose = createArmIkRetargetPose(createOutwardForearmPose(), { mirrorInput: false });
+
+    expect(pose.left?.lowerArmSpread).toBeGreaterThan(0.25);
+    expect(Math.abs(pose.left?.lowerArmRotation?.z ?? 0)).toBeLessThan(1.25);
+    expect(Math.abs(pose.left?.lowerArmRotation?.y ?? 0)).toBeGreaterThan(0.2);
+  });
+
   it('adds forearm bend when the wrist is above the elbow for W poses', () => {
     const pose = createArmIkRetargetPose(createWristUpPose(), { mirrorInput: false });
 
@@ -121,6 +129,13 @@ function createWristUpPose(): NormalizedLandmark[] {
   const landmarks = createBasePose();
   landmarks[13] = point(0.73, 0.43, 0.02, 0.9);
   landmarks[15] = point(0.73, 0.28, 0.04, 0.9);
+  return landmarks;
+}
+
+function createOutwardForearmPose(): NormalizedLandmark[] {
+  const landmarks = createBasePose();
+  landmarks[13] = point(0.73, 0.43, 0.02, 0.9);
+  landmarks[15] = point(0.9, 0.35, 0.04, 0.9);
   return landmarks;
 }
 

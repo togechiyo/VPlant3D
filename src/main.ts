@@ -3278,8 +3278,11 @@ function createFallbackArmRotations(
   const lowerRaise = clamp(target.lowerArmRaise, -1, 1);
   const lowerSpread = clamp(target.lowerArmSpread, -1, 1);
   const elbowDepth = clamp(target.elbow.z - target.shoulder.z, -0.45, 0.45);
+  const lowerOutward = Math.max(0, lowerSpread);
+  const lowerInward = Math.max(0, -lowerSpread);
+  const inwardGate = clamp(0.65 + lowerInward * 0.35 - lowerOutward * 0.55, 0.2, 1);
   const forearmForwardBias = clamp(
-    Math.max(0, -lowerSpread) * 0.4 + Math.max(0, lowerRaise) * 0.22,
+    lowerInward * 0.4 + Math.max(0, lowerRaise) * 0.3,
     0,
     0.5,
   );
@@ -3292,9 +3295,9 @@ function createFallbackArmRotations(
     },
     lowerArmRotation: {
       x: lowerRaise * 0.22,
-      y: sideSign * clamp(lowerSpread * 0.16, -0.24, 0.24) - sideSign * forearmForwardBias,
+      y: sideSign * clamp(lowerSpread * 0.28, -0.36, 0.36) - sideSign * forearmForwardBias * inwardGate,
       z: -sideSign * clamp(
-        lowerBend * 1.08 + Math.max(0, lowerRaise) * 1.42 + Math.max(0, -lowerSpread) * 0.46,
+        lowerBend * 1.08 + Math.max(0, lowerRaise) * 1.42 * inwardGate + lowerInward * 0.5,
         0,
         2.62,
       ),
