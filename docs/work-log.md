@@ -3632,7 +3632,9 @@
 - 残す体験を、OBS表示、背景透過、コントローラー分離、マイク口パク、自動まばたき、表情、VRMA、手動操作、ライト・見た目調整に整理した
 - READMEから仕上げタスクリストへリンクした
 - 追加方針として、UI項目の簡略化、3灯ライトのプリセット化、GitHub README整備、TauriによるControllerアプリ化、macOS / Windowsビルドと実機テストをタスクリストへ追記した
-- Tauri化とOS別配布ビルドは、Web版の安定性を壊さない余力枠として扱う方針にした
+- Tauri化は、提出アプリとしての使い勝手を支える必須項目へ引き上げた
+- TauriはOBS Renderまで包まず、Controller、Relay起動、設定、OBS URL共有を担当する範囲に絞る方針にした
+- Web Controller fallbackは残し、Tauri側で問題が出てもOBS Browser Sourceデモを継続できるようにする
 - 配信環境ではUSBマイク、オーディオIF、仮想マイク、外付けカメラがあり得るため、マイク / カメラの入力デバイス選択を仕上げタスクへ追加した
 
 ### Next
@@ -3641,4 +3643,4 @@
 - コントローラーUIをデモ向けの順番へ並べ直す
 - 見た目プリセットとOBS向けREADMEを整える
 - マイク / カメラのデバイス選択、権限許可後のデバイス名更新、localStorage復元を実装する
-- Tauri化は、まずControllerだけのデスクトップアプリ化として設計を絞る
+- Tauri scaffoldを追加し、Controller UI起動とOBS Render URL共有まで通す

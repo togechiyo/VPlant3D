@@ -13,6 +13,7 @@
 - 高精度モーキャプを主役にしない
 - ハンドトラッキングは実験機能へ下げる
 - OBS Browser Sourceで軽く動くVRMレイヤーとして仕立てる
+- TauriでControllerをデスクトップアプリ化し、起動・操作・OBS URL共有を分かりやすくする
 - カメラなしでも使える、マイク口パク、表情、VRMA、手動操作、照明・見た目調整を強みにする
 - 2026-06-04 以降は新しい大機能を原則追加しない
 
@@ -30,6 +31,8 @@
 - [ ] OBS Render URLにモデルが表示される
 - [ ] 背景透過がOBSで使える
 - [ ] コントローラーとOBS Renderが分離して動く
+- [ ] Tauri版Controllerアプリから操作できる
+- [ ] Tauri版ControllerアプリからOBS Render URLを確認 / コピーできる
 - [ ] マイク音量口パクが動く
 - [ ] 接続済みマイクを選択できる
 - [ ] 接続済みカメラを選択できる
@@ -97,17 +100,21 @@
 - [ ] `docs/human-handoff-board.md` の未対応項目を整理する
 - [ ] `docs/work-log.md` に仕上げフェーズ移行を記録する
 
-## Priority 6: Tauriアプリ化検討 / 実装
+## Priority 6: Tauriアプリ化
 
-Tauri化は魅力があるが、締切前のリスクも大きい。まずはWeb版のデモ安定性を優先し、Tauriは「コントローラーをデスクトップアプリ化する」範囲に限定して検討する。
+Tauri化は提出アプリとしての使い勝手を支える必須項目として扱う。ただし、リスクを絞るため、OBS Renderは引き続きOBS Browser Sourceで表示し、TauriはController、Relay起動、設定、OBS URL共有を担当する。
 
 - [ ] Tauri化の目的を「OBS RenderはBrowser Source、Controllerだけデスクトップアプリ」に絞る
 - [ ] Tauri導入で得られる価値をREADME / docs向けに整理する
 - [ ] Tauriでローカルサーバー起動、または既存relay server接続のどちらにするか決める
+- [ ] Tauriアプリ起動時にController UIを開ける
+- [ ] TauriアプリからOBS Render URLをコピーできる
 - [ ] Tauri版でVRM / VRMAファイル選択が問題なくできるか確認する
 - [ ] Tauri版でマイク・カメラ権限がどう扱われるか確認する
-- [ ] Web版の安定性を壊さない範囲でTauri scaffoldを追加する
-- [ ] Tauri化が6月4日までに安定しなければ、提出物はWeb版中心に戻す
+- [ ] Tauri版で選択したマイク / カメラが使えるか確認する
+- [ ] Tauri版が不安定な場合も、Web Controller fallbackは残す
+- [ ] Tauri版の起動方法をREADMEに書く
+- [ ] Tauri版の既知の制限をREADMEに書く
 
 ## Priority 7: macOS / Windowsビルドと実機テスト
 
@@ -148,7 +155,6 @@ mac版、Windows版は提出の見栄えとして強いが、実機確認が必�
 - [ ] ハンドトラッキングの本格実装
 - [ ] 腕IKの追加調整
 - [ ] 外部トラッキング接続
-- [ ] Tauri化
 - [ ] macOS / Windows配布ビルド
 - [ ] MCPサーバー化
 - [ ] VRMA記録・書き出し
@@ -162,13 +168,14 @@ mac版、Windows版は提出の見栄えとして強いが、実機確認が必�
 - [ ] 仕上げタスクリストを確定する
 - [ ] ハンドトラッキングの扱いを決める
 - [ ] UI整理に着手する
-- [ ] Tauri化とOS別ビルドを余力枠として扱うか判断する
+- [ ] Tauri化を必須項目として扱い、Controllerアプリ化の範囲を確定する
 
 ### 2026-05-30 to 2026-05-31
 
 - [ ] コントローラーUIをデモ向けに整える
 - [ ] 見た目プリセットとライト初期値を整える
 - [ ] VRMA / 表情 / マイク口パクのデモ導線を整える
+- [ ] Tauri scaffoldを追加し、Controller UI起動まで通す
 - [ ] READMEのGitHub表示を整える
 
 ### 2026-06-01 to 2026-06-03
@@ -176,14 +183,15 @@ mac版、Windows版は提出の見栄えとして強いが、実機確認が必�
 - [ ] OBS実機確認で出た不具合を直す
 - [ ] READMEと提出向け説明を整える
 - [ ] デモ手順を固定する
-- [ ] 余力があればTauri scaffoldとmacOSビルドを試す
+- [ ] Tauri版ControllerからOBS Render URL共有と基本操作を確認する
+- [ ] macOSビルドを試す
 - [ ] Windows実機確認が可能なら手順を作って人間確認へ渡す
 
 ### 2026-06-04
 
 - [ ] 新規大機能を止める
 - [ ] 残りはバグ修正と見た目調整に限定する
-- [ ] Tauri / OS別ビルドが不安定なら提出対象から外す
+- [ ] Tauri版が不安定な場合でもWeb Controller fallbackでデモできることを確認する
 
 ### 2026-06-05 to 2026-06-06
 
@@ -204,5 +212,6 @@ mac版、Windows版は提出の見栄えとして強いが、実機確認が必�
 - [ ] `npm run test:e2e` が通る
 - [ ] ChromeでコントローラーURLを確認済み
 - [ ] OBSでRender URLを確認済み
+- [ ] Tauri版Controllerで起動、VRM読み込み、OBS URL確認ができる
 - [ ] READMEだけ見れば起動とOBS設定ができる
 - [ ] ハッカソン提出に必要な説明が揃っている
