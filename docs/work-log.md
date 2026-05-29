@@ -3636,11 +3636,12 @@
 - TauriはOBS Renderまで包まず、Controller、Relay起動、設定、OBS URL共有を担当する範囲に絞る方針にした
 - Web Controller fallbackは残し、Tauri側で問題が出てもOBS Browser Sourceデモを継続できるようにする
 - 配信環境ではUSBマイク、オーディオIF、仮想マイク、外付けカメラがあり得るため、マイク / カメラの入力デバイス選択を仕上げタスクへ追加した
+- Controller UIは機能別カードを並べるのではなく、`カメラモード` と `マイク&手動モード` の2つへ極端に簡略化する方針にした
 
 ### Next
 
 - ハンドトラッキングUIを通常導線から隠す、または実験セクションへ隔離する
-- コントローラーUIをデモ向けの順番へ並べ直す
+- コントローラーUIを `カメラモード` / `マイク&手動モード` 中心へ再構成する
 - 見た目プリセットとOBS向けREADMEを整える
 - マイク / カメラのデバイス選択、権限許可後のデバイス名更新、localStorage復元を実装する
 - Tauri scaffoldを追加し、Controller UI起動とOBS Render URL共有まで通す
