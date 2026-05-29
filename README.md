@@ -129,4 +129,5 @@ Setup Mode also includes Avatar Framing sliders for X/Y position, scale, and Y-a
 - [TDD for Codex](./docs/tdd-for-codex.md)
 - [Work log](./docs/work-log.md)
 - [Submission checklist](./docs/submission-checklist.md)
+- [Hackathon finish task list](./docs/hackathon-finish-task-list.md)
 - [Local assets](./docs/local-assets.md)
