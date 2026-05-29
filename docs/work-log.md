@@ -3639,6 +3639,7 @@
 - Controller UIは機能別カードを並べるのではなく、`カメラモード` と `マイク&手動モード` の2つへ極端に簡略化する方針にした
 - 表情はVRMアバターで使いやすい `喜怒哀楽` をワンタップで出す方向へ寄せる
 - VRMAは主役ではなく、VRMアワード / ハッカソン向けの対応アピールと短い見せ場としてUI上の重みを下げる
+- OBS Browser Sourceへ貼るURLは環境依存があり得るため、Controller / Tauri側にOBS URL共有カードを置き、host / port / transparent / debugを反映したURLを表示・コピーできるようにする方針にした
 
 ### Next
 
@@ -3646,5 +3647,6 @@
 - コントローラーUIを `カメラモード` / `マイク&手動モード` 中心へ再構成する
 - 見た目プリセットとOBS向けREADMEを整える
 - 表情プリセットを `通常` / `喜` / `怒` / `哀` / `楽` へ整理し、モデル差異に強いfallbackを用意する
+- OBS URL共有UIを追加し、`127.0.0.1` / `localhost` 候補、現在port、透明背景、debug切替、Render接続状態を扱う
 - マイク / カメラのデバイス選択、権限許可後のデバイス名更新、localStorage復元を実装する
 - Tauri scaffoldを追加し、Controller UI起動とOBS Render URL共有まで通す

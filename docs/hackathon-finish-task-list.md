@@ -32,6 +32,7 @@
 
 - [ ] VRMを読み込む
 - [ ] OBS Render URLにモデルが表示される
+- [ ] 環境に合わせたOBS Render URLを表示 / コピーできる
 - [ ] 背景透過がOBSで使える
 - [ ] コントローラーとOBS Renderが分離して動く
 - [ ] Tauri版Controllerアプリから操作できる
@@ -62,6 +63,14 @@
   - [ ] 表情ボタン
   - [ ] マウス手動操作
 - [ ] VRM読み込み、VRMA、見た目、OBS URL共有はモード外の共通操作として残す
+- [ ] OBS URL共有カードを共通操作に追加する
+  - [ ] 推奨URLとして `http://127.0.0.1:<port>/?obs=1&transparent=1` を表示する
+  - [ ] Control URLとして `http://127.0.0.1:<port>/?control=1` を表示する
+  - [ ] `localhost` / `127.0.0.1` の候補を表示する
+  - [ ] 現在のポートを反映する
+  - [ ] 透明背景ON/OFF、debug ON/OFFを切り替えたURLを生成する
+  - [ ] ワンタップでコピーできる
+  - [ ] Render側の接続状態を表示する
 - [ ] コントローラー画面の最上部に16:9プレビューを維持する
 - [ ] 操作パネルは縦スクロール前提で、よく使う項目を上へ寄せる
 - [ ] VRM読み込みを最上位に置く
@@ -113,6 +122,7 @@
 - [ ] READMEに最短起動手順を書く
 - [ ] READMEにOBS Browser Source設定手順を書く
 - [ ] READMEにコントローラーURLとOBS Render URLの違いを書く
+- [ ] READMEに `127.0.0.1` / `localhost` / ポート違いへの注意を書く
 - [ ] READMEにデモで推奨する使い方を書く
 - [ ] READMEに既知の制限を書く
 - [ ] `docs/submission-checklist.md` を現在の実装状況に合わせて更新する
@@ -128,6 +138,8 @@ Tauri化は提出アプリとしての使い勝手を支える必須項目とし
 - [ ] Tauriでローカルサーバー起動、または既存relay server接続のどちらにするか決める
 - [ ] Tauriアプリ起動時にController UIを開ける
 - [ ] TauriアプリからOBS Render URLをコピーできる
+- [ ] Tauriアプリが起動したlocal relayのhost / portを検出してURLへ反映する
+- [ ] Tauriアプリ上でOBS Renderの接続状態を表示する
 - [ ] Tauri版でVRM / VRMAファイル選択が問題なくできるか確認する
 - [ ] Tauri版でマイク・カメラ権限がどう扱われるか確認する
 - [ ] Tauri版で選択したマイク / カメラが使えるか確認する
