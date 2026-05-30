@@ -67,6 +67,8 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('怒')).toBeVisible();
   await expect(page.getByText('哀')).toBeVisible();
   await expect(page.getByText('楽')).toBeVisible();
+  await expect(page.getByText('驚')).toBeVisible();
+  await expect(page.locator('#expression-preset-text')).toHaveText('なし');
   await expect(page.getByText('カメラモード')).toBeHidden();
   await page.locator('#camera-mode-button').click();
   await expect(page.locator('#mic-manual-mode-button')).toHaveAttribute('aria-pressed', 'false');

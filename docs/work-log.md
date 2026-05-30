@@ -3728,3 +3728,27 @@
 ### Next
 
 - 実ブラウザで、表情ボタン、VRM読み込み、モード切替の視線移動が自然か確認する
+
+## 2026-05-30 VRM Expression Preset Names
+
+### Goal
+
+- 表情ボタンをVRMプリセット名に合わせて整理する
+
+### Did
+
+- VRM 1.0プリセットに合わせて `驚` / `surprised` を表情ボタンへ追加した
+- `通常` ボタンは、VRMの `neutral` 表情とアプリ側の全表情ゼロ状態が混ざるため削除した
+- 表情ボタンは同じボタンをもう一度押すと `なし` に戻るトグルにした
+- `docs/hackathon-finish-task-list.md` の表情タスク表現をVRMプリセット寄りに更新した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実ブラウザで、`喜` / `怒` / `哀` / `楽` / `驚` の見え方と、再クリックで `なし` に戻る操作感を確認する

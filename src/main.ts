@@ -79,6 +79,7 @@ import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
 import {
+  vrmEmotionExpressionNames,
   vrmExpressionPresets,
   type VrmExpressionPresetId,
 } from './vrm/expression-presets';
@@ -301,7 +302,7 @@ let armIkRetargetPose: ArmIkRetargetPose = createNeutralArmIkRetargetPose();
 let armIkRetargetWasActive = false;
 let handRetargetWasActive = false;
 let autoBlinkState: AutoBlinkState = createAutoBlinkState(performance.now() / 1000);
-let selectedExpressionPreset: VrmExpressionPresetId = 'neutral';
+let selectedExpressionPreset: VrmExpressionPresetId | null = null;
 type BlinkMode = 'mocap' | 'auto' | 'off';
 type LipSyncMode = 'mocap' | 'mic' | 'off';
 let blinkMode: BlinkMode = 'mocap';
@@ -416,14 +417,14 @@ if (isControlPage) {
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/35 bg-black/20 p-2">
       <div class="flex items-center justify-between gap-3">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">表情</span>
-        <span id="expression-preset-text" class="text-xs font-bold text-[#9fa9aa]">通常</span>
+        <span id="expression-preset-text" class="text-xs font-bold text-[#9fa9aa]">なし</span>
       </div>
       <div class="grid grid-cols-5 gap-2">
-        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button" data-expression-preset="neutral">通常</button>
-        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy">喜</button>
-        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="angry">怒</button>
-        <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="sad">哀</button>
-        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="relaxed">楽</button>
+        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy" aria-pressed="false">喜</button>
+        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="angry" aria-pressed="false">怒</button>
+        <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="sad" aria-pressed="false">哀</button>
+        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="relaxed" aria-pressed="false">楽</button>
+        <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="surprised" aria-pressed="false">驚</button>
       </div>
     </div>
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/35 bg-black/20 p-2">
@@ -876,7 +877,7 @@ if (isControlPage) {
     button.addEventListener('click', () => {
       const preset = button.dataset.expressionPreset;
       if (isExpressionPresetId(preset)) {
-        selectedExpressionPreset = preset;
+        selectedExpressionPreset = selectedExpressionPreset === preset ? null : preset;
         applyExpressionPreset();
         updateExpressionPresetUi();
       }
@@ -2618,10 +2619,10 @@ function applyBlinkOpen(): void {
 }
 
 function applyExpressionPreset(): void {
-  const weights = vrmExpressionPresets[selectedExpressionPreset];
+  const weights = selectedExpressionPreset ? vrmExpressionPresets[selectedExpressionPreset] : {};
 
-  for (const [name, value] of Object.entries(weights)) {
-    currentVrm?.expressionManager?.setValue(name, value ?? 0);
+  for (const name of vrmEmotionExpressionNames) {
+    currentVrm?.expressionManager?.setValue(name, weights[name] ?? 0);
   }
 
   faceExpressionWeights = {
@@ -2639,24 +2640,33 @@ function updateExpressionPresetUi(): void {
   }
 
   expressionPresetText.textContent =
-    selectedExpressionPreset === 'neutral'
-      ? '通常'
+    selectedExpressionPreset === null
+      ? 'なし'
       : selectedExpressionPreset === 'happy'
         ? '喜'
         : selectedExpressionPreset === 'angry'
           ? '怒'
           : selectedExpressionPreset === 'sad'
             ? '哀'
-            : '楽';
+            : selectedExpressionPreset === 'relaxed'
+              ? '楽'
+              : '驚';
+
+  document.querySelectorAll<HTMLButtonElement>('.expression-preset-button').forEach((button) => {
+    const isSelected = button.dataset.expressionPreset === selectedExpressionPreset;
+    button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    button.classList.toggle('bg-white/[0.10]', isSelected);
+    button.classList.toggle('border-[#6dff9a]', isSelected);
+  });
 }
 
 function isExpressionPresetId(value: unknown): value is VrmExpressionPresetId {
   return (
-    value === 'neutral' ||
     value === 'happy' ||
     value === 'angry' ||
     value === 'sad' ||
-    value === 'relaxed'
+    value === 'relaxed' ||
+    value === 'surprised'
   );
 }
 
