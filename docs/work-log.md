@@ -3650,3 +3650,32 @@
 - OBS URL共有UIを追加し、`127.0.0.1` / `localhost` 候補、現在port、透明背景、debug切替、Render接続状態を扱う
 - マイク / カメラのデバイス選択、権限許可後のデバイス名更新、localStorage復元を実装する
 - Tauri scaffoldを追加し、Controller UI起動とOBS Render URL共有まで通す
+
+## 2026-05-30 Controller Two-Mode UI
+
+### Goal
+
+- ハッカソン仕上げフェーズ向けに、Controller UIを `カメラモード` と `マイク&手動モード` 中心へ整理する
+
+### Did
+
+- Controllerのカード構成を、VRM、OBS URL、マイク&手動モード、カメラモード、位置調整、ルック、VRMAへ整理した
+- OBS Render URL / Control URLの表示とコピー用ボタンを追加した
+- 手 / 腕トラックは通常導線から外し、カメラモード内の `実験` セクションへ移した
+- 説明文を減らし、UI文言を日本語へ寄せた
+- 表情プリセットを `通常` / `喜` / `怒` / `哀` / `楽` に整理し、`angry` / `sad` もrelayのExpression stateへ乗せるようにした
+- OBS Render、透明背景、VRM / VRMA、マイク口パク、自動まばたき、手動操作、既存トラック処理は維持した
+- E2EのUI期待値を新しい二モード構成へ更新した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実ブラウザとOBSで、二モードUIの視認性と操作密度を人力確認する
+- OBS URL共有は、次に `localhost` / `127.0.0.1` 候補やdebug切替を含めてもう少し仕上げる
+- 仕上げタスクとして、マイク / カメラのデバイス選択とTauri Controller化へ進む

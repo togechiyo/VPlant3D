@@ -84,15 +84,11 @@ describe('smoothFaceExpressionWeights', () => {
     const smoothed = smoothFaceExpressionWeights(
       createNeutralFaceExpressionWeights(),
       {
+        ...createNeutralFaceExpressionWeights(),
         blinkLeft: 1,
         blinkRight: 0.5,
         aa: 0.25,
-        ih: 0,
-        ou: 0,
-        ee: 0,
-        oh: 0,
         happy: 0.5,
-        surprised: 0,
       },
       0.4,
     );

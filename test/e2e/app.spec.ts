@@ -35,7 +35,10 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#vrma-file-input')).toHaveAttribute('multiple', '');
   await expect(page.locator('#vrma-requirement-text')).toHaveText('VRMが必要');
   await expect(page.locator('#vrma-play-button')).toBeDisabled();
-  await expect(page.getByText('カメラなし操作')).toBeVisible();
+  await expect(page.getByText('OBSに貼る')).toBeVisible();
+  await expect(page.locator('#obs-render-url-text')).toContainText('/?obs=1&transparent=1');
+  await expect(page.locator('#control-url-text')).toContainText('/?control=1');
+  await expect(page.getByText('マイク&手動モード')).toBeVisible();
   await expect(page.locator('#manual-control-input')).toBeChecked();
   await expect(page.locator('#manual-mouse-input')).toBeChecked();
   await expect(page.locator('#manual-control-status-text')).toHaveText('未操作');
@@ -49,7 +52,6 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('位置調整')).toBeVisible();
   await expect(page.locator('#avatar-offset-x-input')).toHaveValue('0');
   await expect(page.locator('#avatar-scale-input')).toHaveValue('1');
-  await expect(page.getByText('顔 / 口')).toBeVisible();
   await expect(page.getByText('マイク停止中')).toBeVisible();
   await expect(page.locator('#mic-start-button')).toBeEnabled();
   await expect(page.locator('#mic-stop-button')).toBeDisabled();
@@ -59,14 +61,16 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('揺らぎ')).toBeVisible();
   await expect(page.locator('#idle-sway-input')).toBeChecked();
   await expect(page.getByText('表情')).toBeVisible();
-  await expect(page.getByText('笑顔')).toBeVisible();
-  await expect(page.getByText('体トラック')).toBeVisible();
-  await expect(page.getByText('上半身を動かす')).toBeVisible();
+  await expect(page.getByText('喜')).toBeVisible();
+  await expect(page.getByText('怒')).toBeVisible();
+  await expect(page.getByText('哀')).toBeVisible();
+  await expect(page.getByText('楽')).toBeVisible();
+  await expect(page.getByText('カメラモード')).toBeVisible();
   await expect(page.getByText('骨格のみ表示')).toBeVisible();
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
   await expect(page.getByText('ミラー')).toBeVisible();
   await expect(page.locator('#pose-mirror-input')).toBeChecked();
-  await expect(page.getByText('PoseLandmarker')).toBeVisible();
+  await expect(page.getByText('実験')).toBeVisible();
   await expect(page.locator('#hand-tracking-input')).toBeVisible();
   await expect(page.locator('#hand-tracking-input')).not.toBeChecked();
   await expect(page.locator('#pose-start-button')).toBeEnabled();
@@ -81,8 +85,8 @@ test('Control page keeps setup controls outside the OBS render URL', async ({ pa
 
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
   await expect(page.getByText('VRMを読み込む', { exact: true })).toBeVisible();
-  await expect(page.getByText('顔 / 口')).toBeVisible();
-  await expect(page.getByText('体トラック')).toBeVisible();
+  await expect(page.getByText('マイク&手動モード')).toBeVisible();
+  await expect(page.getByText('カメラモード')).toBeVisible();
   await expect(page.getByText('設定')).toBeVisible();
   expect(errors()).toEqual([]);
 });
@@ -97,10 +101,10 @@ test('OBS transparent mode hides Setup UI but keeps the scene canvas', async ({ 
   await expect(page.getByText('VRMAを読み込む', { exact: true })).toHaveCount(0);
   await expect(page.getByText('手動操作', { exact: true })).toHaveCount(0);
   await expect(page.getByText('3灯ライト')).toHaveCount(0);
-  await expect(page.getByText('顔 / 口')).toHaveCount(0);
+  await expect(page.getByText('マイク&手動モード')).toHaveCount(0);
   await expect(page.getByText('まばたき')).toHaveCount(0);
   await expect(page.getByText('表情')).toHaveCount(0);
-  await expect(page.getByText('体トラック')).toHaveCount(0);
+  await expect(page.getByText('カメラモード')).toHaveCount(0);
   await expect(page.getByText('設定')).toHaveCount(0);
   await expect(page.locator('.relay-debug-overlay')).toHaveCount(0);
   expect(errors()).toEqual([]);

@@ -10,6 +10,8 @@ export interface VrmFaceExpressionWeights {
   oh: number;
   happy: number;
   surprised: number;
+  angry: number;
+  sad: number;
 }
 
 export interface VrmFaceExpressionOptions {
@@ -27,6 +29,8 @@ export function createNeutralFaceExpressionWeights(): VrmFaceExpressionWeights {
     oh: 0,
     happy: 0,
     surprised: 0,
+    angry: 0,
+    sad: 0,
   };
 }
 
@@ -68,6 +72,8 @@ export function createVrmFaceExpressionWeights(
     oh: shapeMouthWeight(Math.max(roundMouth * 0.75, jawOpen * 0.45)),
     happy: clamp01(mouthSmile * 0.75),
     surprised: clamp01(Math.max(browInnerUp, browOuterUp) * 0.55),
+    angry: 0,
+    sad: 0,
   };
 }
 
@@ -88,6 +94,8 @@ export function smoothFaceExpressionWeights(
     oh: smoothMocapExpressionWeight(previous.oh, next.oh, amount, 0.006, 0.18),
     happy: smoothExpressionWeight(previous.happy, next.happy, amount, 0.018, 0.02),
     surprised: smoothExpressionWeight(previous.surprised, next.surprised, amount, 0.018, 0.02),
+    angry: smoothExpressionWeight(previous.angry, next.angry, amount, 0.018, 0.02),
+    sad: smoothExpressionWeight(previous.sad, next.sad, amount, 0.018, 0.02),
   };
 }
 

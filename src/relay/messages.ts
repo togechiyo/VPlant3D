@@ -34,6 +34,8 @@ export interface RelayExpressionState {
   oh?: number;
   happy?: number;
   surprised?: number;
+  angry?: number;
+  sad?: number;
 }
 
 export interface RelayPoseState {
