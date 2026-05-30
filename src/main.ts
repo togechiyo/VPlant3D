@@ -419,7 +419,8 @@ if (isControlPage) {
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">表情</span>
         <span id="expression-preset-text" class="text-xs font-bold text-[#9fa9aa]">なし</span>
       </div>
-      <div class="grid grid-cols-5 gap-2">
+      <div class="grid grid-cols-6 gap-2">
+        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button" data-expression-preset="neutral" aria-pressed="false">自然</button>
         <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy" aria-pressed="false">喜</button>
         <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="angry" aria-pressed="false">怒</button>
         <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="sad" aria-pressed="false">哀</button>
@@ -2642,15 +2643,17 @@ function updateExpressionPresetUi(): void {
   expressionPresetText.textContent =
     selectedExpressionPreset === null
       ? 'なし'
-      : selectedExpressionPreset === 'happy'
-        ? '喜'
-        : selectedExpressionPreset === 'angry'
-          ? '怒'
-          : selectedExpressionPreset === 'sad'
-            ? '哀'
-            : selectedExpressionPreset === 'relaxed'
-              ? '楽'
-              : '驚';
+      : selectedExpressionPreset === 'neutral'
+        ? '自然'
+        : selectedExpressionPreset === 'happy'
+          ? '喜'
+          : selectedExpressionPreset === 'angry'
+            ? '怒'
+            : selectedExpressionPreset === 'sad'
+              ? '哀'
+              : selectedExpressionPreset === 'relaxed'
+                ? '楽'
+                : '驚';
 
   document.querySelectorAll<HTMLButtonElement>('.expression-preset-button').forEach((button) => {
     const isSelected = button.dataset.expressionPreset === selectedExpressionPreset;
@@ -2662,6 +2665,7 @@ function updateExpressionPresetUi(): void {
 
 function isExpressionPresetId(value: unknown): value is VrmExpressionPresetId {
   return (
+    value === 'neutral' ||
     value === 'happy' ||
     value === 'angry' ||
     value === 'sad' ||

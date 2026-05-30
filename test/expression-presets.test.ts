@@ -4,10 +4,11 @@ import { vrmEmotionExpressionNames, vrmExpressionPresets } from '../src/vrm/expr
 
 describe('VRM expression presets', () => {
   it('tracks the VRM emotion preset names handled by the quick buttons', () => {
-    expect(vrmEmotionExpressionNames).toEqual(['happy', 'surprised', 'relaxed', 'angry', 'sad']);
+    expect(vrmEmotionExpressionNames).toEqual(['neutral', 'happy', 'surprised', 'relaxed', 'angry', 'sad']);
   });
 
   it('keeps one-button presets focused on one dominant expression', () => {
+    expect(vrmExpressionPresets.neutral.neutral).toBe(1);
     expect(vrmExpressionPresets.happy.happy).toBeGreaterThan(0.7);
     expect(vrmExpressionPresets.happy.surprised).toBe(0);
     expect(vrmExpressionPresets.angry.angry).toBeGreaterThan(0.7);

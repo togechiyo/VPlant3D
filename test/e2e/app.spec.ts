@@ -63,6 +63,7 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('揺らぎ')).toBeVisible();
   await expect(page.locator('#idle-sway-input')).toBeChecked();
   await expect(page.getByText('表情')).toBeVisible();
+  await expect(page.getByText('自然')).toBeVisible();
   await expect(page.getByText('喜')).toBeVisible();
   await expect(page.getByText('怒')).toBeVisible();
   await expect(page.getByText('哀')).toBeVisible();
