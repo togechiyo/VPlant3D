@@ -79,8 +79,11 @@ import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
 import {
+  createNeutralVrmEmotionExpressionWeights,
+  createVrmExpressionPresetTarget,
+  smoothVrmEmotionExpressionWeights,
   vrmEmotionExpressionNames,
-  vrmExpressionPresets,
+  type VrmEmotionExpressionWeights,
   type VrmExpressionPresetId,
 } from './vrm/expression-presets';
 import { VPlantRelayClient } from './relay/client';
@@ -305,6 +308,8 @@ let armIkRetargetWasActive = false;
 let handRetargetWasActive = false;
 let autoBlinkState: AutoBlinkState = createAutoBlinkState(performance.now() / 1000);
 let selectedExpressionPreset: VrmExpressionPresetId | null = null;
+let emotionExpressionWeights: VrmEmotionExpressionWeights =
+  createNeutralVrmEmotionExpressionWeights();
 type BlinkMode = 'mocap' | 'auto' | 'off';
 type LipSyncMode = 'mocap' | 'mic' | 'off';
 let blinkMode: BlinkMode = 'mocap';
@@ -1205,7 +1210,7 @@ function animate(frameTime = performance.now()): void {
   }
   updateLookAtCameraTarget();
   if (!isRenderPage) {
-    sampleCameraLessExpressions(elapsed);
+    sampleCameraLessExpressions(elapsed, delta);
     sampleMicReactiveMouth();
     publishRelayState(frameTime);
   }
@@ -1575,6 +1580,7 @@ function captureExpressionManagerSnapshot(): RelayExpressionState {
   const expressionManager = currentVrm?.expressionManager;
 
   return {
+    neutral: expressionManager?.getValue('neutral') ?? undefined,
     blinkLeft: expressionManager?.getValue('blinkLeft') ?? undefined,
     blinkRight: expressionManager?.getValue('blinkRight') ?? undefined,
     aa: expressionManager?.getValue('aa') ?? undefined,
@@ -1584,6 +1590,7 @@ function captureExpressionManagerSnapshot(): RelayExpressionState {
     oh: expressionManager?.getValue('oh') ?? undefined,
     happy: expressionManager?.getValue('happy') ?? undefined,
     surprised: expressionManager?.getValue('surprised') ?? undefined,
+    relaxed: expressionManager?.getValue('relaxed') ?? undefined,
     angry: expressionManager?.getValue('angry') ?? undefined,
     sad: expressionManager?.getValue('sad') ?? undefined,
   };
@@ -1800,6 +1807,7 @@ function createRelayExpressionState(): RelayExpressionState {
           };
 
   const candidate = {
+    neutral: roundRelayValue(emotionExpressionWeights.neutral, 3),
     blinkLeft: roundRelayValue(faceExpressionWeights.blinkLeft, 3),
     blinkRight: roundRelayValue(faceExpressionWeights.blinkRight, 3),
     aa: roundRelayValue(mouthExpressions.aa, 3),
@@ -1809,6 +1817,7 @@ function createRelayExpressionState(): RelayExpressionState {
     oh: roundRelayValue(mouthExpressions.oh, 3),
     happy: roundRelayValue(faceExpressionWeights.happy, 3),
     surprised: roundRelayValue(faceExpressionWeights.surprised, 3),
+    relaxed: roundRelayValue(emotionExpressionWeights.relaxed, 3),
     angry: roundRelayValue(faceExpressionWeights.angry, 3),
     sad: roundRelayValue(faceExpressionWeights.sad, 3),
   };
@@ -2588,6 +2597,7 @@ function createNeutralMouthExpressions(): Pick<
 }
 
 function applyAllFaceExpressions(weights: VrmFaceExpressionWeights): void {
+  currentVrm?.expressionManager?.setValue('neutral', emotionExpressionWeights.neutral);
   currentVrm?.expressionManager?.setValue('blinkLeft', weights.blinkLeft);
   currentVrm?.expressionManager?.setValue('blinkRight', weights.blinkRight);
   currentVrm?.expressionManager?.setValue('aa', weights.aa);
@@ -2597,6 +2607,7 @@ function applyAllFaceExpressions(weights: VrmFaceExpressionWeights): void {
   currentVrm?.expressionManager?.setValue('oh', weights.oh);
   currentVrm?.expressionManager?.setValue('happy', weights.happy);
   currentVrm?.expressionManager?.setValue('surprised', weights.surprised);
+  currentVrm?.expressionManager?.setValue('relaxed', emotionExpressionWeights.relaxed);
   currentVrm?.expressionManager?.setValue('angry', weights.angry);
   currentVrm?.expressionManager?.setValue('sad', weights.sad);
 }
@@ -2627,16 +2638,17 @@ function applyMocapFaceExpressions(weights: VrmFaceExpressionWeights): void {
 
 function resetFaceExpressions(): void {
   faceExpressionWeights = createNeutralFaceExpressionWeights();
+  emotionExpressionWeights = createNeutralVrmEmotionExpressionWeights();
   applyAllFaceExpressions(faceExpressionWeights);
   resetHeadRetarget();
 }
 
-function sampleCameraLessExpressions(elapsedSeconds: number): void {
+function sampleCameraLessExpressions(elapsedSeconds: number, deltaSeconds: number): void {
   if (!currentVrm) {
     return;
   }
 
-  applyExpressionPreset();
+  applyExpressionPreset(deltaSeconds);
 
   if (blinkMode === 'off') {
     applyBlinkOpen();
@@ -2668,19 +2680,25 @@ function applyBlinkOpen(): void {
   currentVrm?.expressionManager?.setValue('blinkRight', 0);
 }
 
-function applyExpressionPreset(): void {
-  const weights = selectedExpressionPreset ? vrmExpressionPresets[selectedExpressionPreset] : {};
+function applyExpressionPreset(deltaSeconds = 1 / 60): void {
+  const target = createVrmExpressionPresetTarget(selectedExpressionPreset);
+  const smoothing = getFrameSmoothing(deltaSeconds, 9);
+  emotionExpressionWeights = smoothVrmEmotionExpressionWeights(
+    emotionExpressionWeights,
+    target,
+    smoothing,
+  );
 
   for (const name of vrmEmotionExpressionNames) {
-    currentVrm?.expressionManager?.setValue(name, weights[name] ?? 0);
+    currentVrm?.expressionManager?.setValue(name, emotionExpressionWeights[name]);
   }
 
   faceExpressionWeights = {
     ...faceExpressionWeights,
-    happy: weights.happy ?? 0,
-    surprised: weights.surprised ?? 0,
-    angry: weights.angry ?? 0,
-    sad: weights.sad ?? 0,
+    happy: emotionExpressionWeights.happy,
+    surprised: emotionExpressionWeights.surprised,
+    angry: emotionExpressionWeights.angry,
+    sad: emotionExpressionWeights.sad,
   };
 }
 

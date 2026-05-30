@@ -25,6 +25,7 @@ export interface RelayLookSettings {
 }
 
 export interface RelayExpressionState {
+  neutral?: number;
   blinkLeft?: number;
   blinkRight?: number;
   aa?: number;
@@ -34,6 +35,7 @@ export interface RelayExpressionState {
   oh?: number;
   happy?: number;
   surprised?: number;
+  relaxed?: number;
   angry?: number;
   sad?: number;
 }

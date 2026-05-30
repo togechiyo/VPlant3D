@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { vrmEmotionExpressionNames, vrmExpressionPresets } from '../src/vrm/expression-presets';
+import {
+  createNeutralVrmEmotionExpressionWeights,
+  createVrmExpressionPresetTarget,
+  smoothVrmEmotionExpressionWeights,
+  vrmEmotionExpressionNames,
+  vrmExpressionPresets,
+} from '../src/vrm/expression-presets';
 
 describe('VRM expression presets', () => {
   it('tracks the VRM emotion preset names handled by the quick buttons', () => {
@@ -15,5 +21,22 @@ describe('VRM expression presets', () => {
     expect(vrmExpressionPresets.sad.sad).toBeGreaterThan(0.7);
     expect(vrmExpressionPresets.relaxed.relaxed).toBeGreaterThan(0.7);
     expect(vrmExpressionPresets.surprised.surprised).toBeGreaterThan(0.7);
+  });
+
+  it('creates a zero target when no preset is selected', () => {
+    expect(createVrmExpressionPresetTarget(null)).toEqual(
+      createNeutralVrmEmotionExpressionWeights(),
+    );
+  });
+
+  it('smooths preset changes instead of jumping to the target', () => {
+    const previous = createNeutralVrmEmotionExpressionWeights();
+    const target = createVrmExpressionPresetTarget('happy');
+    const smoothed = smoothVrmEmotionExpressionWeights(previous, target, 0.4);
+
+    expect(smoothed.happy).toBeGreaterThan(0);
+    expect(smoothed.happy).toBeLessThan(target.happy);
+    expect(smoothed.relaxed).toBeGreaterThan(0);
+    expect(smoothed.relaxed).toBeLessThan(target.relaxed);
   });
 });

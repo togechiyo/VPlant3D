@@ -3851,3 +3851,26 @@
 
 - 実OBSで、Browser Sourceを再読み込みしてカメラモードの頭・体・表情が追従するか確認する
 - まだ動かない場合は `?debug=1` を付けたOBS URLでruntime sequenceとhead値が増えているか確認する
+
+## 2026-05-30 Smooth Expression Presets
+
+### Goal
+
+- 喜怒哀楽などの表情プリセットを瞬時切り替えではなく、短い間を持ってなめらかに遷移させる
+
+### Did
+
+- 表情プリセットの現在値と目標値を分け、描画フレームごとに補間するようにした
+- `neutral` / `relaxed` もOBS Renderへ送る `RelayExpressionState` に含め、自然・楽のプリセットもOBS側へ伝わるようにした
+- 表情プリセット目標値と補間の純ロジックテストを追加した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実ブラウザで、表情ボタン連打時の遷移速度が気持ちよいか確認する
