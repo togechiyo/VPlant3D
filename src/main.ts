@@ -440,7 +440,14 @@ if (isControlPage) {
         <button id="control-url-copy-button" class="rounded-md border border-[#38d5ff]/55 bg-transparent px-3 py-2 text-xs font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button">Control URLをコピー</button>
       </div>
     </div>
-    <div class="grid gap-2 rounded-md border border-[#6dff9a]/30 bg-black/20 p-2">
+    <div class="grid gap-2 rounded-md border border-white/10 bg-black/20 p-2">
+      <span class="text-xs font-bold uppercase tracking-normal text-[#9fa9aa]">操作モード</span>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="mic-manual-mode-button" class="rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/15 px-3 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" aria-pressed="true">マイク&手動</button>
+        <button id="camera-mode-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#9fa9aa] transition hover:border-[#38d5ff]" type="button" aria-pressed="false">カメラ</button>
+      </div>
+    </div>
+    <div id="mic-manual-mode-panel" class="grid gap-2 rounded-md border border-[#6dff9a]/30 bg-black/20 p-2">
       <div class="flex items-start justify-between gap-3">
         <div class="grid gap-1">
           <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">モード</span>
@@ -513,7 +520,7 @@ if (isControlPage) {
       </div>
       <button id="manual-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">顔向きリセット</button>
     </div>
-    <div class="grid gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
+    <div id="camera-mode-panel" class="hidden gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">モード</span>
         <strong class="text-sm font-bold text-[#eef4f2]">カメラモード</strong>
@@ -663,6 +670,10 @@ if (isControlPage) {
     '#obs-render-url-copy-button',
   );
   const controlUrlCopyButton = panel.querySelector<HTMLButtonElement>('#control-url-copy-button');
+  const micManualModeButton = panel.querySelector<HTMLButtonElement>('#mic-manual-mode-button');
+  const cameraModeButton = panel.querySelector<HTMLButtonElement>('#camera-mode-button');
+  const micManualModePanel = panel.querySelector<HTMLElement>('#mic-manual-mode-panel');
+  const cameraModePanel = panel.querySelector<HTMLElement>('#camera-mode-panel');
   avatarOffsetXInput = panel.querySelector<HTMLInputElement>('#avatar-offset-x-input');
   avatarOffsetYInput = panel.querySelector<HTMLInputElement>('#avatar-offset-y-input');
   avatarScaleInput = panel.querySelector<HTMLInputElement>('#avatar-scale-input');
@@ -729,6 +740,29 @@ if (isControlPage) {
   controlUrlCopyButton?.addEventListener('click', () => {
     void navigator.clipboard?.writeText(controlUrl);
   });
+  const setControlMode = (mode: 'mic-manual' | 'camera') => {
+    const isMicManual = mode === 'mic-manual';
+    micManualModePanel?.classList.toggle('hidden', !isMicManual);
+    micManualModePanel?.classList.toggle('grid', isMicManual);
+    cameraModePanel?.classList.toggle('hidden', isMicManual);
+    cameraModePanel?.classList.toggle('grid', !isMicManual);
+    micManualModeButton?.setAttribute('aria-pressed', String(isMicManual));
+    cameraModeButton?.setAttribute('aria-pressed', String(!isMicManual));
+    micManualModeButton?.classList.toggle('border-[#6dff9a]/80', isMicManual);
+    micManualModeButton?.classList.toggle('bg-[#6dff9a]/15', isMicManual);
+    micManualModeButton?.classList.toggle('text-[#dfffee]', isMicManual);
+    micManualModeButton?.classList.toggle('border-white/15', !isMicManual);
+    micManualModeButton?.classList.toggle('bg-white/[0.04]', !isMicManual);
+    micManualModeButton?.classList.toggle('text-[#9fa9aa]', !isMicManual);
+    cameraModeButton?.classList.toggle('border-[#38d5ff]/80', !isMicManual);
+    cameraModeButton?.classList.toggle('bg-[#38d5ff]/15', !isMicManual);
+    cameraModeButton?.classList.toggle('text-[#dff8ff]', !isMicManual);
+    cameraModeButton?.classList.toggle('border-white/15', isMicManual);
+    cameraModeButton?.classList.toggle('bg-white/[0.04]', isMicManual);
+    cameraModeButton?.classList.toggle('text-[#9fa9aa]', isMicManual);
+  };
+  micManualModeButton?.addEventListener('click', () => setControlMode('mic-manual'));
+  cameraModeButton?.addEventListener('click', () => setControlMode('camera'));
   avatarOffsetXInput?.addEventListener('input', () => {
     appStore.getState().setAvatarOffsetX(Number(avatarOffsetXInput?.value ?? 0));
     applyAvatarTransform();

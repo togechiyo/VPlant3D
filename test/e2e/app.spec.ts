@@ -39,6 +39,8 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#obs-render-url-text')).toContainText('/?obs=1&transparent=1');
   await expect(page.locator('#control-url-text')).toContainText('/?control=1');
   await expect(page.getByText('マイク&手動モード')).toBeVisible();
+  await expect(page.locator('#mic-manual-mode-button')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#camera-mode-button')).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('#manual-control-input')).toBeChecked();
   await expect(page.locator('#manual-mouse-input')).toBeChecked();
   await expect(page.locator('#manual-control-status-text')).toHaveText('未操作');
@@ -65,6 +67,10 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('怒')).toBeVisible();
   await expect(page.getByText('哀')).toBeVisible();
   await expect(page.getByText('楽')).toBeVisible();
+  await expect(page.getByText('カメラモード')).toBeHidden();
+  await page.locator('#camera-mode-button').click();
+  await expect(page.locator('#mic-manual-mode-button')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#camera-mode-button')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText('カメラモード')).toBeVisible();
   await expect(page.getByText('骨格のみ表示')).toBeVisible();
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
@@ -86,6 +92,8 @@ test('Control page keeps setup controls outside the OBS render URL', async ({ pa
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
   await expect(page.getByText('VRMを読み込む', { exact: true })).toBeVisible();
   await expect(page.getByText('マイク&手動モード')).toBeVisible();
+  await expect(page.getByText('カメラモード')).toBeHidden();
+  await page.locator('#camera-mode-button').click();
   await expect(page.getByText('カメラモード')).toBeVisible();
   await expect(page.getByText('設定')).toBeVisible();
   expect(errors()).toEqual([]);
