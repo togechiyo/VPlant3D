@@ -35,7 +35,7 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#vrma-file-input')).toHaveAttribute('multiple', '');
   await expect(page.locator('#vrma-requirement-text')).toHaveText('VRMが必要');
   await expect(page.locator('#vrma-play-button')).toBeDisabled();
-  await expect(page.getByText('OBSに貼る')).toBeVisible();
+  await expect(page.getByText('OBSに貼る')).toHaveCount(1);
   await expect(page.locator('#obs-render-url-text')).toContainText('/?obs=1&transparent=1');
   await expect(page.locator('#control-url-text')).toContainText('/?control=1');
   await expect(page.getByText('マイク&手動モード')).toBeVisible();

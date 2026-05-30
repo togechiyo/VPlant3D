@@ -414,6 +414,19 @@ if (isControlPage) {
   panel.innerHTML = `
     <div class="grid h-full content-start gap-2 overflow-y-auto pr-1">
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/35 bg-black/20 p-2">
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">表情</span>
+        <span id="expression-preset-text" class="text-xs font-bold text-[#9fa9aa]">通常</span>
+      </div>
+      <div class="grid grid-cols-5 gap-2">
+        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button" data-expression-preset="neutral">通常</button>
+        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy">喜</button>
+        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="angry">怒</button>
+        <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="sad">哀</button>
+        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="relaxed">楽</button>
+      </div>
+    </div>
+    <div class="grid gap-2 rounded-md border border-[#6dff9a]/35 bg-black/20 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM</span>
         <strong id="vrm-status-text" class="text-sm font-bold text-[#eef4f2]">VRM未選択</strong>
@@ -424,27 +437,11 @@ if (isControlPage) {
         VRMを読み込む
       </label>
     </div>
-    <div class="grid gap-2 rounded-md border border-[#6dff9a]/25 bg-black/20 p-2">
-      <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">OBS URL</span>
-        <strong class="text-sm font-bold text-[#eef4f2]">OBSに貼る</strong>
-      </div>
-      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-        <span class="text-xs font-bold text-[#9fa9aa]">Render</span>
-        <code id="obs-render-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrl}</code>
-        <button id="obs-render-url-copy-button" class="rounded-md border border-[#6dff9a]/60 bg-transparent px-3 py-2 text-xs font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button">Render URLをコピー</button>
-      </div>
-      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-        <span class="text-xs font-bold text-[#9fa9aa]">Control</span>
-        <code id="control-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dff8ff]">${controlUrl}</code>
-        <button id="control-url-copy-button" class="rounded-md border border-[#38d5ff]/55 bg-transparent px-3 py-2 text-xs font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button">Control URLをコピー</button>
-      </div>
-    </div>
     <div class="grid gap-2 rounded-md border border-white/10 bg-black/20 p-2">
       <span class="text-xs font-bold uppercase tracking-normal text-[#9fa9aa]">操作モード</span>
       <div class="grid grid-cols-2 gap-2">
-        <button id="mic-manual-mode-button" class="rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/15 px-3 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" aria-pressed="true">マイク&手動</button>
-        <button id="camera-mode-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#9fa9aa] transition hover:border-[#38d5ff]" type="button" aria-pressed="false">カメラ</button>
+        <button id="mic-manual-mode-button" class="rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/15 px-3 py-4 text-base font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" aria-pressed="true">マイク&手動</button>
+        <button id="camera-mode-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-4 text-base font-bold text-[#9fa9aa] transition hover:border-[#38d5ff]" type="button" aria-pressed="false">カメラ</button>
       </div>
     </div>
     <div id="mic-manual-mode-panel" class="grid gap-2 rounded-md border border-[#6dff9a]/30 bg-black/20 p-2">
@@ -495,19 +492,6 @@ if (isControlPage) {
         <input id="idle-sway-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
         揺らぎ
       </label>
-      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-        <div class="flex items-center justify-between gap-3">
-          <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">表情</span>
-          <span id="expression-preset-text" class="text-xs font-bold text-[#9fa9aa]">通常</span>
-        </div>
-        <div class="grid grid-cols-5 gap-2">
-          <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-xs font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button" data-expression-preset="neutral">通常</button>
-          <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-1.5 text-xs font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy">喜</button>
-          <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="angry">怒</button>
-          <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-1.5 text-xs font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="sad">哀</button>
-          <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-1.5 text-xs font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="relaxed">楽</button>
-        </div>
-      </div>
       <div class="grid gap-2">
         <div class="grid gap-1">
           <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>音量</span><span>RMS</span></div>
@@ -652,6 +636,22 @@ if (isControlPage) {
         </label>
       </div>
       <div id="vrma-slot-list" class="grid gap-2"></div>
+    </div>
+    <div class="grid gap-2 rounded-md border border-white/10 bg-black/20 p-2">
+      <div class="grid gap-1">
+        <span class="text-xs font-bold uppercase tracking-normal text-[#9fa9aa]">OBS URL</span>
+        <strong class="text-sm font-bold text-[#eef4f2]">OBSに貼る</strong>
+      </div>
+      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+        <span class="text-xs font-bold text-[#9fa9aa]">Render</span>
+        <code id="obs-render-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrl}</code>
+        <button id="obs-render-url-copy-button" class="rounded-md border border-[#6dff9a]/60 bg-transparent px-3 py-2 text-xs font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button">Render URLをコピー</button>
+      </div>
+      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+        <span class="text-xs font-bold text-[#9fa9aa]">Control</span>
+        <code id="control-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dff8ff]">${controlUrl}</code>
+        <button id="control-url-copy-button" class="rounded-md border border-[#38d5ff]/55 bg-transparent px-3 py-2 text-xs font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button">Control URLをコピー</button>
+      </div>
     </div>
     <ul class="m-0 grid list-none content-start gap-2 rounded-md border border-white/10 bg-black/20 p-2">
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>設定</span><strong class="font-bold text-[#6dff9a]">表示中</strong></li>

@@ -3704,3 +3704,27 @@
 
 - 実ブラウザ/OBSで、モード切替後の操作感を確認する
 - 次の仕上げ候補は、マイク / カメラのデバイス選択、OBS URL共有カードの拡張、Tauri Controller化
+
+## 2026-05-30 Controller Priority Layout
+
+### Goal
+
+- 操作頻度が高い項目をプレビュー直下へ寄せ、モード選択を目立たせる
+
+### Did
+
+- 表情プリセットをController最上段へ移動した
+- 操作モードの2択ボタンを縦に大きくし、選択対象として目立つようにした
+- OBS URLカードを下の方へ移動し、初回設定用の扱いへ寄せた
+- E2EのOBS URL確認を、画面内表示前提ではなくカード存在確認に調整した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実ブラウザで、表情ボタン、VRM読み込み、モード切替の視線移動が自然か確認する
