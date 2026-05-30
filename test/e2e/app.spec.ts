@@ -134,6 +134,42 @@ test('OBS debug mode shows relay diagnostics without setup controls', async ({ p
   expect(errors()).toEqual([]);
 });
 
+test('relays manual pose changes to OBS debug runtime state', async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: {
+      width: 1920,
+      height: 1080,
+    },
+  });
+  const renderPage = await context.newPage();
+  const controlPage = await context.newPage();
+  const renderErrors = collectPageErrors(renderPage);
+  const controlErrors = collectPageErrors(controlPage);
+
+  await renderPage.goto('/?obs=1&transparent=1&debug=1');
+  await controlPage.goto('/?control=1');
+  await expect(renderPage.locator('.relay-debug-overlay')).toBeVisible();
+
+  const canvas = controlPage.locator('canvas.scene-canvas');
+  const canvasBox = await canvas.boundingBox();
+  expect(canvasBox).not.toBeNull();
+
+  const startX = (canvasBox?.x ?? 0) + (canvasBox?.width ?? 0) / 2;
+  const startY = (canvasBox?.y ?? 0) + (canvasBox?.height ?? 0) / 2;
+  await controlPage.mouse.move(startX, startY);
+  await controlPage.mouse.down({ button: 'left' });
+  await controlPage.mouse.move(startX + 180, startY + 40, { steps: 8 });
+  await controlPage.mouse.up({ button: 'left' });
+
+  await expect
+    .poll(async () =>
+      extractRelayDebugHeadYaw(await renderPage.locator('.relay-debug-overlay').textContent()),
+    )
+    .toBeGreaterThan(0.01);
+  expect([...renderErrors(), ...controlErrors()]).toEqual([]);
+  await context.close();
+});
+
 test('Control page updates three-light look controls', async ({ page }) => {
   const errors = collectPageErrors(page);
 
@@ -312,4 +348,10 @@ function collectPageErrors(page: Page): () => string[] {
   });
 
   return () => errors;
+}
+
+function extractRelayDebugHeadYaw(text: string | null): number {
+  const match = text?.match(/head yaw\/pitch\/roll (-?\d+\.\d+)/);
+  const yawText = match?.[1];
+  return yawText ? Math.abs(Number.parseFloat(yawText)) : 0;
 }

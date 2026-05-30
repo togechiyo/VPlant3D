@@ -1719,9 +1719,27 @@ function publishRelayState(frameTime: number): void {
   }
 
   relayMotionPublishTime = frameTime;
+  const runtimeState = createRelayRuntimeState(nextState);
   relayClient.send({
     type: 'runtimeState',
-    state: createRelayRuntimeState(nextState),
+    state: runtimeState,
+  });
+  relayClient.send({
+    type: 'motionState',
+    state: {
+      sequence: runtimeState.sequence,
+      sentAt: runtimeState.sentAt,
+      expressions: runtimeState.expressions,
+      pose: runtimeState.pose,
+    },
+  });
+  relayClient.send({
+    type: 'expressionState',
+    state: {
+      sequence: runtimeState.sequence,
+      sentAt: runtimeState.sentAt,
+      expressions: runtimeState.expressions,
+    },
   });
 }
 

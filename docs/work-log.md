@@ -3825,3 +3825,29 @@
 ### Next
 
 - 実Chromeで、カメラモードボタンだけでカメラ権限確認からトラック開始まで進むか人力確認する
+
+## 2026-05-30 OBS Motion Relay Compatibility
+
+### Goal
+
+- OBS側へ動きが伝達されないケースを減らす
+
+### Did
+
+- OBS Browser Sourceが古いJSをキャッシュして `runtimeState` を読めていない可能性を想定した
+- Control側のrealtime送信で、正規の `runtimeState` に加えて互換用の `motionState` / `expressionState` も同じsequenceで送るようにした
+- 新しいOBS Render側は `runtimeState` 受信後に互換メッセージを破棄するため、前に問題になった旧messageの後勝ち混線は避ける設計のまま
+- Playwrightに、手動ポーズ変更がOBS debug overlayのruntime head値まで届くE2E確認を追加した
+
+### Verified
+
+- `npm run test:e2e -- --grep "relays manual"`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実OBSで、Browser Sourceを再読み込みしてカメラモードの頭・体・表情が追従するか確認する
+- まだ動かない場合は `?debug=1` を付けたOBS URLでruntime sequenceとhead値が増えているか確認する
