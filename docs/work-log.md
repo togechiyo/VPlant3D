@@ -3775,3 +3775,28 @@
 ### Next
 
 - 実ブラウザで、6個の表情ボタンが狭く感じないか確認する
+
+## 2026-05-30 Weighted Controller UI
+
+### Goal
+
+- Controller UI全体を、重要度と操作頻度に合わせて重みづけする
+
+### Did
+
+- 表情プリセット、VRM読み込み、操作モード、マイク / カメラ開始停止を大きめにした
+- 手動操作、マウス、揺らぎは同じ行にまとめ、配信中に触る主操作から少し下げた
+- 位置調整、3灯ライト、VRMAは枠線と余白を控えめにし、準備・補助機能として見えるようにした
+- OBS URLは従来通り下部に置き、初回設定用の扱いを維持した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+- Playwright screenshot: `/private/tmp/vplant3d-weighted-ui.png`
+
+### Next
+
+- 実ブラウザで、スクロール時に位置調整・ルック・VRMAへ届きやすいか確認する

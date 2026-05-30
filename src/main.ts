@@ -413,40 +413,42 @@ if (isControlPage) {
   const controlUrl = `${localOrigin}/?control=1`;
   const obsRenderUrl = `${localOrigin}/?obs=1&transparent=1`;
   panel.innerHTML = `
-    <div class="grid h-full content-start gap-2 overflow-y-auto pr-1">
-    <div class="grid gap-2 rounded-md border border-[#6dff9a]/35 bg-black/20 p-2">
+    <div class="grid h-full content-start gap-3 overflow-y-auto pr-1">
+    <div class="grid gap-3 rounded-md border border-[#6dff9a]/55 bg-black/25 p-3 shadow-[0_0_22px_rgba(109,255,154,0.08)]">
       <div class="flex items-center justify-between gap-3">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">表情</span>
-        <span id="expression-preset-text" class="text-xs font-bold text-[#9fa9aa]">なし</span>
+        <span class="text-sm font-bold tracking-normal text-[#6dff9a]">表情プリセット</span>
+        <span id="expression-preset-text" class="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-bold text-[#9fa9aa]">なし</span>
       </div>
       <div class="grid grid-cols-6 gap-2">
-        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button" data-expression-preset="neutral" aria-pressed="false">自然</button>
-        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy" aria-pressed="false">喜</button>
-        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="angry" aria-pressed="false">怒</button>
-        <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="sad" aria-pressed="false">哀</button>
-        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="relaxed" aria-pressed="false">楽</button>
-        <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="surprised" aria-pressed="false">驚</button>
+        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-3 text-base font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button" data-expression-preset="neutral" aria-pressed="false">自然</button>
+        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-3 text-base font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="happy" aria-pressed="false">喜</button>
+        <button class="expression-preset-button rounded-md border border-white/15 bg-white/[0.04] px-2 py-3 text-base font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button" data-expression-preset="angry" aria-pressed="false">怒</button>
+        <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-3 text-base font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="sad" aria-pressed="false">哀</button>
+        <button class="expression-preset-button rounded-md border border-[#6dff9a]/55 bg-transparent px-2 py-3 text-base font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" data-expression-preset="relaxed" aria-pressed="false">楽</button>
+        <button class="expression-preset-button rounded-md border border-[#38d5ff]/55 bg-transparent px-2 py-3 text-base font-bold text-[#dff8ff] transition hover:border-[#6dff9a]" type="button" data-expression-preset="surprised" aria-pressed="false">驚</button>
       </div>
     </div>
-    <div class="grid gap-2 rounded-md border border-[#6dff9a]/35 bg-black/20 p-2">
-      <div class="grid gap-1">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM</span>
-        <strong id="vrm-status-text" class="text-sm font-bold text-[#eef4f2]">VRM未選択</strong>
-        <span id="vrm-file-text" class="min-h-5 text-sm text-[#9fa9aa]">未読み込み</span>
+    <div class="grid gap-3 rounded-md border border-[#6dff9a]/45 bg-black/20 p-3">
+      <div class="flex items-start justify-between gap-3">
+        <div class="grid gap-1">
+          <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">VRM</span>
+          <strong id="vrm-status-text" class="text-base font-bold text-[#eef4f2]">VRM未選択</strong>
+          <span id="vrm-file-text" class="min-h-5 text-sm text-[#9fa9aa]">未読み込み</span>
+        </div>
       </div>
-      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/10 px-3 py-2 text-sm font-bold text-[#dfffee] transition hover:border-[#38d5ff] hover:bg-white/[0.04]">
+      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/10 px-4 py-3 text-base font-bold text-[#dfffee] transition hover:border-[#38d5ff] hover:bg-white/[0.04]">
         <input id="vrm-file-input" class="sr-only" type="file" accept=".vrm" />
         VRMを読み込む
       </label>
     </div>
-    <div class="grid gap-2 rounded-md border border-white/10 bg-black/20 p-2">
-      <span class="text-xs font-bold uppercase tracking-normal text-[#9fa9aa]">操作モード</span>
+    <div class="grid gap-3 rounded-md border border-white/10 bg-black/20 p-3">
+      <span class="text-sm font-bold tracking-normal text-[#eef4f2]">操作モード</span>
       <div class="grid grid-cols-2 gap-2">
-        <button id="mic-manual-mode-button" class="rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/15 px-3 py-4 text-base font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" aria-pressed="true">マイク&手動</button>
-        <button id="camera-mode-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-4 text-base font-bold text-[#9fa9aa] transition hover:border-[#38d5ff]" type="button" aria-pressed="false">カメラ</button>
+        <button id="mic-manual-mode-button" class="rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/15 px-3 py-5 text-lg font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" aria-pressed="true">マイク&手動</button>
+        <button id="camera-mode-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-5 text-lg font-bold text-[#9fa9aa] transition hover:border-[#38d5ff]" type="button" aria-pressed="false">カメラ</button>
       </div>
     </div>
-    <div id="mic-manual-mode-panel" class="grid gap-2 rounded-md border border-[#6dff9a]/30 bg-black/20 p-2">
+    <div id="mic-manual-mode-panel" class="grid gap-3 rounded-md border border-[#6dff9a]/35 bg-black/20 p-3">
       <div class="flex items-start justify-between gap-3">
         <div class="grid gap-1">
           <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">モード</span>
@@ -459,10 +461,10 @@ if (isControlPage) {
         <span id="mic-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">音量で口を動かす</span>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/70 bg-transparent px-3 py-2 text-sm font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">マイク開始</button>
-        <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
+        <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/75 bg-[#6dff9a]/10 px-3 py-3 text-base font-bold text-[#dfffee] transition enabled:hover:border-[#38d5ff] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">マイク開始</button>
+        <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-3 text-base font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
       </div>
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid grid-cols-3 gap-2">
         <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="manual-control-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
           手動操作
@@ -470,6 +472,10 @@ if (isControlPage) {
         <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="manual-mouse-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
           マウス
+        </label>
+        <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+          <input id="idle-sway-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
+          揺らぎ
         </label>
       </div>
       <div class="grid grid-cols-2 gap-2">
@@ -490,10 +496,6 @@ if (isControlPage) {
           </select>
         </label>
       </div>
-      <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
-        <input id="idle-sway-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" checked />
-        揺らぎ
-      </label>
       <div class="grid gap-2">
         <div class="grid gap-1">
           <div class="flex items-center justify-between text-xs font-bold text-[#9fa9aa]"><span>音量</span><span>RMS</span></div>
@@ -504,9 +506,9 @@ if (isControlPage) {
           <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="mic-mouth-bar" class="h-full w-0 rounded-full bg-[#6dff9a] transition-[width] duration-75"></div></div>
         </div>
       </div>
-      <button id="manual-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">顔向きリセット</button>
+      <button id="manual-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">顔向きリセット</button>
     </div>
-    <div id="camera-mode-panel" class="hidden gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
+    <div id="camera-mode-panel" class="hidden gap-3 rounded-md border border-[#38d5ff]/35 bg-black/20 p-3">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">モード</span>
         <strong class="text-sm font-bold text-[#eef4f2]">カメラモード</strong>
@@ -514,8 +516,8 @@ if (isControlPage) {
         <span id="pose-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">上半身を動かす</span>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">カメラ開始</button>
-        <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
+        <button id="pose-start-button" class="rounded-md border border-[#38d5ff]/65 bg-[#38d5ff]/10 px-3 py-3 text-base font-bold text-[#dff8ff] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">カメラ開始</button>
+        <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-3 text-base font-bold text-[#eef4f2] transition enabled:hover:border-[#38d5ff] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
       </div>
       <div class="grid grid-cols-2 gap-2">
         <label class="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
@@ -545,7 +547,7 @@ if (isControlPage) {
         </label>
       </div>
     </div>
-    <div class="grid gap-2 rounded-md border border-[#6dff9a]/25 bg-black/20 p-2">
+    <div class="grid gap-2 rounded-md border border-[#6dff9a]/20 bg-black/15 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#6dff9a]">位置調整</span>
       </div>
@@ -567,7 +569,7 @@ if (isControlPage) {
       </label>
       <button id="avatar-reset-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-bold text-[#eef4f2] transition hover:border-[#38d5ff]" type="button">リセット</button>
     </div>
-    <div class="grid gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
+    <div class="grid gap-2 rounded-md border border-[#38d5ff]/20 bg-black/15 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">ルック</span>
         <strong class="text-sm font-bold text-[#eef4f2]">3灯ライト</strong>
@@ -618,14 +620,14 @@ if (isControlPage) {
         </label>
       </div>
     </div>
-    <div class="grid gap-2 rounded-md border border-[#38d5ff]/25 bg-black/20 p-2">
+    <div class="grid gap-2 rounded-md border border-[#38d5ff]/20 bg-black/15 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">VRMA</span>
         <strong id="vrma-status-text" class="text-sm font-bold text-[#eef4f2]">VRMA未選択</strong>
         <span id="vrma-file-text" class="min-h-5 text-sm text-[#9fa9aa]">未読み込み</span>
         <span id="vrma-requirement-text" class="min-h-5 text-sm text-[#9fa9aa]">VRMが必要</span>
       </div>
-      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-sm font-bold text-[#dff8ff] transition hover:border-[#6dff9a] hover:bg-white/[0.04]">
+      <label class="inline-flex cursor-pointer items-center justify-center rounded-md border border-[#38d5ff]/55 bg-[#38d5ff]/10 px-3 py-2 text-xs font-bold text-[#dff8ff] transition hover:border-[#6dff9a] hover:bg-white/[0.04]">
         <input id="vrma-file-input" class="sr-only" type="file" accept=".vrma" multiple />
         VRMAを読み込む
       </label>
