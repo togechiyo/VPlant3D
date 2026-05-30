@@ -285,6 +285,8 @@ let rimLightColorSelect: HTMLSelectElement | null = null;
 let rimLightDirectionSelect: HTMLSelectElement | null = null;
 let keyLightScaleText: HTMLElement | null = null;
 let fillLightScaleText: HTMLElement | null = null;
+type ControlMode = 'mic-manual' | 'camera';
+let selectedControlMode: ControlMode = 'mic-manual';
 let manualPose: ManualPoseState = createNeutralManualPoseState(false);
 let manualPointerSession: {
   pointerId: number;
@@ -744,8 +746,9 @@ if (isControlPage) {
   controlUrlCopyButton?.addEventListener('click', () => {
     void navigator.clipboard?.writeText(controlUrl);
   });
-  const setControlMode = (mode: 'mic-manual' | 'camera') => {
+  const setControlMode = (mode: ControlMode) => {
     const isMicManual = mode === 'mic-manual';
+    selectedControlMode = mode;
     micManualModePanel?.classList.toggle('hidden', !isMicManual);
     micManualModePanel?.classList.toggle('grid', isMicManual);
     cameraModePanel?.classList.toggle('hidden', isMicManual);
@@ -764,6 +767,13 @@ if (isControlPage) {
     cameraModeButton?.classList.toggle('border-white/15', isMicManual);
     cameraModeButton?.classList.toggle('bg-white/[0.04]', isMicManual);
     cameraModeButton?.classList.toggle('text-[#9fa9aa]', isMicManual);
+
+    if (!isMicManual) {
+      resetManualControlPose();
+      if (shouldAutoStartCameraOnModeChange()) {
+        void startPoseDebug();
+      }
+    }
   };
   micManualModeButton?.addEventListener('click', () => setControlMode('mic-manual'));
   cameraModeButton?.addEventListener('click', () => setControlMode('camera'));
@@ -1090,7 +1100,26 @@ function preventManualCanvasDefault(event: Event): void {
 function canUseManualMouse(): boolean {
   const nextState = appStore.getState();
 
-  return isControlPage && nextState.manualControlEnabled && nextState.manualMouseEnabled;
+  return (
+    isControlPage &&
+    selectedControlMode === 'mic-manual' &&
+    nextState.poseStatus !== 'active' &&
+    nextState.manualControlEnabled &&
+    nextState.manualMouseEnabled
+  );
+}
+
+function shouldAutoStartCameraOnModeChange(): boolean {
+  const nextState = appStore.getState();
+
+  return (
+    isControlPage &&
+    selectedControlMode === 'camera' &&
+    nextState.poseStatus !== 'requesting' &&
+    nextState.poseStatus !== 'loading' &&
+    nextState.poseStatus !== 'active' &&
+    !navigator.webdriver
+  );
 }
 
 function getManualPointerButton(button: number): ManualPointerButton | null {
@@ -3052,7 +3081,15 @@ function formatArmIkStatus(pose: ArmIkRetargetPose): string {
 }
 
 function applyManualControlPose(): void {
-  if (!isControlPage || !appStore.getState().manualControlEnabled || !manualPose.enabled) {
+  const nextState = appStore.getState();
+
+  if (
+    !isControlPage ||
+    selectedControlMode !== 'mic-manual' ||
+    nextState.poseStatus === 'active' ||
+    !nextState.manualControlEnabled ||
+    !manualPose.enabled
+  ) {
     return;
   }
 
@@ -3280,7 +3317,15 @@ function applyUpperBodyRetarget(): void {
 }
 
 function isManualControlPoseActive(): boolean {
-  return isControlPage && appStore.getState().manualControlEnabled && manualPose.enabled;
+  const nextState = appStore.getState();
+
+  return (
+    isControlPage &&
+    selectedControlMode === 'mic-manual' &&
+    nextState.poseStatus !== 'active' &&
+    nextState.manualControlEnabled &&
+    manualPose.enabled
+  );
 }
 
 function applyArmIkRetarget(): void {
