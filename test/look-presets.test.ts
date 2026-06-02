@@ -7,17 +7,15 @@ import {
 } from '../src/look/look-presets';
 
 describe('look presets', () => {
-  it('resolves the default three-light setup', () => {
+  it('resolves the default key-light setup', () => {
     const lights = resolveLookLights(createDefaultLookSettings());
 
     expect(lights.id).toBe('standard');
-    expect(lights.keyIntensity).toBeCloseTo(1.65);
-    expect(lights.keyPosition[0]).toBeLessThan(0);
+    expect(lights.keyIntensity).toBeCloseTo(2.15);
+    expect(lights.keyPosition[1]).toBeGreaterThan(3.5);
     expect(lights.keyPosition[2]).toBeGreaterThan(0);
-    expect(lights.fillIntensity).toBeCloseTo(0.26);
-    expect(lights.fillPosition[0]).toBeGreaterThan(0);
-    expect(lights.fillPosition[2]).toBeGreaterThan(0);
-    expect(lights.rimIntensity).toBeCloseTo(2.35);
+    expect(lights.fillIntensity).toBe(0);
+    expect(lights.rimIntensity).toBe(0);
     expect(lights.rimColor).toBe(0x38d5ff);
     expect(lights.rimPosition).toEqual([0, 5.65, -1.05]);
     expect(lights.rimTarget).toEqual([0, 1.52, 0]);
@@ -30,11 +28,11 @@ describe('look presets', () => {
       fillIntensityScale: -1,
     });
 
-    expect(lights.keyIntensity).toBeCloseTo(3.3);
+    expect(lights.keyIntensity).toBeCloseTo(4.3);
     expect(lights.fillIntensity).toBe(0);
   });
 
-  it('overrides rim strength, color, and direction', () => {
+  it('keeps rim disabled while retaining old setting compatibility', () => {
     const lights = resolveLookLights({
       ...createDefaultLookSettings(),
       rimStrength: 'strong',
@@ -42,7 +40,7 @@ describe('look presets', () => {
       rimDirection: 'left-back',
     });
 
-    expect(lights.rimIntensity).toBeCloseTo(3.8);
+    expect(lights.rimIntensity).toBe(0);
     expect(lights.rimColor).toBe(0x6dff9a);
     expect(lights.rimPosition).toEqual([-2.35, 3.85, -2.75]);
   });

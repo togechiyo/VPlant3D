@@ -3898,3 +3898,31 @@
 
 - Tauri v2 scaffoldを追加し、Web版Controller / OBS Renderを壊さずにTauri windowでController UIを起動できるか確認する
 - macOS / Windowsの実機確認項目をHuman Handoff Boardへ追加する
+
+## 2026-06-02 Hide Hand Tracking And Simplify Key Light
+
+### Goal
+
+- Tauri実装前に、失敗しがちなハンドトラッキング導線をしまい、照明を明るめのキーライト1灯へ単純化する
+
+### Did
+
+- Controller UIから `腕 / 手首` の実験項目を外し、通常操作ではハンドトラッキングを起動しない状態にした
+- Look UIの表示を `3灯ライト` から `キーライト` に変更し、操作をプリセットと明るさだけに絞った
+- 既存のLook設定互換は残しつつ、解決後のFill/Rim強度を0にして、実描画はキーライト中心になるようにした
+- デフォルトキーライトを正面やや上からの明るめ設定に調整した
+- E2EとLook単体テストの期待値を、キーライト中心のUIに合わせて更新した
+
+### Verified
+
+- `npm run test -- test/look-presets.test.ts`
+- `npm run test -- test/app-store.test.ts`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+- in-app browser DOM確認: `キーライト` 表示、`3灯ライト` / `腕 / 手首` / `実験` 非表示、`#hand-tracking-input` 0件
+
+### Next
+
+- 実ブラウザ/OBSで、キーライト1灯の明るさとハンドトラッキング項目が消えていることを確認する

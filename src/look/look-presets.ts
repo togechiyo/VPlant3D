@@ -43,9 +43,9 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     id: 'standard',
     label: '標準',
     keyColor: 0xf4fbff,
-    keyIntensity: 1.65,
-    keyPosition: [-2.4, 3.35, 3.35],
-    keyTarget: [0, 1.34, 0],
+    keyIntensity: 2.15,
+    keyPosition: [0.25, 3.9, 3.55],
+    keyTarget: [0, 1.42, 0],
     fillColor: 0xb8d7ff,
     fillIntensity: 0.26,
     fillPosition: [2.6, 1.9, 2.25],
@@ -54,15 +54,15 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     rimIntensity: 1.55,
     rimPosition: [0.9, 4.55, -2.65],
     rimTarget: [0, 1.52, 0],
-    exposure: 0.86,
+    exposure: 0.94,
   },
   bright: {
     id: 'bright',
     label: '明るめ',
     keyColor: 0xffffff,
-    keyIntensity: 1.95,
-    keyPosition: [-2.2, 3.4, 3.45],
-    keyTarget: [0, 1.34, 0],
+    keyIntensity: 2.4,
+    keyPosition: [0.15, 4.05, 3.65],
+    keyTarget: [0, 1.42, 0],
     fillColor: 0xcfe8ff,
     fillIntensity: 0.42,
     fillPosition: [2.5, 1.95, 2.45],
@@ -71,15 +71,15 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     rimIntensity: 1.6,
     rimPosition: [0.85, 4.6, -2.65],
     rimTarget: [0, 1.52, 0],
-    exposure: 0.88,
+    exposure: 0.96,
   },
   'front-top': {
     id: 'front-top',
     label: '正面上',
     keyColor: 0xf4fbff,
-    keyIntensity: 1.82,
-    keyPosition: [0, 4.2, 3.25],
-    keyTarget: [0, 1.36, 0],
+    keyIntensity: 2.25,
+    keyPosition: [0, 4.35, 3.35],
+    keyTarget: [0, 1.44, 0],
     fillColor: 0xcfe8ff,
     fillIntensity: 0.28,
     fillPosition: [2.35, 1.85, 2.25],
@@ -88,15 +88,15 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     rimIntensity: 1.55,
     rimPosition: [0.8, 4.75, -2.55],
     rimTarget: [0, 1.54, 0],
-    exposure: 0.86,
+    exposure: 0.94,
   },
   neon: {
     id: 'neon',
     label: 'ネオン',
     keyColor: 0xf4fbff,
-    keyIntensity: 1.46,
-    keyPosition: [-2.35, 3.25, 3.15],
-    keyTarget: [0, 1.34, 0],
+    keyIntensity: 2.05,
+    keyPosition: [0.4, 3.9, 3.35],
+    keyTarget: [0, 1.42, 0],
     fillColor: 0x38d5ff,
     fillIntensity: 0.34,
     fillPosition: [2.85, 1.9, 2.1],
@@ -105,15 +105,15 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     rimIntensity: 3.1,
     rimPosition: [1.15, 4.7, -2.7],
     rimTarget: [0, 1.54, 0],
-    exposure: 0.82,
+    exposure: 0.92,
   },
   edge: {
     id: 'edge',
     label: '輪郭強調',
     keyColor: 0xf4fbff,
-    keyIntensity: 1.26,
-    keyPosition: [-2.45, 3.2, 3.1],
-    keyTarget: [0, 1.34, 0],
+    keyIntensity: 1.95,
+    keyPosition: [0.35, 3.85, 3.3],
+    keyTarget: [0, 1.42, 0],
     fillColor: 0xaecfff,
     fillIntensity: 0.12,
     fillPosition: [2.7, 1.85, 2.05],
@@ -122,7 +122,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     rimIntensity: 4.1,
     rimPosition: [1.25, 4.9, -2.9],
     rimTarget: [0, 1.56, 0],
-    exposure: 0.8,
+    exposure: 0.9,
   },
 };
 
@@ -139,14 +139,13 @@ export function createDefaultLookSettings(): LookSettings {
 
 export function resolveLookLights(settings: LookSettings): ResolvedLookLights {
   const preset = lookLightPresets[settings.preset] ?? lookLightPresets.standard;
-  const rimIntensity = getRimIntensity(settings.rimStrength, preset.rimIntensity);
 
   return {
     ...preset,
     keyIntensity: preset.keyIntensity * clampScale(settings.keyIntensityScale),
-    fillIntensity: preset.fillIntensity * clampScale(settings.fillIntensityScale),
+    fillIntensity: 0,
     rimColor: getRimColor(settings.rimColor, preset.rimColor),
-    rimIntensity,
+    rimIntensity: 0,
     rimPosition: getRimPosition(settings.rimDirection, preset.rimPosition),
   };
 }
@@ -166,19 +165,6 @@ export function normalizeLookSettings(settings: Partial<LookSettings>): LookSett
       ? settings.rimDirection
       : defaults.rimDirection,
   };
-}
-
-function getRimIntensity(strength: RimLightStrength, presetIntensity: number): number {
-  switch (strength) {
-    case 'off':
-      return 0;
-    case 'soft':
-      return Math.min(presetIntensity, 1.45);
-    case 'medium':
-      return Math.max(presetIntensity, 2.35);
-    case 'strong':
-      return Math.max(presetIntensity, 3.8);
-  }
 }
 
 function getRimColor(color: RimLightColor, fallback: number): number {

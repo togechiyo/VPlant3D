@@ -53,7 +53,7 @@ describe('render smoothing', () => {
     expect(smoothed.fillIntensity).toBeCloseTo(previous.fillIntensity / 2);
     expect(smoothed.rimIntensity).toBeCloseTo((previous.rimIntensity + target.rimIntensity) / 2);
     expect(smoothed.rimPosition).toEqual([0, 3.85, -2.75]);
-    expect(smoothed.keyTarget).toEqual([0, 1.34, 0]);
+    expect(smoothed.keyTarget).toEqual([0, 1.42, 0]);
     expect(smoothed.exposure).toBeCloseTo((previous.exposure + target.exposure) / 2);
     expect(smoothed.rimColor).not.toBe(previous.rimColor);
     expect(smoothed.rimColor).not.toBe(target.rimColor);

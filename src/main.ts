@@ -545,14 +545,6 @@ if (isControlPage) {
         </div>
         <div class="h-2 overflow-hidden rounded-full bg-white/10"><div id="pose-visibility-bar" class="h-full w-0 rounded-full bg-[#38d5ff] transition-[width] duration-75"></div></div>
       </div>
-      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-        <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">実験</span>
-        <span id="hand-tracking-text" class="text-xs font-bold text-[#9fa9aa]">手: 待機</span>
-        <label class="inline-flex items-center gap-2 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
-          <input id="hand-tracking-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" />
-          腕 / 手首
-        </label>
-      </div>
     </div>
     <div class="grid gap-2 rounded-md border border-[#6dff9a]/20 bg-black/15 p-2">
       <div class="grid gap-1">
@@ -579,7 +571,7 @@ if (isControlPage) {
     <div class="grid gap-2 rounded-md border border-[#38d5ff]/20 bg-black/15 p-2">
       <div class="grid gap-1">
         <span class="text-xs font-bold uppercase tracking-normal text-[#38d5ff]">ルック</span>
-        <strong class="text-sm font-bold text-[#eef4f2]">3灯ライト</strong>
+        <strong class="text-sm font-bold text-[#eef4f2]">キーライト</strong>
       </div>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
         <span>プリセット</span>
@@ -592,40 +584,9 @@ if (isControlPage) {
         </select>
       </label>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-        <span class="flex justify-between"><span>Key</span><span id="key-light-scale-text">100%</span></span>
+        <span class="flex justify-between"><span>明るさ</span><span id="key-light-scale-text">100%</span></span>
         <input id="key-light-scale-input" class="accent-[#38d5ff]" type="range" min="0" max="2" step="0.05" value="1" />
       </label>
-      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-        <span class="flex justify-between"><span>Fill</span><span id="fill-light-scale-text">100%</span></span>
-        <input id="fill-light-scale-input" class="accent-[#6dff9a]" type="range" min="0" max="2" step="0.05" value="1" />
-      </label>
-      <div class="grid grid-cols-3 gap-2">
-        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-          <span>Rim</span>
-          <select id="rim-light-strength-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
-            <option value="off">OFF</option>
-            <option value="soft">弱</option>
-            <option value="medium" selected>中</option>
-            <option value="strong">強</option>
-          </select>
-        </label>
-        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-          <span>色</span>
-          <select id="rim-light-color-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
-            <option value="white">白</option>
-            <option value="blue" selected>青</option>
-            <option value="green">緑</option>
-          </select>
-        </label>
-        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-          <span>方向</span>
-          <select id="rim-light-direction-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
-            <option value="left-back">左後</option>
-            <option value="right-back">右後</option>
-            <option value="top-back" selected>上後</option>
-          </select>
-        </label>
-      </div>
     </div>
     <div class="grid gap-2 rounded-md border border-[#38d5ff]/20 bg-black/15 p-2">
       <div class="grid gap-1">
