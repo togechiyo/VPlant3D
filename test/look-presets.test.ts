@@ -12,8 +12,10 @@ describe('look presets', () => {
 
     expect(lights.id).toBe('standard');
     expect(lights.keyIntensity).toBeCloseTo(2.15);
+    expect(lights.keyColor).toBe(0xf4fbff);
     expect(lights.keyPosition[1]).toBeGreaterThan(3.5);
     expect(lights.keyPosition[2]).toBeGreaterThan(0);
+    expect(lights.keyShadowEnabled).toBe(false);
     expect(lights.fillIntensity).toBe(0);
     expect(lights.rimIntensity).toBe(0);
     expect(lights.rimColor).toBe(0x38d5ff);
@@ -45,11 +47,27 @@ describe('look presets', () => {
     expect(lights.rimPosition).toEqual([-2.35, 3.85, -2.75]);
   });
 
+  it('applies key color, direction, and shadow settings', () => {
+    const lights = resolveLookLights({
+      ...createDefaultLookSettings(),
+      keyColor: 'warm',
+      keyDirection: 'left-top',
+      keyShadowEnabled: true,
+    });
+
+    expect(lights.keyColor).toBe(0xfff0d2);
+    expect(lights.keyPosition).toEqual([-2.25, 3.75, 3.25]);
+    expect(lights.keyShadowEnabled).toBe(true);
+  });
+
   it('normalizes partial or invalid settings', () => {
     const settings = normalizeLookSettings(
       {
         preset: 'not-a-preset',
         keyIntensityScale: Number.NaN,
+        keyColor: 'nope',
+        keyDirection: 'sideways',
+        keyShadowEnabled: 'yes',
         fillIntensityScale: 1.5,
         rimStrength: 'medium',
         rimColor: 'nope',
@@ -60,6 +78,9 @@ describe('look presets', () => {
     expect(settings).toEqual({
       preset: 'standard',
       keyIntensityScale: 1,
+      keyColor: 'neutral',
+      keyDirection: 'front-top',
+      keyShadowEnabled: false,
       fillIntensityScale: 1.5,
       rimStrength: 'medium',
       rimColor: 'blue',

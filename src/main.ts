@@ -23,6 +23,8 @@ import {
 } from './input/manual-control';
 import {
   resolveLookLights,
+  type KeyLightColor,
+  type KeyLightDirection,
   type LookPresetId,
   type LookSettings,
   type ResolvedLookLights,
@@ -169,6 +171,7 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.86;
 renderer.shadowMap.enabled = false;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.domElement.className = 'scene-canvas';
 viewport.append(renderer.domElement);
 
@@ -187,6 +190,15 @@ if (isControlPage) {
 
 const keyLight = new THREE.DirectionalLight(0xf4fbff, 1.75);
 keyLight.position.set(0.35, 3.4, 4.2);
+keyLight.castShadow = false;
+keyLight.shadow.mapSize.set(1024, 1024);
+keyLight.shadow.camera.near = 0.1;
+keyLight.shadow.camera.far = 12;
+keyLight.shadow.camera.left = -3;
+keyLight.shadow.camera.right = 3;
+keyLight.shadow.camera.top = 3;
+keyLight.shadow.camera.bottom = -3;
+keyLight.shadow.bias = -0.00018;
 scene.add(keyLight);
 const keyLightTarget = new THREE.Object3D();
 keyLightTarget.position.set(0, 1.34, 0);
@@ -232,6 +244,7 @@ let currentVrm: VRM | null = null;
 let currentVrma: VRMAnimation | null = null;
 let currentVrmaMixer: THREE.AnimationMixer | null = null;
 let currentVrmaAction: THREE.AnimationAction | null = null;
+let vrmShadowCastingEnabled: boolean | null = null;
 const vrmaSlots: Array<{ name: string; duration: number; animation: VRMAnimation }> = [];
 let selectedVrmaSlotIndex = -1;
 let placeholderVisible = true;
@@ -282,11 +295,15 @@ let manualMouseInput: HTMLInputElement | null = null;
 let manualControlStatusText: HTMLElement | null = null;
 let lookPresetSelect: HTMLSelectElement | null = null;
 let keyLightScaleInput: HTMLInputElement | null = null;
+let keyLightColorSelect: HTMLSelectElement | null = null;
+let keyLightDirectionSelect: HTMLSelectElement | null = null;
+let keyLightShadowInput: HTMLInputElement | null = null;
 let fillLightScaleInput: HTMLInputElement | null = null;
 let rimLightStrengthSelect: HTMLSelectElement | null = null;
 let rimLightColorSelect: HTMLSelectElement | null = null;
 let rimLightDirectionSelect: HTMLSelectElement | null = null;
 let keyLightScaleText: HTMLElement | null = null;
+let keyLightShadowText: HTMLElement | null = null;
 let fillLightScaleText: HTMLElement | null = null;
 type ControlMode = 'mic-manual' | 'camera';
 let selectedControlMode: ControlMode = 'mic-manual';
@@ -587,6 +604,34 @@ if (isControlPage) {
         <span class="flex justify-between"><span>明るさ</span><span id="key-light-scale-text">100%</span></span>
         <input id="key-light-scale-input" class="accent-[#38d5ff]" type="range" min="0" max="2" step="0.05" value="1" />
       </label>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span>色味</span>
+          <select id="key-light-color-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+            <option value="neutral" selected>ニュートラル</option>
+            <option value="warm">ウォーム</option>
+            <option value="cool">クール</option>
+            <option value="neon-blue">ネオンブルー</option>
+            <option value="neon-green">ネオングリーン</option>
+          </select>
+        </label>
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span>方向</span>
+          <select id="key-light-direction-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+            <option value="front-top" selected>正面上</option>
+            <option value="left-top">左上</option>
+            <option value="right-top">右上</option>
+            <option value="high-front">真上寄り</option>
+          </select>
+        </label>
+      </div>
+      <label class="inline-flex items-center justify-between gap-3 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-3 py-2 text-xs font-bold text-[#9fa9aa]">
+        <span>遮蔽影</span>
+        <span class="inline-flex items-center gap-2">
+          <span id="key-light-shadow-text">OFF</span>
+          <input id="key-light-shadow-input" class="h-4 w-4 accent-[#38d5ff]" type="checkbox" />
+        </span>
+      </label>
     </div>
     <div class="grid gap-2 rounded-md border border-[#38d5ff]/20 bg-black/15 p-2">
       <div class="grid gap-1">
@@ -690,11 +735,15 @@ if (isControlPage) {
   const manualResetButton = panel.querySelector<HTMLButtonElement>('#manual-reset-button');
   lookPresetSelect = panel.querySelector<HTMLSelectElement>('#look-preset-select');
   keyLightScaleInput = panel.querySelector<HTMLInputElement>('#key-light-scale-input');
+  keyLightColorSelect = panel.querySelector<HTMLSelectElement>('#key-light-color-select');
+  keyLightDirectionSelect = panel.querySelector<HTMLSelectElement>('#key-light-direction-select');
+  keyLightShadowInput = panel.querySelector<HTMLInputElement>('#key-light-shadow-input');
   fillLightScaleInput = panel.querySelector<HTMLInputElement>('#fill-light-scale-input');
   rimLightStrengthSelect = panel.querySelector<HTMLSelectElement>('#rim-light-strength-select');
   rimLightColorSelect = panel.querySelector<HTMLSelectElement>('#rim-light-color-select');
   rimLightDirectionSelect = panel.querySelector<HTMLSelectElement>('#rim-light-direction-select');
   keyLightScaleText = panel.querySelector<HTMLElement>('#key-light-scale-text');
+  keyLightShadowText = panel.querySelector<HTMLElement>('#key-light-shadow-text');
   fillLightScaleText = panel.querySelector<HTMLElement>('#fill-light-scale-text');
 
   vrmFileInput?.addEventListener('change', () => {
@@ -780,6 +829,18 @@ if (isControlPage) {
   });
   keyLightScaleInput?.addEventListener('input', () => {
     appStore.getState().setKeyLightScale(Number(keyLightScaleInput?.value ?? 1));
+    applyLookSettings(appStore.getState().lookSettings);
+  });
+  keyLightColorSelect?.addEventListener('change', () => {
+    appStore.getState().setKeyLightColor(getKeyLightColorFromSelect());
+    applyLookSettings(appStore.getState().lookSettings);
+  });
+  keyLightDirectionSelect?.addEventListener('change', () => {
+    appStore.getState().setKeyLightDirection(getKeyLightDirectionFromSelect());
+    applyLookSettings(appStore.getState().lookSettings);
+  });
+  keyLightShadowInput?.addEventListener('change', () => {
+    appStore.getState().setKeyLightShadowEnabled(keyLightShadowInput?.checked ?? false);
     applyLookSettings(appStore.getState().lookSettings);
   });
   fillLightScaleInput?.addEventListener('input', () => {
@@ -898,8 +959,10 @@ function applyLookSettings(settings: LookSettings): void {
 }
 
 function applyResolvedLookLights(lights: ResolvedLookLights): void {
+  renderer.shadowMap.enabled = lights.keyShadowEnabled;
   keyLight.color.setHex(lights.keyColor);
   keyLight.intensity = lights.keyIntensity;
+  keyLight.castShadow = lights.keyShadowEnabled;
   keyLight.position.set(...lights.keyPosition);
   keyLightTarget.position.set(...lights.keyTarget);
   fillLight.color.setHex(lights.fillColor);
@@ -911,6 +974,26 @@ function applyResolvedLookLights(lights: ResolvedLookLights): void {
   rimLight.position.set(...lights.rimPosition);
   rimLightTarget.position.set(...lights.rimTarget);
   renderer.toneMappingExposure = lights.exposure;
+  configureVrmShadowCasting(lights.keyShadowEnabled);
+}
+
+function configureVrmShadowCasting(enabled: boolean): void {
+  if (vrmShadowCastingEnabled === enabled) {
+    return;
+  }
+
+  vrmShadowCastingEnabled = enabled;
+
+  if (!currentVrm) {
+    return;
+  }
+
+  currentVrm.scene.traverse((object) => {
+    if (object instanceof THREE.Mesh) {
+      object.castShadow = enabled;
+      object.receiveShadow = enabled;
+    }
+  });
 }
 
 function setupManualControlEvents(): void {
@@ -1110,6 +1193,25 @@ function getLookPresetFromSelect(): LookPresetId {
     value === 'edge'
     ? value
     : 'standard';
+}
+
+function getKeyLightColorFromSelect(): KeyLightColor {
+  const value = keyLightColorSelect?.value;
+
+  return value === 'warm' ||
+    value === 'cool' ||
+    value === 'neon-blue' ||
+    value === 'neon-green'
+    ? value
+    : 'neutral';
+}
+
+function getKeyLightDirectionFromSelect(): KeyLightDirection {
+  const value = keyLightDirectionSelect?.value;
+
+  return value === 'left-top' || value === 'right-top' || value === 'high-front'
+    ? value
+    : 'front-top';
 }
 
 function getRimLightStrengthFromSelect(): RimLightStrength {
@@ -2028,6 +2130,8 @@ function replaceCurrentVrm(nextVrm: VRM): void {
   }
 
   currentVrm = nextVrm;
+  vrmShadowCastingEnabled = null;
+  configureVrmShadowCasting(appStore.getState().lookSettings.keyShadowEnabled);
   fitObjectToDefaultView(nextVrm.scene);
   applyIdleArmPose(nextVrm);
   configureUpperBodyCamera();
@@ -2266,6 +2370,18 @@ function updateLookSettingsUi(nextState: AppState): void {
     keyLightScaleInput.value = settings.keyIntensityScale.toString();
   }
 
+  if (keyLightColorSelect) {
+    keyLightColorSelect.value = settings.keyColor;
+  }
+
+  if (keyLightDirectionSelect) {
+    keyLightDirectionSelect.value = settings.keyDirection;
+  }
+
+  if (keyLightShadowInput) {
+    keyLightShadowInput.checked = settings.keyShadowEnabled;
+  }
+
   if (fillLightScaleInput) {
     fillLightScaleInput.value = settings.fillIntensityScale.toString();
   }
@@ -2284,6 +2400,10 @@ function updateLookSettingsUi(nextState: AppState): void {
 
   if (keyLightScaleText) {
     keyLightScaleText.textContent = `${Math.round(settings.keyIntensityScale * 100)}%`;
+  }
+
+  if (keyLightShadowText) {
+    keyLightShadowText.textContent = settings.keyShadowEnabled ? 'ON' : 'OFF';
   }
 
   if (fillLightScaleText) {

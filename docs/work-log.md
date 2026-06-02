@@ -3926,3 +3926,30 @@
 ### Next
 
 - 実ブラウザ/OBSで、キーライト1灯の明るさとハンドトラッキング項目が消えていることを確認する
+
+## 2026-06-02 Add Key Light Custom Controls
+
+### Goal
+
+- 3灯ライトを増やす方向ではなく、キーライトだけを細かく調整できるようにする
+
+### Did
+
+- Look UIの `キーライト` に、明るさ、色味、方向、遮蔽影ON/OFFを追加した
+- 色味はニュートラル、ウォーム、クール、ネオンブルー、ネオングリーンから選択できるようにした
+- 方向は正面上、左上、右上、真上寄りから選択できるようにした
+- 遮蔽影はデフォルトOFFにし、ON/OFF変更時だけVRM meshのshadow設定を更新するようにして、毎フレームの不要なtraverseを避けた
+- RelayのLook設定は後方互換を保つため、新しいkey light項目をoptionalとして追加した
+- Look設定、store、render smoothing、E2Eのテストを更新した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実ブラウザ/OBSで、キーライトの色味・方向・影ON/OFFの見え方を確認する
+- 遮蔽影はVRM材質やOBS側の見え方で効き方が変わるため、必要なら提出前にOFF固定へ戻す

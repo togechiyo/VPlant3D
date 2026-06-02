@@ -1,4 +1,6 @@
 export type LookPresetId = 'standard' | 'bright' | 'front-top' | 'neon' | 'edge';
+export type KeyLightColor = 'neutral' | 'warm' | 'cool' | 'neon-blue' | 'neon-green';
+export type KeyLightDirection = 'front-top' | 'left-top' | 'right-top' | 'high-front';
 export type RimLightStrength = 'off' | 'soft' | 'medium' | 'strong';
 export type RimLightColor = 'white' | 'blue' | 'green';
 export type RimLightDirection = 'left-back' | 'right-back' | 'top-back';
@@ -6,6 +8,9 @@ export type RimLightDirection = 'left-back' | 'right-back' | 'top-back';
 export interface LookSettings {
   preset: LookPresetId;
   keyIntensityScale: number;
+  keyColor: KeyLightColor;
+  keyDirection: KeyLightDirection;
+  keyShadowEnabled: boolean;
   fillIntensityScale: number;
   rimStrength: RimLightStrength;
   rimColor: RimLightColor;
@@ -19,6 +24,7 @@ export interface LookLightPreset {
   keyIntensity: number;
   keyPosition: [number, number, number];
   keyTarget: [number, number, number];
+  keyShadowEnabled: boolean;
   fillColor: number;
   fillIntensity: number;
   fillPosition: [number, number, number];
@@ -46,6 +52,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     keyIntensity: 2.15,
     keyPosition: [0.25, 3.9, 3.55],
     keyTarget: [0, 1.42, 0],
+    keyShadowEnabled: false,
     fillColor: 0xb8d7ff,
     fillIntensity: 0.26,
     fillPosition: [2.6, 1.9, 2.25],
@@ -63,6 +70,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     keyIntensity: 2.4,
     keyPosition: [0.15, 4.05, 3.65],
     keyTarget: [0, 1.42, 0],
+    keyShadowEnabled: false,
     fillColor: 0xcfe8ff,
     fillIntensity: 0.42,
     fillPosition: [2.5, 1.95, 2.45],
@@ -80,6 +88,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     keyIntensity: 2.25,
     keyPosition: [0, 4.35, 3.35],
     keyTarget: [0, 1.44, 0],
+    keyShadowEnabled: false,
     fillColor: 0xcfe8ff,
     fillIntensity: 0.28,
     fillPosition: [2.35, 1.85, 2.25],
@@ -97,6 +106,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     keyIntensity: 2.05,
     keyPosition: [0.4, 3.9, 3.35],
     keyTarget: [0, 1.42, 0],
+    keyShadowEnabled: false,
     fillColor: 0x38d5ff,
     fillIntensity: 0.34,
     fillPosition: [2.85, 1.9, 2.1],
@@ -114,6 +124,7 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
     keyIntensity: 1.95,
     keyPosition: [0.35, 3.85, 3.3],
     keyTarget: [0, 1.42, 0],
+    keyShadowEnabled: false,
     fillColor: 0xaecfff,
     fillIntensity: 0.12,
     fillPosition: [2.7, 1.85, 2.05],
@@ -130,6 +141,9 @@ export function createDefaultLookSettings(): LookSettings {
   return {
     preset: 'standard',
     keyIntensityScale: 1,
+    keyColor: 'neutral',
+    keyDirection: 'front-top',
+    keyShadowEnabled: false,
     fillIntensityScale: 1,
     rimStrength: 'medium',
     rimColor: 'blue',
@@ -142,7 +156,10 @@ export function resolveLookLights(settings: LookSettings): ResolvedLookLights {
 
   return {
     ...preset,
+    keyColor: getKeyColor(settings.keyColor, preset.keyColor),
     keyIntensity: preset.keyIntensity * clampScale(settings.keyIntensityScale),
+    keyPosition: getKeyPosition(settings.keyDirection, preset.keyPosition),
+    keyShadowEnabled: settings.keyShadowEnabled,
     fillIntensity: 0,
     rimColor: getRimColor(settings.rimColor, preset.rimColor),
     rimIntensity: 0,
@@ -156,6 +173,14 @@ export function normalizeLookSettings(settings: Partial<LookSettings>): LookSett
   return {
     preset: isLookPresetId(settings.preset) ? settings.preset : defaults.preset,
     keyIntensityScale: clampScale(settings.keyIntensityScale ?? defaults.keyIntensityScale),
+    keyColor: isKeyLightColor(settings.keyColor) ? settings.keyColor : defaults.keyColor,
+    keyDirection: isKeyLightDirection(settings.keyDirection)
+      ? settings.keyDirection
+      : defaults.keyDirection,
+    keyShadowEnabled:
+      typeof settings.keyShadowEnabled === 'boolean'
+        ? settings.keyShadowEnabled
+        : defaults.keyShadowEnabled,
     fillIntensityScale: clampScale(settings.fillIntensityScale ?? defaults.fillIntensityScale),
     rimStrength: isRimLightStrength(settings.rimStrength)
       ? settings.rimStrength
@@ -165,6 +190,41 @@ export function normalizeLookSettings(settings: Partial<LookSettings>): LookSett
       ? settings.rimDirection
       : defaults.rimDirection,
   };
+}
+
+function getKeyColor(color: KeyLightColor, fallback: number): number {
+  switch (color) {
+    case 'neutral':
+      return 0xf4fbff;
+    case 'warm':
+      return 0xfff0d2;
+    case 'cool':
+      return 0xd9f2ff;
+    case 'neon-blue':
+      return 0x9ee8ff;
+    case 'neon-green':
+      return 0xd8ffdf;
+    default:
+      return fallback;
+  }
+}
+
+function getKeyPosition(
+  direction: KeyLightDirection,
+  fallback: [number, number, number],
+): [number, number, number] {
+  switch (direction) {
+    case 'front-top':
+      return [0.25, 3.9, 3.55];
+    case 'left-top':
+      return [-2.25, 3.75, 3.25];
+    case 'right-top':
+      return [2.25, 3.75, 3.25];
+    case 'high-front':
+      return [0, 5.0, 2.55];
+    default:
+      return fallback;
+  }
 }
 
 function getRimColor(color: RimLightColor, fallback: number): number {
@@ -211,6 +271,25 @@ function isLookPresetId(value: unknown): value is LookPresetId {
     value === 'front-top' ||
     value === 'neon' ||
     value === 'edge'
+  );
+}
+
+function isKeyLightColor(value: unknown): value is KeyLightColor {
+  return (
+    value === 'neutral' ||
+    value === 'warm' ||
+    value === 'cool' ||
+    value === 'neon-blue' ||
+    value === 'neon-green'
+  );
+}
+
+function isKeyLightDirection(value: unknown): value is KeyLightDirection {
+  return (
+    value === 'front-top' ||
+    value === 'left-top' ||
+    value === 'right-top' ||
+    value === 'high-front'
   );
 }
 

@@ -47,6 +47,10 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('キーライト')).toBeVisible();
   await expect(page.locator('#look-preset-select')).toHaveValue('standard');
   await expect(page.locator('#key-light-scale-input')).toHaveValue('1');
+  await expect(page.locator('#key-light-color-select')).toHaveValue('neutral');
+  await expect(page.locator('#key-light-direction-select')).toHaveValue('front-top');
+  await expect(page.locator('#key-light-shadow-input')).not.toBeChecked();
+  await expect(page.locator('#key-light-shadow-text')).toHaveText('OFF');
   await expect(page.locator('#fill-light-scale-input')).toHaveCount(0);
   await expect(page.locator('#rim-light-strength-select')).toHaveCount(0);
   await expect(page.getByText('位置調整')).toBeVisible();
@@ -174,9 +178,15 @@ test('Control page updates key light look controls', async ({ page }) => {
 
   await page.locator('#look-preset-select').selectOption('neon');
   await page.locator('#key-light-scale-input').fill('1.5');
+  await page.locator('#key-light-color-select').selectOption('warm');
+  await page.locator('#key-light-direction-select').selectOption('left-top');
+  await page.locator('#key-light-shadow-input').check();
 
   await expect(page.locator('#look-preset-select')).toHaveValue('neon');
   await expect(page.locator('#key-light-scale-text')).toHaveText('150%');
+  await expect(page.locator('#key-light-color-select')).toHaveValue('warm');
+  await expect(page.locator('#key-light-direction-select')).toHaveValue('left-top');
+  await expect(page.locator('#key-light-shadow-text')).toHaveText('ON');
   await expect(page.locator('#fill-light-scale-input')).toHaveCount(0);
   await expect(page.locator('#rim-light-strength-select')).toHaveCount(0);
   expect(errors()).toEqual([]);

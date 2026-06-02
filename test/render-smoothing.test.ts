@@ -34,6 +34,9 @@ describe('render smoothing', () => {
     const previous = resolveLookLights({
       preset: 'standard',
       keyIntensityScale: 1,
+      keyColor: 'neutral',
+      keyDirection: 'front-top',
+      keyShadowEnabled: false,
       fillIntensityScale: 1,
       rimStrength: 'soft',
       rimColor: 'blue',
@@ -42,6 +45,9 @@ describe('render smoothing', () => {
     const target = resolveLookLights({
       preset: 'neon',
       keyIntensityScale: 2,
+      keyColor: 'neon-blue',
+      keyDirection: 'left-top',
+      keyShadowEnabled: true,
       fillIntensityScale: 0,
       rimStrength: 'strong',
       rimColor: 'green',
@@ -50,6 +56,7 @@ describe('render smoothing', () => {
     const smoothed = smoothResolvedLookLights(previous, target, 0.5);
 
     expect(smoothed.keyIntensity).toBeCloseTo((previous.keyIntensity + target.keyIntensity) / 2);
+    expect(smoothed.keyShadowEnabled).toBe(true);
     expect(smoothed.fillIntensity).toBeCloseTo(previous.fillIntensity / 2);
     expect(smoothed.rimIntensity).toBeCloseTo((previous.rimIntensity + target.rimIntensity) / 2);
     expect(smoothed.rimPosition).toEqual([0, 3.85, -2.75]);

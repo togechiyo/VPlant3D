@@ -49,6 +49,9 @@ describe('createAppStore', () => {
       lookSettings: {
         preset: 'standard',
         keyIntensityScale: 1,
+        keyColor: 'neutral',
+        keyDirection: 'front-top',
+        keyShadowEnabled: false,
         fillIntensityScale: 1,
         rimStrength: 'medium',
         rimColor: 'blue',
@@ -345,6 +348,9 @@ describe('createAppStore', () => {
 
     store.getState().setLookPreset('neon');
     store.getState().setKeyLightScale(1.5);
+    store.getState().setKeyLightColor('warm');
+    store.getState().setKeyLightDirection('left-top');
+    store.getState().setKeyLightShadowEnabled(true);
     store.getState().setFillLightScale(0.5);
     store.getState().setRimLightStrength('strong');
     store.getState().setRimLightColor('green');
@@ -353,6 +359,9 @@ describe('createAppStore', () => {
     expect(store.getState().lookSettings).toEqual({
       preset: 'neon',
       keyIntensityScale: 1.5,
+      keyColor: 'warm',
+      keyDirection: 'left-top',
+      keyShadowEnabled: true,
       fillIntensityScale: 0.5,
       rimStrength: 'strong',
       rimColor: 'green',

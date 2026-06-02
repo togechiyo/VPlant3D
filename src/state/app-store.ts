@@ -4,6 +4,8 @@ import type { ObsQueryOptions } from '../obs/query';
 import {
   createDefaultLookSettings,
   normalizeLookSettings,
+  type KeyLightColor,
+  type KeyLightDirection,
   type LookPresetId,
   type LookSettings,
   type RimLightColor,
@@ -102,6 +104,9 @@ export interface AppState {
   setManualControlStatus: (status: string) => void;
   setLookPreset: (preset: LookPresetId) => void;
   setKeyLightScale: (scale: number) => void;
+  setKeyLightColor: (color: KeyLightColor) => void;
+  setKeyLightDirection: (direction: KeyLightDirection) => void;
+  setKeyLightShadowEnabled: (enabled: boolean) => void;
   setFillLightScale: (scale: number) => void;
   setRimLightStrength: (strength: RimLightStrength) => void;
   setRimLightColor: (color: RimLightColor) => void;
@@ -372,6 +377,27 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
         lookSettings: normalizeLookSettings({
           ...state.lookSettings,
           keyIntensityScale: scale,
+        }),
+      })),
+    setKeyLightColor: (color) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          keyColor: color,
+        }),
+      })),
+    setKeyLightDirection: (direction) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          keyDirection: direction,
+        }),
+      })),
+    setKeyLightShadowEnabled: (enabled) =>
+      set((state) => ({
+        lookSettings: normalizeLookSettings({
+          ...state.lookSettings,
+          keyShadowEnabled: enabled,
         }),
       })),
     setFillLightScale: (scale) =>
