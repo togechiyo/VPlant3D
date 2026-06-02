@@ -133,8 +133,8 @@
 
 Tauri化は提出アプリとしての使い勝手を支える必須項目として扱う。ただし、リスクを絞るため、OBS Renderは引き続きOBS Browser Sourceで表示し、TauriはController、Relay起動、設定、OBS URL共有を担当する。
 
-- [ ] Tauri化の目的を「OBS RenderはBrowser Source、Controllerだけデスクトップアプリ」に絞る
-- [ ] Tauri導入で得られる価値をREADME / docs向けに整理する
+- [x] Tauri化の目的を「OBS RenderはBrowser Source、Controllerだけデスクトップアプリ」に絞る
+- [x] Tauri導入で得られる価値をREADME / docs向けに整理する
 - [ ] Tauriでローカルサーバー起動、または既存relay server接続のどちらにするか決める
 - [ ] Tauriアプリ起動時にController UIを開ける
 - [ ] TauriアプリからOBS Render URLをコピーできる

@@ -3874,3 +3874,27 @@
 ### Next
 
 - 実ブラウザで、表情ボタン連打時の遷移速度が気持ちよいか確認する
+
+## 2026-06-02 Tauri Controller Technical Plan
+
+### Goal
+
+- ハッカソン提出前のTauri化について、実装前に技術的な採用範囲とリスクを整理する
+
+### Did
+
+- `docs/tauri-controller-technical-plan.md` を追加した
+- TauriはOBS Renderを置き換える描画アプリではなく、Controller / Relay launcherとして使う方針に絞った
+- 最初の実装は、Tauri windowでController UIを開き、OBS Render URLを表示・コピーするところまでに限定する案にした
+- Node Relayのsidecar化やRust relay移植は、締切前には段階導入または後回しにする判断を残した
+- `README.md` のDocumentationにTauri検討メモへのリンクを追加した
+- `docs/hackathon-finish-task-list.md` のTauri目的整理タスクを完了扱いにした
+
+### Verified
+
+- ドキュメント更新のみ。テスト・ビルドは未実行
+
+### Next
+
+- Tauri v2 scaffoldを追加し、Web版Controller / OBS Renderを壊さずにTauri windowでController UIを起動できるか確認する
+- macOS / Windowsの実機確認項目をHuman Handoff Boardへ追加する
