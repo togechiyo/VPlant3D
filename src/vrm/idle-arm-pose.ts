@@ -12,11 +12,18 @@ const vrm0IdleArmPoseAdjustments: IdleArmPoseAdjustment[] = [
   { bone: 'rightHand', rotation: [0, -0.03, 0] },
 ];
 
+const vrm1IdleArmPoseAdjustments: IdleArmPoseAdjustment[] = [
+  { bone: 'leftUpperArm', rotation: [0, 0, -1.12] },
+  { bone: 'rightUpperArm', rotation: [0, 0, 1.12] },
+  { bone: 'leftHand', rotation: [0, 0.03, 0] },
+  { bone: 'rightHand', rotation: [0, -0.03, 0] },
+];
+
 export function createIdleArmPoseAdjustments(
   metaVersion: VrmMetaVersion,
 ): IdleArmPoseAdjustment[] {
   if (metaVersion === '1') {
-    return [];
+    return vrm1IdleArmPoseAdjustments;
   }
 
   return vrm0IdleArmPoseAdjustments;
