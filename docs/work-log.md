@@ -4068,3 +4068,32 @@
 ### Next
 
 - 実ブラウザ/OBSで、VRM 1.0のカメラ顔上下、手動顔上下、ミラーONの左右方向を確認する
+
+## 2026-06-03 Split VRM 1.0 Face And Body Mirror
+
+### Goal
+
+- VRM 1.0で、ミラーONだと顔の左右は合うが体の傾きが逆になり、ミラーOFFだと体は近いが顔が逆になる問題を切り分ける
+
+### Did
+
+- UI上の `ミラー` は顔向きに合わせ、VRM 1.0でもデフォルトONのまま維持した
+- VRM 1.0の上半身リターゲットだけ、内部の `mirrorInput` 解釈を反転する互換関数を追加した
+- これにより、VRM 1.0ではミラーON時でも顔はミラーON相当、体幹の傾きはミラーOFF相当として流す
+- まずデモで目立つ胸/首の傾きに限定し、実験扱いの腕IK/手指トラックのmirror解釈は変更しない
+- VRM 0.xやmeta不明時は従来どおり、顔と体に同じmirror解釈を使う
+- 手動pose relayのE2Eは、Controlで手動poseを作ってからOBS Renderを開き、latest runtime再送を検証する順序へ変えて安定化した
+
+### Verified
+
+- `npm run test -- test/head-vrm-compat.test.ts test/upper-body-retarget.test.ts test/head-retarget.test.ts`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e -- --grep "relays manual pose changes"`
+- `npm run test:e2e`
+
+### Next
+
+- 実ブラウザ/OBSで、VRM 1.0のミラーON時に顔左右と体の傾きが同時に直感通りか確認する
+- 腕IK/手指トラックを再開する場合は、VRM 1.0の左右/ミラー互換を別途見直す

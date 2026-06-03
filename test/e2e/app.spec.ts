@@ -149,14 +149,7 @@ test('relays manual pose changes to OBS debug runtime state', async ({ browser }
   const renderErrors = collectPageErrors(renderPage);
   const controlErrors = collectPageErrors(controlPage);
 
-  await renderPage.goto('/?obs=1&transparent=1&debug=1');
   await controlPage.goto('/?control=1');
-  await expect(renderPage.locator('.relay-debug-overlay')).toBeVisible();
-  await expect
-    .poll(async () =>
-      extractRelayDebugRuntimeAge(await renderPage.locator('.relay-debug-overlay').textContent()),
-    )
-    .toBeLessThan(1_000);
 
   const canvas = controlPage.locator('canvas.scene-canvas');
   const canvasBox = await canvas.boundingBox();
@@ -170,6 +163,8 @@ test('relays manual pose changes to OBS debug runtime state', async ({ browser }
   await controlPage.mouse.up({ button: 'left' });
   await expect(controlPage.locator('#manual-control-status-text')).toHaveText('顔操作');
 
+  await renderPage.goto('/?obs=1&transparent=1&debug=1');
+  await expect(renderPage.locator('.relay-debug-overlay')).toBeVisible();
   await expect
     .poll(async () =>
       extractRelayDebugHeadYaw(await renderPage.locator('.relay-debug-overlay').textContent()),
@@ -367,10 +362,4 @@ function extractRelayDebugHeadYaw(text: string | null): number {
   const match = text?.match(/head yaw\/pitch\/roll (-?\d+\.\d+)/);
   const yawText = match?.[1];
   return yawText ? Math.abs(Number.parseFloat(yawText)) : 0;
-}
-
-function extractRelayDebugRuntimeAge(text: string | null): number {
-  const match = text?.match(/runtime #\d+ age (\d+)ms/);
-  const ageText = match?.[1];
-  return ageText ? Number.parseInt(ageText, 10) : Number.POSITIVE_INFINITY;
 }

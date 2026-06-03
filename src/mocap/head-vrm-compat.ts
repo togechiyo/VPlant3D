@@ -7,6 +7,13 @@ export function getDefaultPoseMirrorInputForVrm(metaVersion: HeadVrmMetaVersion)
   return true;
 }
 
+export function getUpperBodyMirrorInputForVrm(
+  mirrorInput: boolean,
+  metaVersion: HeadVrmMetaVersion,
+): boolean {
+  return metaVersion === '1' ? !mirrorInput : mirrorInput;
+}
+
 export function adaptHeadRetargetPoseForVrm(
   pose: HeadRetargetPose,
   metaVersion: HeadVrmMetaVersion,

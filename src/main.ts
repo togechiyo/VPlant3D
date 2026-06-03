@@ -57,6 +57,7 @@ import {
 import {
   adaptHeadRetargetPoseForVrm,
   getDefaultPoseMirrorInputForVrm,
+  getUpperBodyMirrorInputForVrm,
 } from './mocap/head-vrm-compat';
 import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
 import {
@@ -3397,7 +3398,10 @@ function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
     upperBodyRetargetPose,
     createUpperBodyRetargetPose(summary, {
       ...defaultUpperBodyRetargetOptions,
-      mirrorInput: nextState.poseMirrorInput,
+      mirrorInput: getUpperBodyMirrorInputForVrm(
+        nextState.poseMirrorInput,
+        currentVrm?.meta.metaVersion,
+      ),
       trackArms: false,
     }),
   );
