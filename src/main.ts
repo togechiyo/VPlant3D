@@ -56,6 +56,7 @@ import {
 } from './mocap/head-retarget';
 import {
   adaptHeadRetargetPoseForVrm,
+  adaptUpperBodyRetargetPoseForVrm,
   getDefaultPoseMirrorInputForVrm,
 } from './mocap/head-vrm-compat';
 import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
@@ -1713,7 +1714,8 @@ function updateRelayDebugOverlay(): void {
 
   relayDebugOverlay.textContent = [
     'OBS Relay Debug',
-    `vrm ${compatProfile.versionLabel} face/body/arm mirror ${formatRelayDebugBool(compatProfile.faceMirrorInput)} / ${formatRelayDebugBool(compatProfile.bodyMirrorInput)} / ${formatRelayDebugBool(compatProfile.armMirrorInput)} headPitchSign ${compatProfile.headPitchSign}`,
+    `vrm ${compatProfile.versionLabel} face/body/arm mirror ${formatRelayDebugBool(compatProfile.faceMirrorInput)} / ${formatRelayDebugBool(compatProfile.bodyMirrorInput)} / ${formatRelayDebugBool(compatProfile.armMirrorInput)}`,
+    `compat head ${formatRotationSigns(compatProfile.cameraHeadSigns)} body ${formatUpperBodySigns(compatProfile.cameraUpperBodySigns)}`,
     `runtime #${lastAppliedRelayRuntimeSequence} age ${runtimeAge}ms`,
     `motion #${lastAppliedRelayMotionSequence} age ${motionAge}ms`,
     `expression #${lastAppliedRelayExpressionSequence} age ${expressionAge}ms`,
@@ -1733,6 +1735,23 @@ function updateRelayDebugOverlay(): void {
 
 function formatRelayDebugBool(value: boolean): string {
   return value ? 'on' : 'off';
+}
+
+function formatRotationSigns(signs: { pitch: number; yaw: number; roll: number }): string {
+  return `p${formatSign(signs.pitch)} y${formatSign(signs.yaw)} r${formatSign(signs.roll)}`;
+}
+
+function formatUpperBodySigns(signs: {
+  chestYaw: number;
+  chestRoll: number;
+  neckYaw: number;
+  neckRoll: number;
+}): string {
+  return `cy${formatSign(signs.chestYaw)} cr${formatSign(signs.chestRoll)} ny${formatSign(signs.neckYaw)} nr${formatSign(signs.neckRoll)}`;
+}
+
+function formatSign(value: number): string {
+  return value < 0 ? '-' : '+';
 }
 
 function publishRelayDebugSample(frameTime: number): void {
@@ -3307,9 +3326,9 @@ function applyManualControlPose(): void {
   const compatProfile = getCurrentVrmCompatProfile();
   headRetargetPose = {
     enabled: true,
-    pitch: manualPose.headPitch * compatProfile.manualHeadPitchSign,
-    yaw: manualPose.headYaw,
-    roll: manualPose.headRoll,
+    pitch: manualPose.headPitch * compatProfile.manualHeadSigns.pitch,
+    yaw: manualPose.headYaw * compatProfile.manualHeadSigns.yaw,
+    roll: manualPose.headRoll * compatProfile.manualHeadSigns.roll,
   };
   upperBodyRetargetPose = {
     ...upperBodyRetargetPose,
@@ -3442,11 +3461,14 @@ function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
   const compatProfile = getCurrentVrmCompatProfile();
   upperBodyRetargetPose = smoothUpperBodyRetargetPose(
     upperBodyRetargetPose,
-    createUpperBodyRetargetPose(summary, {
-      ...defaultUpperBodyRetargetOptions,
-      mirrorInput: compatProfile.bodyMirrorInput,
-      trackArms: false,
-    }),
+    adaptUpperBodyRetargetPoseForVrm(
+      createUpperBodyRetargetPose(summary, {
+        ...defaultUpperBodyRetargetOptions,
+        mirrorInput: compatProfile.bodyMirrorInput,
+        trackArms: false,
+      }),
+      currentVrm?.meta.metaVersion,
+    ),
   );
 
   if (!appStore.getState().handTrackingEnabled) {

@@ -1,6 +1,20 @@
 export type VrmMetaVersion = '0' | '1' | string | undefined;
 export type VrmCompatVersion = '0' | '1' | 'unknown';
 export type IdleArmPoseProfile = 'vrm0' | 'vrm1';
+export type RotationSign = 1 | -1;
+
+export interface HeadRotationSigns {
+  pitch: RotationSign;
+  yaw: RotationSign;
+  roll: RotationSign;
+}
+
+export interface UpperBodyRotationSigns {
+  chestYaw: RotationSign;
+  chestRoll: RotationSign;
+  neckYaw: RotationSign;
+  neckRoll: RotationSign;
+}
 
 export interface VrmExpressionManagerLike {
   getExpression(name: string): unknown | null;
@@ -14,6 +28,9 @@ export interface VrmCompatProfile {
   faceMirrorInput: boolean;
   bodyMirrorInput: boolean;
   armMirrorInput: boolean;
+  cameraHeadSigns: HeadRotationSigns;
+  manualHeadSigns: HeadRotationSigns;
+  cameraUpperBodySigns: UpperBodyRotationSigns;
   headPitchSign: 1 | -1;
   manualHeadPitchSign: 1 | -1;
   idleArmPoseProfile: IdleArmPoseProfile;
@@ -52,6 +69,15 @@ export function resolveVrmCompatProfile(
 ): VrmCompatProfile {
   const version = normalizeVrmCompatVersion(metaVersion);
   const isVrm1 = version === '1';
+  const cameraHeadSigns: HeadRotationSigns = isVrm1
+    ? { pitch: -1, yaw: 1, roll: -1 }
+    : { pitch: 1, yaw: 1, roll: 1 };
+  const manualHeadSigns: HeadRotationSigns = isVrm1
+    ? { pitch: -1, yaw: 1, roll: 1 }
+    : { pitch: 1, yaw: 1, roll: 1 };
+  const cameraUpperBodySigns: UpperBodyRotationSigns = isVrm1
+    ? { chestYaw: -1, chestRoll: -1, neckYaw: -1, neckRoll: -1 }
+    : { chestYaw: 1, chestRoll: 1, neckYaw: 1, neckRoll: 1 };
 
   return {
     version,
@@ -60,8 +86,11 @@ export function resolveVrmCompatProfile(
     faceMirrorInput: uiMirrorInput,
     bodyMirrorInput: uiMirrorInput,
     armMirrorInput: uiMirrorInput,
-    headPitchSign: isVrm1 ? -1 : 1,
-    manualHeadPitchSign: isVrm1 ? -1 : 1,
+    cameraHeadSigns,
+    manualHeadSigns,
+    cameraUpperBodySigns,
+    headPitchSign: cameraHeadSigns.pitch,
+    manualHeadPitchSign: manualHeadSigns.pitch,
     idleArmPoseProfile: isVrm1 ? 'vrm1' : 'vrm0',
     expressionAliases: vrmExpressionAliases,
   };

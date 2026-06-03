@@ -24,7 +24,7 @@ function createExpressionManager(names: string[]): VrmExpressionManagerLike {
 }
 
 describe('resolveVrmCompatProfile', () => {
-  it('keeps the UI mirror for face, body, and arms while flipping pitch for VRM 1.0', () => {
+  it('keeps UI mirror channels while splitting VRM 1.0 camera and manual axis signs', () => {
     const profile = resolveVrmCompatProfile('1', true);
 
     expect(profile.version).toBe('1');
@@ -32,6 +32,14 @@ describe('resolveVrmCompatProfile', () => {
     expect(profile.faceMirrorInput).toBe(true);
     expect(profile.bodyMirrorInput).toBe(true);
     expect(profile.armMirrorInput).toBe(true);
+    expect(profile.cameraHeadSigns).toEqual({ pitch: -1, yaw: 1, roll: -1 });
+    expect(profile.manualHeadSigns).toEqual({ pitch: -1, yaw: 1, roll: 1 });
+    expect(profile.cameraUpperBodySigns).toEqual({
+      chestYaw: -1,
+      chestRoll: -1,
+      neckYaw: -1,
+      neckRoll: -1,
+    });
     expect(profile.headPitchSign).toBe(-1);
     expect(profile.manualHeadPitchSign).toBe(-1);
     expect(profile.idleArmPoseProfile).toBe('vrm1');
@@ -43,6 +51,9 @@ describe('resolveVrmCompatProfile', () => {
       faceMirrorInput: true,
       bodyMirrorInput: true,
       armMirrorInput: true,
+      cameraHeadSigns: { pitch: 1, yaw: 1, roll: 1 },
+      manualHeadSigns: { pitch: 1, yaw: 1, roll: 1 },
+      cameraUpperBodySigns: { chestYaw: 1, chestRoll: 1, neckYaw: 1, neckRoll: 1 },
       headPitchSign: 1,
       manualHeadPitchSign: 1,
       idleArmPoseProfile: 'vrm0',
@@ -52,6 +63,9 @@ describe('resolveVrmCompatProfile', () => {
       faceMirrorInput: false,
       bodyMirrorInput: false,
       armMirrorInput: false,
+      cameraHeadSigns: { pitch: 1, yaw: 1, roll: 1 },
+      manualHeadSigns: { pitch: 1, yaw: 1, roll: 1 },
+      cameraUpperBodySigns: { chestYaw: 1, chestRoll: 1, neckYaw: 1, neckRoll: 1 },
       headPitchSign: 1,
       manualHeadPitchSign: 1,
       idleArmPoseProfile: 'vrm0',

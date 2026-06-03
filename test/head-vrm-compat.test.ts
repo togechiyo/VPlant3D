@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   adaptHeadRetargetPoseForVrm,
+  adaptUpperBodyRetargetPoseForVrm,
   getDefaultPoseMirrorInputForVrm,
   getUpperBodyMirrorInputForVrm,
 } from '../src/mocap/head-vrm-compat';
 import type { HeadRetargetPose } from '../src/mocap/head-retarget';
+import type { UpperBodyRetargetPose } from '../src/mocap/upper-body-retarget';
 
 describe('head VRM compatibility', () => {
   it('keeps mirror input on for VRM 1.0', () => {
@@ -28,7 +30,7 @@ describe('head VRM compatibility', () => {
     expect(getUpperBodyMirrorInputForVrm(true, undefined)).toBe(true);
   });
 
-  it('flips only pitch for VRM 1.0 head mocap', () => {
+  it('uses camera-specific head signs for VRM 1.0 mocap', () => {
     const pose: HeadRetargetPose = {
       enabled: true,
       pitch: 0.1,
@@ -40,7 +42,7 @@ describe('head VRM compatibility', () => {
       enabled: true,
       pitch: -0.1,
       yaw: 0.2,
-      roll: -0.3,
+      roll: 0.3,
     });
   });
 
@@ -53,5 +55,43 @@ describe('head VRM compatibility', () => {
     };
 
     expect(adaptHeadRetargetPoseForVrm(pose, '0')).toEqual(pose);
+  });
+
+  it('uses camera-specific upper body signs for VRM 1.0 mocap', () => {
+    const pose: UpperBodyRetargetPose = {
+      enabled: true,
+      chestYaw: 0.12,
+      chestRoll: -0.18,
+      neckYaw: 0.05,
+      neckRoll: -0.07,
+      leftUpperArmRoll: -0.2,
+      rightUpperArmRoll: 0.2,
+      leftLowerArmRoll: -0.4,
+      rightLowerArmRoll: 0.4,
+    };
+
+    expect(adaptUpperBodyRetargetPoseForVrm(pose, '1')).toEqual({
+      ...pose,
+      chestYaw: -0.12,
+      chestRoll: 0.18,
+      neckYaw: -0.05,
+      neckRoll: 0.07,
+    });
+  });
+
+  it('leaves VRM 0.x upper body mocap unchanged', () => {
+    const pose: UpperBodyRetargetPose = {
+      enabled: true,
+      chestYaw: 0.12,
+      chestRoll: -0.18,
+      neckYaw: 0.05,
+      neckRoll: -0.07,
+      leftUpperArmRoll: -0.2,
+      rightUpperArmRoll: 0.2,
+      leftLowerArmRoll: -0.4,
+      rightLowerArmRoll: 0.4,
+    };
+
+    expect(adaptUpperBodyRetargetPoseForVrm(pose, '0')).toEqual(pose);
   });
 });

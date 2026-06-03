@@ -45,6 +45,42 @@
 - 
 ```
 
+## 2026-06-03 VRM 1.0 Camera Mocap Axis Compatibility
+
+### Goal
+
+- VRM 1.0でカメラモーキャプ時の頭向き、頭傾き、胴体傾き、胴体ひねりが直感とずれる問題を、場当たり的なmirror切替ではなく軸別互換として見直す
+
+### Did
+
+- `src/vrm/vrm-version-compat.ts` に `cameraHeadSigns`、`manualHeadSigns`、`cameraUpperBodySigns` を追加
+- VRM 1.0では、カメラ由来のhead pitch / roll、upper body chest yaw / chest roll、neck yaw / neck rollを軸ごとに補正するよう変更
+- 手動操作はカメラ補正と分離し、現状の良い挙動を壊さないようmanual head signsを別に持たせた
+- OBS debug overlayに互換sign表示を追加
+- `docs/vrm-version-differences.md` に、VRM 1.0は単一mirrorではなく軸別補正で扱う方針を追記
+
+### Worked
+
+- `npm run test -- test/vrm-version-compat.test.ts test/head-vrm-compat.test.ts` 成功
+- `npm run test` 成功
+- `npm run lint` 成功
+- `npm run build` 成功。既存のlarge chunk warningのみ
+- `npm run test:e2e` 成功。通常sandboxではlocalhost listen EPERMで失敗したため、権限付きで再実行して11件成功
+
+### Failed / Blocked
+
+- VRM 1.0実機モデルで、カメラモーキャプの頭yaw / pitch / roll、胴体yaw / rollが本当に直感通りかは人間確認が必要
+
+### Decisions
+
+- VRM 1.0の違和感は `faceMirrorInput` / `bodyMirrorInput` の丸ごと反転ではなく、カメラ頭、手動頭、カメラ胴体の軸別signで管理する
+- 手動操作とカメラモーキャプは入力座標系が違うため、同じ補正を共有しない
+
+### Next
+
+- VRM 1.0モデルでカメラモードを確認し、残る違和感が「head yaw」「head roll」「chest yaw」「chest roll」のどれかを切り分ける
+- もしまだ逆の軸があれば、`cameraHeadSigns` / `cameraUpperBodySigns` の該当軸だけを調整する
+
 ## 2026-05-23 OBS Render Cleanup Planning
 
 ### Goal

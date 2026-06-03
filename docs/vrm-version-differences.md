@@ -156,13 +156,17 @@ VPlant3Dでの判断:
 現状のVPlant3D補正:
 
 - `src/mocap/head-vrm-compat.ts`
-  - `adaptHeadRetargetPoseForVrm()` でVRM 1.0のhead pitchを反転
-  - 2026-06-03時点では、VRM 1.0でも体側mirror解釈はUI mirrorと同じに戻した
-- 手動マウス操作でもVRM 1.0の顔上下が逆にならないよう、同じ互換処理を使う方針
+  - `adaptHeadRetargetPoseForVrm()` でVRM 1.0のカメラ由来head pitch / rollを個別に補正
+  - 手動マウス操作はカメラ入力と分け、VRM 1.0では手動head pitchだけを補正する
+- `src/vrm/vrm-version-compat.ts`
+  - `cameraHeadSigns`、`manualHeadSigns`、`cameraUpperBodySigns` を持ち、単一のmirror反転で扱わない
+  - 2026-06-03の再確認では、VRM 1.0のカメラ胴体はUI mirror自体は維持しつつ、カメラ由来のchest yaw / rollとneck yaw / rollを軸ごとに反転する方針にした
 
 今後の注意:
 
 - 頭と体の補正は、同じ `mirrorInput` から派生しても内部で別扱いにする
+- 手動操作で自然に見えている軸は、カメラモーキャプの補正に巻き込まない
+- VRM 1.0の違和感が残る場合は、`cameraHeadSigns` / `cameraUpperBodySigns` の軸単位で調整する
 - 腕はさらに別枠。腕はローカル軸とモデル衣装の見え方に影響されやすい
 
 ## 表情: BlendShapeからExpressionへ
