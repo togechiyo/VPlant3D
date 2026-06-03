@@ -77,6 +77,7 @@ import type {
 import type { HeadRetargetPose } from './mocap/head-retarget';
 import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
+import { createIdleArmPoseAdjustments } from './vrm/idle-arm-pose';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
 import {
   createNeutralVrmEmotionExpressionWeights,
@@ -2206,13 +2207,25 @@ function updateLookAtCameraTarget(): void {
 }
 
 function applyIdleArmPose(vrm: VRM): void {
-  rotateNormalizedBone(vrm, VRMHumanBoneName.LeftUpperArm, 0, 0, 1.12);
-  rotateNormalizedBone(vrm, VRMHumanBoneName.RightUpperArm, 0, 0, -1.12);
-  rotateNormalizedBone(vrm, VRMHumanBoneName.LeftHand, 0, 0.03, 0);
-  rotateNormalizedBone(vrm, VRMHumanBoneName.RightHand, 0, -0.03, 0);
+  const adjustments = createIdleArmPoseAdjustments(vrm.meta.metaVersion);
+
+  for (const adjustment of adjustments) {
+    rotateNormalizedBone(vrm, idleArmPoseBoneNames[adjustment.bone], ...adjustment.rotation);
+  }
+
   vrm.humanoid.update();
   vrm.scene.updateMatrixWorld(true);
 }
+
+const idleArmPoseBoneNames = {
+  leftUpperArm: VRMHumanBoneName.LeftUpperArm,
+  rightUpperArm: VRMHumanBoneName.RightUpperArm,
+  leftHand: VRMHumanBoneName.LeftHand,
+  rightHand: VRMHumanBoneName.RightHand,
+} satisfies Record<
+  ReturnType<typeof createIdleArmPoseAdjustments>[number]['bone'],
+  VRMHumanBoneName
+>;
 
 function rotateNormalizedBone(
   vrm: VRM,

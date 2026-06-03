@@ -3979,3 +3979,29 @@
 
 - 実ブラウザ/OBSで、色変更とXYZ方向変更がモデルの見た目に直感的に効くか確認する
 - 提出前UIとして、方向スライダーの初期値・範囲が分かりやすいか確認する
+
+## 2026-06-03 Fix VRM 1.0 Idle Arm Pose
+
+### Goal
+
+- VRM 1.0モデル読み込み時に、初期腕補正でバンザイ状態になる問題を直す
+
+### Did
+
+- ロード直後の `applyIdleArmPose` で入れていた上腕/手首の固定補正を、VRM meta versionごとの調整リストへ切り出した
+- `vrm.meta.metaVersion === '1'` の場合は、VRM 1.0の正規化後デフォルト姿勢を尊重し、腕補正を入れないようにした
+- VRM 0.xやmeta不明時は、従来の腕下げ補正を維持した
+- `createIdleArmPoseAdjustments` の単体テストを追加した
+
+### Verified
+
+- `npm run test -- test/idle-arm-pose.test.ts`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実ブラウザ/OBSで、`Sample_D_VRM1.vrm` 読み込み時にバンザイせず、VRM 1.0の初期姿勢がそのまま出るか確認する
+- VRM 0.xモデルで従来の腕下げ初期姿勢が崩れていないか確認する
