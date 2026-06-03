@@ -4097,3 +4097,38 @@
 
 - 実ブラウザ/OBSで、VRM 1.0のミラーON時に顔左右と体の傾きが同時に直感通りか確認する
 - 腕IK/手指トラックを再開する場合は、VRM 1.0の左右/ミラー互換を別途見直す
+
+## 2026-06-03 Document VRM 0.x / 1.0 Differences
+
+### Goal
+
+- VRM 1.0で顔上下、体傾き、腕下げ、ミラー解釈がVRM 0.xとずれるため、仕様差分を実装判断用に整理する
+
+### Did
+
+- 公式のVRM座標系、VRM 0.0仕様、VRM 1.0 humanoid / expression / meta仕様、`@pixiv/three-vrm` migration guideを確認した
+- [docs/vrm-version-differences.md](./vrm-version-differences.md) を追加し、座標系、モデル正面、Humanoid、Expression、Meta、LookAt、SpringBone、MToonの差分をVPlant3D向けにまとめた
+- 現在入れているVRM 1.0向け補正として、idle arm poseの符号差、head pitch反転、体側mirror解釈反転を記録した
+
+### Worked
+
+- VRM 0は前が `-Z`、VRM 1は前が `+Z`、Unity変換時もVRM 0はZ反転、VRM 1はX反転という差分を確認できた
+- `@pixiv/three-vrm` v1系ではnormalized human bonesが導入されており、表示正面を揃えてもraw boneのローカル軸まで同じとは限らない、という判断を明文化できた
+- ExpressionはVRM 0.xの `joy` / `sorrow` / `fun` / `a` などと、VRM 1.0の `happy` / `sad` / `relaxed` / `aa` などをfallback mappingで扱う方針にした
+
+### Failed / Blocked
+
+- 今回は調査とドキュメント化のみ。VRM 1.0互換moduleの実装整理はまだ行っていない
+- VRM 1.0腕トラックのモデルごとの軸差は、追加の実モデル確認が必要
+
+### Decisions
+
+- `mirrorInput` はUI上の直感設定として残し、内部では顔、体、腕で別々に派生させる
+- VRM 0.x / 1.0差分は、今後 `vrm-version-compat` のような互換moduleへ寄せる
+- 表情プリセットはVRM 1.0名を正規名として扱い、VRM 0.x名へfallbackする
+
+### Next
+
+- `src/vrm/vrm-version-compat.ts` のような互換moduleを作り、head/body/arm/expressionのバージョン分岐を集約する
+- UIの表情プリセット解決を、モデルに存在するExpression名を見てfallbackする形に整理する
+- VRM 1.0サンプル複数体で、腕下げ、顔pitch、体mirror、手動操作を確認する
