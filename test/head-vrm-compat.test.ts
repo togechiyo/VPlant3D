@@ -7,8 +7,8 @@ import {
 import type { HeadRetargetPose } from '../src/mocap/head-retarget';
 
 describe('head VRM compatibility', () => {
-  it('defaults mirror input off for VRM 1.0', () => {
-    expect(getDefaultPoseMirrorInputForVrm('1')).toBe(false);
+  it('keeps mirror input on for VRM 1.0', () => {
+    expect(getDefaultPoseMirrorInputForVrm('1')).toBe(true);
   });
 
   it('keeps mirror input on for VRM 0.x or unknown metadata', () => {

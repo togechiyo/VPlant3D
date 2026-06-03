@@ -3,7 +3,8 @@ import type { HeadRetargetPose } from './head-retarget';
 export type HeadVrmMetaVersion = '0' | '1' | string | undefined;
 
 export function getDefaultPoseMirrorInputForVrm(metaVersion: HeadVrmMetaVersion): boolean {
-  return metaVersion !== '1';
+  void metaVersion;
+  return true;
 }
 
 export function adaptHeadRetargetPoseForVrm(

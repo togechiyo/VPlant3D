@@ -4037,5 +4037,34 @@
 
 ### Next
 
-- 実ブラウザ/OBSで、VRM 1.0モデルの顔上下、左右、ミラーOFF初期値が直感通りか確認する
+- 実ブラウザ/OBSで、VRM 1.0モデルの顔上下、左右、ミラー初期値が直感通りか確認する
 - VRM 0.xモデルでカメラモードの顔方向が従来どおりか確認する
+- 後続確認でVRM 1.0もミラーONが合うと分かったため、次の作業でミラー初期値OFF方針は取り消す
+
+## 2026-06-03 Keep VRM 1.0 Head Mirror On
+
+### Goal
+
+- VRM 1.0でもミラーONのほうが左右方向に合うため、前回のミラー初期値OFFを戻す
+- VRM 1.0では手動マウス操作の顔上下も反転して見えるため、手動操作にも同じpitch補正を適用する
+
+### Did
+
+- VRM meta versionに関係なく、カメラモードの `ミラー` 初期値はONに戻した
+- VRM 1.0の頭pitch反転補正を、MediaPipe顔トラックだけでなく手動マウス顔操作にも適用した
+- VRM 0.xやmeta不明時は頭pitchを従来どおりそのまま通す
+- 互換テストの期待値を、VRM 1.0でもミラーONに更新した
+- OBS relay E2Eが古いruntimeを見て揺れることがあったため、Controlが新しいruntimeを送れる状態を待ってから手動poseを検証するようにした
+
+### Verified
+
+- `npm run test -- test/head-vrm-compat.test.ts test/head-retarget.test.ts`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e -- --grep "relays manual pose changes"`
+- `npm run test:e2e`
+
+### Next
+
+- 実ブラウザ/OBSで、VRM 1.0のカメラ顔上下、手動顔上下、ミラーONの左右方向を確認する

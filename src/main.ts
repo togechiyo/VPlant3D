@@ -3255,12 +3255,15 @@ function applyManualControlPose(): void {
     return;
   }
 
-  headRetargetPose = {
-    enabled: true,
-    pitch: manualPose.headPitch,
-    yaw: manualPose.headYaw,
-    roll: manualPose.headRoll,
-  };
+  headRetargetPose = adaptHeadRetargetPoseForVrm(
+    {
+      enabled: true,
+      pitch: manualPose.headPitch,
+      yaw: manualPose.headYaw,
+      roll: manualPose.headRoll,
+    },
+    currentVrm?.meta.metaVersion,
+  );
   upperBodyRetargetPose = {
     ...upperBodyRetargetPose,
     enabled: true,
