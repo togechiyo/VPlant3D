@@ -4006,3 +4006,36 @@
 
 - 実ブラウザ/OBSで、`Sample_D_VRM1.vrm` 読み込み時に腕が下がるか確認する
 - VRM 0.xモデルで従来の腕下げ初期姿勢が崩れていないか確認する
+
+## 2026-06-03 Adjust VRM 1.0 Head Mocap Direction
+
+### Goal
+
+- VRM 1.0モデルでカメラモードの顔上下トラッキングが反転する問題を直す
+- VRM 1.0では左右方向もVRM 0.xと見え方が異なるため、ミラー入力の初期値を見直す
+
+### Did
+
+- `head-vrm-compat` を追加し、VRM meta versionごとの頭モーキャプ補正を切り出した
+- `vrm.meta.metaVersion === '1'` の場合だけ、MediaPipe由来の頭pitchを反転してからVRMへ流すようにした
+- VRM 1.0読み込み時は `ミラー` をデフォルトOFFにし、VRM 0.xやmeta不明時は従来どおりONにした
+- 手動マウス操作の頭向きは変更せず、カメラモーキャプ由来の頭姿勢だけを対象にした
+- VRM 0.x側が従来どおりであることを単体テストで固定した
+
+### Verified
+
+- `npm run test -- test/head-vrm-compat.test.ts test/head-retarget.test.ts`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Notes
+
+- `npm run test:e2e` は通常サンドボックスではlocalhost listen権限で失敗したため、権限付きで実行した
+- E2Eのrelay確認が1回だけ `yaw=0` のままになる揺れを見せたが、同テストの単独再実行とフル再実行では成功した
+
+### Next
+
+- 実ブラウザ/OBSで、VRM 1.0モデルの顔上下、左右、ミラーOFF初期値が直感通りか確認する
+- VRM 0.xモデルでカメラモードの顔方向が従来どおりか確認する

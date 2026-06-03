@@ -54,6 +54,10 @@ import {
   createNeutralHeadRetargetPose,
   smoothHeadRetargetPose,
 } from './mocap/head-retarget';
+import {
+  adaptHeadRetargetPoseForVrm,
+  getDefaultPoseMirrorInputForVrm,
+} from './mocap/head-vrm-compat';
 import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
 import {
   createNeutralRetargetPose,
@@ -2131,6 +2135,7 @@ function replaceCurrentVrm(nextVrm: VRM): void {
   }
 
   currentVrm = nextVrm;
+  appStore.getState().setPoseMirrorInput(getDefaultPoseMirrorInputForVrm(nextVrm.meta.metaVersion));
   vrmShadowCastingEnabled = null;
   configureVrmShadowCasting(appStore.getState().lookSettings.keyShadowEnabled);
   fitObjectToDefaultView(nextVrm.scene);
@@ -3157,9 +3162,12 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
 
   const result = faceTracker.detect(videoFrame, frameTime);
   const categories = result.faceBlendshapes[0]?.categories ?? [];
-  const nextHeadPose = createHeadRetargetPose(result.facialTransformationMatrixes[0], {
-    mirrorInput: appStore.getState().poseMirrorInput,
-  });
+  const nextHeadPose = adaptHeadRetargetPoseForVrm(
+    createHeadRetargetPose(result.facialTransformationMatrixes[0], {
+      mirrorInput: appStore.getState().poseMirrorInput,
+    }),
+    currentVrm?.meta.metaVersion,
+  );
   const hasFaceSignal = categories.length > 0 || nextHeadPose.enabled;
 
   if (categories.length > 0) {
