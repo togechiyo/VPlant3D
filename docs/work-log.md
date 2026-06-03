@@ -3953,3 +3953,29 @@
 
 - 実ブラウザ/OBSで、キーライトの色味・方向・影ON/OFFの見え方を確認する
 - 遮蔽影はVRM材質やOBS側の見え方で効き方が変わるため、必要なら提出前にOFF固定へ戻す
+
+## 2026-06-03 Free Key Light Color And Direction
+
+### Goal
+
+- キーライトの色味と方向を、固定プリセットではなくGUIで自由に決められるようにする
+
+### Did
+
+- キーライトの色味選択をカラーピッカーに変更し、任意の `#rrggbb` を指定できるようにした
+- キーライト方向をプリセット選択からX/Y/Zスライダーに変更した
+- 内部Look設定を `keyColorHex` と `keyPosition` に切り替えた
+- 旧 `keyColor` / `keyDirection` はRelay互換入力として残し、古い状態を受けても新しい設定へ正規化できるようにした
+- Store、Relay型、Look解決、E2Eの期待値を新UIに合わせて更新した
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Next
+
+- 実ブラウザ/OBSで、色変更とXYZ方向変更がモデルの見た目に直感的に効くか確認する
+- 提出前UIとして、方向スライダーの初期値・範囲が分かりやすいか確認する

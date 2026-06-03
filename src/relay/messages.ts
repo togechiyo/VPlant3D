@@ -18,7 +18,9 @@ export interface RelayAvatarTransform {
 export interface RelayLookSettings {
   preset: 'standard' | 'bright' | 'front-top' | 'neon' | 'edge';
   keyIntensityScale: number;
+  keyColorHex?: string;
   keyColor?: 'neutral' | 'warm' | 'cool' | 'neon-blue' | 'neon-green';
+  keyPosition?: [number, number, number];
   keyDirection?: 'front-top' | 'left-top' | 'right-top' | 'high-front';
   keyShadowEnabled?: boolean;
   fillIntensityScale: number;

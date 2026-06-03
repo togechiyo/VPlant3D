@@ -23,8 +23,6 @@ import {
 } from './input/manual-control';
 import {
   resolveLookLights,
-  type KeyLightColor,
-  type KeyLightDirection,
   type LookPresetId,
   type LookSettings,
   type ResolvedLookLights,
@@ -295,14 +293,20 @@ let manualMouseInput: HTMLInputElement | null = null;
 let manualControlStatusText: HTMLElement | null = null;
 let lookPresetSelect: HTMLSelectElement | null = null;
 let keyLightScaleInput: HTMLInputElement | null = null;
-let keyLightColorSelect: HTMLSelectElement | null = null;
-let keyLightDirectionSelect: HTMLSelectElement | null = null;
+let keyLightColorInput: HTMLInputElement | null = null;
+let keyLightPositionXInput: HTMLInputElement | null = null;
+let keyLightPositionYInput: HTMLInputElement | null = null;
+let keyLightPositionZInput: HTMLInputElement | null = null;
 let keyLightShadowInput: HTMLInputElement | null = null;
 let fillLightScaleInput: HTMLInputElement | null = null;
 let rimLightStrengthSelect: HTMLSelectElement | null = null;
 let rimLightColorSelect: HTMLSelectElement | null = null;
 let rimLightDirectionSelect: HTMLSelectElement | null = null;
 let keyLightScaleText: HTMLElement | null = null;
+let keyLightColorText: HTMLElement | null = null;
+let keyLightPositionXText: HTMLElement | null = null;
+let keyLightPositionYText: HTMLElement | null = null;
+let keyLightPositionZText: HTMLElement | null = null;
 let keyLightShadowText: HTMLElement | null = null;
 let fillLightScaleText: HTMLElement | null = null;
 type ControlMode = 'mic-manual' | 'camera';
@@ -604,25 +608,23 @@ if (isControlPage) {
         <span class="flex justify-between"><span>明るさ</span><span id="key-light-scale-text">100%</span></span>
         <input id="key-light-scale-input" class="accent-[#38d5ff]" type="range" min="0" max="2" step="0.05" value="1" />
       </label>
-      <div class="grid grid-cols-2 gap-2">
+      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+        <span class="flex justify-between"><span>色</span><span id="key-light-color-text">#f4fbff</span></span>
+        <input id="key-light-color-input" class="h-9 w-full cursor-pointer rounded-md border border-[#38d5ff]/30 bg-[#101314] p-1" type="color" value="#f4fbff" />
+      </label>
+      <div class="grid gap-2 rounded-md border border-[#38d5ff]/20 bg-white/[0.03] p-2">
+        <span class="text-xs font-bold text-[#9fa9aa]">方向</span>
         <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-          <span>色味</span>
-          <select id="key-light-color-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
-            <option value="neutral" selected>ニュートラル</option>
-            <option value="warm">ウォーム</option>
-            <option value="cool">クール</option>
-            <option value="neon-blue">ネオンブルー</option>
-            <option value="neon-green">ネオングリーン</option>
-          </select>
+          <span class="flex justify-between"><span>X</span><span id="key-light-position-x-text">0.25</span></span>
+          <input id="key-light-position-x-input" class="accent-[#38d5ff]" type="range" min="-4" max="4" step="0.05" value="0.25" />
         </label>
         <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-          <span>方向</span>
-          <select id="key-light-direction-select" class="rounded-md border border-[#38d5ff]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
-            <option value="front-top" selected>正面上</option>
-            <option value="left-top">左上</option>
-            <option value="right-top">右上</option>
-            <option value="high-front">真上寄り</option>
-          </select>
+          <span class="flex justify-between"><span>Y</span><span id="key-light-position-y-text">3.90</span></span>
+          <input id="key-light-position-y-input" class="accent-[#6dff9a]" type="range" min="0.5" max="6" step="0.05" value="3.9" />
+        </label>
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span class="flex justify-between"><span>Z</span><span id="key-light-position-z-text">3.55</span></span>
+          <input id="key-light-position-z-input" class="accent-[#38d5ff]" type="range" min="-1" max="6" step="0.05" value="3.55" />
         </label>
       </div>
       <label class="inline-flex items-center justify-between gap-3 rounded-md border border-[#38d5ff]/30 bg-white/[0.03] px-3 py-2 text-xs font-bold text-[#9fa9aa]">
@@ -735,14 +737,20 @@ if (isControlPage) {
   const manualResetButton = panel.querySelector<HTMLButtonElement>('#manual-reset-button');
   lookPresetSelect = panel.querySelector<HTMLSelectElement>('#look-preset-select');
   keyLightScaleInput = panel.querySelector<HTMLInputElement>('#key-light-scale-input');
-  keyLightColorSelect = panel.querySelector<HTMLSelectElement>('#key-light-color-select');
-  keyLightDirectionSelect = panel.querySelector<HTMLSelectElement>('#key-light-direction-select');
+  keyLightColorInput = panel.querySelector<HTMLInputElement>('#key-light-color-input');
+  keyLightPositionXInput = panel.querySelector<HTMLInputElement>('#key-light-position-x-input');
+  keyLightPositionYInput = panel.querySelector<HTMLInputElement>('#key-light-position-y-input');
+  keyLightPositionZInput = panel.querySelector<HTMLInputElement>('#key-light-position-z-input');
   keyLightShadowInput = panel.querySelector<HTMLInputElement>('#key-light-shadow-input');
   fillLightScaleInput = panel.querySelector<HTMLInputElement>('#fill-light-scale-input');
   rimLightStrengthSelect = panel.querySelector<HTMLSelectElement>('#rim-light-strength-select');
   rimLightColorSelect = panel.querySelector<HTMLSelectElement>('#rim-light-color-select');
   rimLightDirectionSelect = panel.querySelector<HTMLSelectElement>('#rim-light-direction-select');
   keyLightScaleText = panel.querySelector<HTMLElement>('#key-light-scale-text');
+  keyLightColorText = panel.querySelector<HTMLElement>('#key-light-color-text');
+  keyLightPositionXText = panel.querySelector<HTMLElement>('#key-light-position-x-text');
+  keyLightPositionYText = panel.querySelector<HTMLElement>('#key-light-position-y-text');
+  keyLightPositionZText = panel.querySelector<HTMLElement>('#key-light-position-z-text');
   keyLightShadowText = panel.querySelector<HTMLElement>('#key-light-shadow-text');
   fillLightScaleText = panel.querySelector<HTMLElement>('#fill-light-scale-text');
 
@@ -831,14 +839,17 @@ if (isControlPage) {
     appStore.getState().setKeyLightScale(Number(keyLightScaleInput?.value ?? 1));
     applyLookSettings(appStore.getState().lookSettings);
   });
-  keyLightColorSelect?.addEventListener('change', () => {
-    appStore.getState().setKeyLightColor(getKeyLightColorFromSelect());
+  keyLightColorInput?.addEventListener('input', () => {
+    appStore.getState().setKeyLightColorHex(keyLightColorInput?.value ?? '#f4fbff');
     applyLookSettings(appStore.getState().lookSettings);
   });
-  keyLightDirectionSelect?.addEventListener('change', () => {
-    appStore.getState().setKeyLightDirection(getKeyLightDirectionFromSelect());
+  const updateKeyLightPosition = () => {
+    appStore.getState().setKeyLightPosition(getKeyLightPositionFromInputs());
     applyLookSettings(appStore.getState().lookSettings);
-  });
+  };
+  keyLightPositionXInput?.addEventListener('input', updateKeyLightPosition);
+  keyLightPositionYInput?.addEventListener('input', updateKeyLightPosition);
+  keyLightPositionZInput?.addEventListener('input', updateKeyLightPosition);
   keyLightShadowInput?.addEventListener('change', () => {
     appStore.getState().setKeyLightShadowEnabled(keyLightShadowInput?.checked ?? false);
     applyLookSettings(appStore.getState().lookSettings);
@@ -1195,23 +1206,12 @@ function getLookPresetFromSelect(): LookPresetId {
     : 'standard';
 }
 
-function getKeyLightColorFromSelect(): KeyLightColor {
-  const value = keyLightColorSelect?.value;
-
-  return value === 'warm' ||
-    value === 'cool' ||
-    value === 'neon-blue' ||
-    value === 'neon-green'
-    ? value
-    : 'neutral';
-}
-
-function getKeyLightDirectionFromSelect(): KeyLightDirection {
-  const value = keyLightDirectionSelect?.value;
-
-  return value === 'left-top' || value === 'right-top' || value === 'high-front'
-    ? value
-    : 'front-top';
+function getKeyLightPositionFromInputs(): [number, number, number] {
+  return [
+    Number(keyLightPositionXInput?.value ?? 0.25),
+    Number(keyLightPositionYInput?.value ?? 3.9),
+    Number(keyLightPositionZInput?.value ?? 3.55),
+  ];
 }
 
 function getRimLightStrengthFromSelect(): RimLightStrength {
@@ -2370,12 +2370,20 @@ function updateLookSettingsUi(nextState: AppState): void {
     keyLightScaleInput.value = settings.keyIntensityScale.toString();
   }
 
-  if (keyLightColorSelect) {
-    keyLightColorSelect.value = settings.keyColor;
+  if (keyLightColorInput) {
+    keyLightColorInput.value = settings.keyColorHex;
   }
 
-  if (keyLightDirectionSelect) {
-    keyLightDirectionSelect.value = settings.keyDirection;
+  if (keyLightPositionXInput) {
+    keyLightPositionXInput.value = settings.keyPosition[0].toString();
+  }
+
+  if (keyLightPositionYInput) {
+    keyLightPositionYInput.value = settings.keyPosition[1].toString();
+  }
+
+  if (keyLightPositionZInput) {
+    keyLightPositionZInput.value = settings.keyPosition[2].toString();
   }
 
   if (keyLightShadowInput) {
@@ -2400,6 +2408,22 @@ function updateLookSettingsUi(nextState: AppState): void {
 
   if (keyLightScaleText) {
     keyLightScaleText.textContent = `${Math.round(settings.keyIntensityScale * 100)}%`;
+  }
+
+  if (keyLightColorText) {
+    keyLightColorText.textContent = settings.keyColorHex;
+  }
+
+  if (keyLightPositionXText) {
+    keyLightPositionXText.textContent = settings.keyPosition[0].toFixed(2);
+  }
+
+  if (keyLightPositionYText) {
+    keyLightPositionYText.textContent = settings.keyPosition[1].toFixed(2);
+  }
+
+  if (keyLightPositionZText) {
+    keyLightPositionZText.textContent = settings.keyPosition[2].toFixed(2);
   }
 
   if (keyLightShadowText) {

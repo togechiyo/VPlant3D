@@ -34,8 +34,8 @@ describe('render smoothing', () => {
     const previous = resolveLookLights({
       preset: 'standard',
       keyIntensityScale: 1,
-      keyColor: 'neutral',
-      keyDirection: 'front-top',
+      keyColorHex: '#f4fbff',
+      keyPosition: [0.25, 3.9, 3.55],
       keyShadowEnabled: false,
       fillIntensityScale: 1,
       rimStrength: 'soft',
@@ -45,8 +45,8 @@ describe('render smoothing', () => {
     const target = resolveLookLights({
       preset: 'neon',
       keyIntensityScale: 2,
-      keyColor: 'neon-blue',
-      keyDirection: 'left-top',
+      keyColorHex: '#9ee8ff',
+      keyPosition: [-2.25, 3.75, 3.25],
       keyShadowEnabled: true,
       fillIntensityScale: 0,
       rimStrength: 'strong',

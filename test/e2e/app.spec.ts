@@ -47,8 +47,10 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('キーライト')).toBeVisible();
   await expect(page.locator('#look-preset-select')).toHaveValue('standard');
   await expect(page.locator('#key-light-scale-input')).toHaveValue('1');
-  await expect(page.locator('#key-light-color-select')).toHaveValue('neutral');
-  await expect(page.locator('#key-light-direction-select')).toHaveValue('front-top');
+  await expect(page.locator('#key-light-color-input')).toHaveValue('#f4fbff');
+  await expect(page.locator('#key-light-position-x-input')).toHaveValue('0.25');
+  await expect(page.locator('#key-light-position-y-input')).toHaveValue('3.9');
+  await expect(page.locator('#key-light-position-z-input')).toHaveValue('3.55');
   await expect(page.locator('#key-light-shadow-input')).not.toBeChecked();
   await expect(page.locator('#key-light-shadow-text')).toHaveText('OFF');
   await expect(page.locator('#fill-light-scale-input')).toHaveCount(0);
@@ -178,14 +180,18 @@ test('Control page updates key light look controls', async ({ page }) => {
 
   await page.locator('#look-preset-select').selectOption('neon');
   await page.locator('#key-light-scale-input').fill('1.5');
-  await page.locator('#key-light-color-select').selectOption('warm');
-  await page.locator('#key-light-direction-select').selectOption('left-top');
+  await page.locator('#key-light-color-input').fill('#ff66aa');
+  await page.locator('#key-light-position-x-input').fill('-1.25');
+  await page.locator('#key-light-position-y-input').fill('4.5');
+  await page.locator('#key-light-position-z-input').fill('2.25');
   await page.locator('#key-light-shadow-input').check();
 
   await expect(page.locator('#look-preset-select')).toHaveValue('neon');
   await expect(page.locator('#key-light-scale-text')).toHaveText('150%');
-  await expect(page.locator('#key-light-color-select')).toHaveValue('warm');
-  await expect(page.locator('#key-light-direction-select')).toHaveValue('left-top');
+  await expect(page.locator('#key-light-color-input')).toHaveValue('#ff66aa');
+  await expect(page.locator('#key-light-position-x-text')).toHaveText('-1.25');
+  await expect(page.locator('#key-light-position-y-text')).toHaveText('4.50');
+  await expect(page.locator('#key-light-position-z-text')).toHaveText('2.25');
   await expect(page.locator('#key-light-shadow-text')).toHaveText('ON');
   await expect(page.locator('#fill-light-scale-input')).toHaveCount(0);
   await expect(page.locator('#rim-light-strength-select')).toHaveCount(0);

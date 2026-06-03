@@ -8,8 +8,8 @@ export type RimLightDirection = 'left-back' | 'right-back' | 'top-back';
 export interface LookSettings {
   preset: LookPresetId;
   keyIntensityScale: number;
-  keyColor: KeyLightColor;
-  keyDirection: KeyLightDirection;
+  keyColorHex: string;
+  keyPosition: [number, number, number];
   keyShadowEnabled: boolean;
   fillIntensityScale: number;
   rimStrength: RimLightStrength;
@@ -38,11 +38,17 @@ export interface LookLightPreset {
 
 export interface ResolvedLookLights extends LookLightPreset {
   keyIntensity: number;
+  keyPosition: [number, number, number];
   fillIntensity: number;
   rimColor: number;
   rimIntensity: number;
   rimPosition: [number, number, number];
 }
+
+type LegacyLookSettingsInput = {
+  keyColor?: KeyLightColor;
+  keyDirection?: KeyLightDirection;
+};
 
 export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
   standard: {
@@ -141,8 +147,8 @@ export function createDefaultLookSettings(): LookSettings {
   return {
     preset: 'standard',
     keyIntensityScale: 1,
-    keyColor: 'neutral',
-    keyDirection: 'front-top',
+    keyColorHex: '#f4fbff',
+    keyPosition: [0.25, 3.9, 3.55],
     keyShadowEnabled: false,
     fillIntensityScale: 1,
     rimStrength: 'medium',
@@ -156,9 +162,9 @@ export function resolveLookLights(settings: LookSettings): ResolvedLookLights {
 
   return {
     ...preset,
-    keyColor: getKeyColor(settings.keyColor, preset.keyColor),
+    keyColor: hexToNumber(settings.keyColorHex, preset.keyColor),
     keyIntensity: preset.keyIntensity * clampScale(settings.keyIntensityScale),
-    keyPosition: getKeyPosition(settings.keyDirection, preset.keyPosition),
+    keyPosition: normalizeKeyPosition(settings.keyPosition, preset.keyPosition),
     keyShadowEnabled: settings.keyShadowEnabled,
     fillIntensity: 0,
     rimColor: getRimColor(settings.rimColor, preset.rimColor),
@@ -167,16 +173,21 @@ export function resolveLookLights(settings: LookSettings): ResolvedLookLights {
   };
 }
 
-export function normalizeLookSettings(settings: Partial<LookSettings>): LookSettings {
+export function normalizeLookSettings(
+  settings: Partial<LookSettings> & LegacyLookSettingsInput,
+): LookSettings {
   const defaults = createDefaultLookSettings();
 
   return {
     preset: isLookPresetId(settings.preset) ? settings.preset : defaults.preset,
     keyIntensityScale: clampScale(settings.keyIntensityScale ?? defaults.keyIntensityScale),
-    keyColor: isKeyLightColor(settings.keyColor) ? settings.keyColor : defaults.keyColor,
-    keyDirection: isKeyLightDirection(settings.keyDirection)
-      ? settings.keyDirection
-      : defaults.keyDirection,
+    keyColorHex: normalizeKeyColorHex(settings.keyColorHex, settings.keyColor),
+    keyPosition: normalizeKeyPosition(
+      settings.keyPosition,
+      isKeyLightDirection(settings.keyDirection)
+        ? getKeyPosition(settings.keyDirection, defaults.keyPosition)
+        : defaults.keyPosition,
+    ),
     keyShadowEnabled:
       typeof settings.keyShadowEnabled === 'boolean'
         ? settings.keyShadowEnabled
@@ -190,6 +201,48 @@ export function normalizeLookSettings(settings: Partial<LookSettings>): LookSett
       ? settings.rimDirection
       : defaults.rimDirection,
   };
+}
+
+function normalizeKeyColorHex(value: unknown, legacyColor: unknown): string {
+  if (typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value)) {
+    return value.toLowerCase();
+  }
+
+  if (isKeyLightColor(legacyColor)) {
+    return numberToHex(getKeyColor(legacyColor, 0xf4fbff));
+  }
+
+  return '#f4fbff';
+}
+
+function normalizeKeyPosition(
+  value: unknown,
+  fallback: [number, number, number],
+): [number, number, number] {
+  if (!Array.isArray(value) || value.length !== 3) {
+    return fallback;
+  }
+
+  const x = Number(value[0]);
+  const y = Number(value[1]);
+  const z = Number(value[2]);
+  if (![x, y, z].every(Number.isFinite)) {
+    return fallback;
+  }
+
+  return [clampRange(x, -4, 4), clampRange(y, 0.5, 6), clampRange(z, -1, 6)];
+}
+
+function hexToNumber(value: string, fallback: number): number {
+  if (!/^#[0-9a-fA-F]{6}$/.test(value)) {
+    return fallback;
+  }
+
+  return Number.parseInt(value.slice(1), 16);
+}
+
+function numberToHex(value: number): string {
+  return `#${Math.max(0, Math.min(0xffffff, value)).toString(16).padStart(6, '0')}`;
 }
 
 function getKeyColor(color: KeyLightColor, fallback: number): number {
@@ -262,6 +315,10 @@ function clampScale(value: number): number {
   }
 
   return Math.min(Math.max(value, 0), 2);
+}
+
+function clampRange(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }
 
 function isLookPresetId(value: unknown): value is LookPresetId {
