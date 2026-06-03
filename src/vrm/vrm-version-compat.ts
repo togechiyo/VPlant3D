@@ -76,7 +76,7 @@ export function resolveVrmCompatProfile(
     ? { pitch: -1, yaw: 1, roll: 1 }
     : { pitch: 1, yaw: 1, roll: 1 };
   const cameraUpperBodySigns: UpperBodyRotationSigns = isVrm1
-    ? { chestYaw: -1, chestRoll: -1, neckYaw: -1, neckRoll: -1 }
+    ? { chestYaw: 1, chestRoll: -1, neckYaw: 1, neckRoll: -1 }
     : { chestYaw: 1, chestRoll: 1, neckYaw: 1, neckRoll: 1 };
 
   return {

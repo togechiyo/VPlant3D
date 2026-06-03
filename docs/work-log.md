@@ -81,6 +81,35 @@
 - VRM 1.0モデルでカメラモードを確認し、残る違和感が「head yaw」「head roll」「chest yaw」「chest roll」のどれかを切り分ける
 - もしまだ逆の軸があれば、`cameraHeadSigns` / `cameraUpperBodySigns` の該当軸だけを調整する
 
+## 2026-06-03 VRM 1.0 Body Twist Direction Follow-up
+
+### Goal
+
+- VRM 1.0で、頭の向きに合わせて体が少し捻られる時に、体が頭と逆方向へ捻られる問題を直す
+
+### Did
+
+- `cameraUpperBodySigns` のVRM 1.0 `chestYaw` / `neckYaw` を反転しない設定へ戻した
+- VRM 1.0の `chestRoll` / `neckRoll` は前回の傾き補正を維持した
+- `docs/vrm-version-differences.md` に、体のひねりと傾きを別軸として扱う判断を追記
+
+### Worked
+
+- これでVRM 1.0の体のひねりは頭yawと同じ方向に追従する想定
+
+### Failed / Blocked
+
+- 実機確認はまだ必要
+
+### Decisions
+
+- VRM 1.0のカメラ胴体は、yawとrollを同じ符号補正にしない
+- 頭に合わせた体のひねりは `chestYaw` / `neckYaw` 側なので、VRM 1.0でも反転しない
+
+### Next
+
+- VRM 1.0モデルでカメラモードを確認し、体のひねりが頭と同じ方向になったか見る
+
 ## 2026-05-23 OBS Render Cleanup Planning
 
 ### Goal

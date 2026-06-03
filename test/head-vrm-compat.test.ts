@@ -72,9 +72,9 @@ describe('head VRM compatibility', () => {
 
     expect(adaptUpperBodyRetargetPoseForVrm(pose, '1')).toEqual({
       ...pose,
-      chestYaw: -0.12,
+      chestYaw: 0.12,
       chestRoll: 0.18,
-      neckYaw: -0.05,
+      neckYaw: 0.05,
       neckRoll: 0.07,
     });
   });

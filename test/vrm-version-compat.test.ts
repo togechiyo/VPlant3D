@@ -35,9 +35,9 @@ describe('resolveVrmCompatProfile', () => {
     expect(profile.cameraHeadSigns).toEqual({ pitch: -1, yaw: 1, roll: -1 });
     expect(profile.manualHeadSigns).toEqual({ pitch: -1, yaw: 1, roll: 1 });
     expect(profile.cameraUpperBodySigns).toEqual({
-      chestYaw: -1,
+      chestYaw: 1,
       chestRoll: -1,
-      neckYaw: -1,
+      neckYaw: 1,
       neckRoll: -1,
     });
     expect(profile.headPitchSign).toBe(-1);

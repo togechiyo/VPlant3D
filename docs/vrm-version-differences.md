@@ -160,7 +160,9 @@ VPlant3Dでの判断:
   - 手動マウス操作はカメラ入力と分け、VRM 1.0では手動head pitchだけを補正する
 - `src/vrm/vrm-version-compat.ts`
   - `cameraHeadSigns`、`manualHeadSigns`、`cameraUpperBodySigns` を持ち、単一のmirror反転で扱わない
-  - 2026-06-03の再確認では、VRM 1.0のカメラ胴体はUI mirror自体は維持しつつ、カメラ由来のchest yaw / rollとneck yaw / rollを軸ごとに反転する方針にした
+  - 2026-06-03の再確認では、VRM 1.0のカメラ胴体はUI mirror自体は維持する
+  - 体のひねり `chestYaw` / `neckYaw` は頭yawと同じ方向へ追従する必要があるため、VRM 1.0でも反転しない
+  - 体の傾き `chestRoll` / `neckRoll` はVRM 1.0で逆に見えやすいため、軸別に反転する
 
 今後の注意:
 
