@@ -57,7 +57,6 @@ import {
 import {
   adaptHeadRetargetPoseForVrm,
   getDefaultPoseMirrorInputForVrm,
-  getUpperBodyMirrorInputForVrm,
 } from './mocap/head-vrm-compat';
 import { summarizeUpperBodyPose } from './mocap/pose-landmarks';
 import {
@@ -84,6 +83,12 @@ import type { UpperBodyPoseSummary } from './mocap/pose-landmarks';
 import type { UpperBodyRetargetPose } from './mocap/upper-body-retarget';
 import { createIdleArmPoseAdjustments } from './vrm/idle-arm-pose';
 import { loadVrmFromFile, VrmLoadError } from './vrm/load-vrm';
+import {
+  getVrmExpressionValue,
+  resolveVrmCompatProfile,
+  setVrmExpressionValue,
+  type VrmCompatProfile,
+} from './vrm/vrm-version-compat';
 import {
   createNeutralVrmEmotionExpressionWeights,
   createVrmExpressionPresetTarget,
@@ -1640,29 +1645,51 @@ function createRelayExpressionTarget(
 function applyRelayExpressions(expressions: Partial<VrmFaceExpressionWeights>): void {
   for (const [name, value] of Object.entries(expressions)) {
     if (typeof value === 'number') {
-      currentVrm?.expressionManager?.setValue(name, value);
+      setCurrentVrmExpressionValue(name, value);
     }
   }
 }
 
 function captureExpressionManagerSnapshot(): RelayExpressionState {
-  const expressionManager = currentVrm?.expressionManager;
-
   return {
-    neutral: expressionManager?.getValue('neutral') ?? undefined,
-    blinkLeft: expressionManager?.getValue('blinkLeft') ?? undefined,
-    blinkRight: expressionManager?.getValue('blinkRight') ?? undefined,
-    aa: expressionManager?.getValue('aa') ?? undefined,
-    ih: expressionManager?.getValue('ih') ?? undefined,
-    ou: expressionManager?.getValue('ou') ?? undefined,
-    ee: expressionManager?.getValue('ee') ?? undefined,
-    oh: expressionManager?.getValue('oh') ?? undefined,
-    happy: expressionManager?.getValue('happy') ?? undefined,
-    surprised: expressionManager?.getValue('surprised') ?? undefined,
-    relaxed: expressionManager?.getValue('relaxed') ?? undefined,
-    angry: expressionManager?.getValue('angry') ?? undefined,
-    sad: expressionManager?.getValue('sad') ?? undefined,
+    neutral: getCurrentVrmExpressionValue('neutral'),
+    blinkLeft: getCurrentVrmExpressionValue('blinkLeft'),
+    blinkRight: getCurrentVrmExpressionValue('blinkRight'),
+    aa: getCurrentVrmExpressionValue('aa'),
+    ih: getCurrentVrmExpressionValue('ih'),
+    ou: getCurrentVrmExpressionValue('ou'),
+    ee: getCurrentVrmExpressionValue('ee'),
+    oh: getCurrentVrmExpressionValue('oh'),
+    happy: getCurrentVrmExpressionValue('happy'),
+    surprised: getCurrentVrmExpressionValue('surprised'),
+    relaxed: getCurrentVrmExpressionValue('relaxed'),
+    angry: getCurrentVrmExpressionValue('angry'),
+    sad: getCurrentVrmExpressionValue('sad'),
   };
+}
+
+function getCurrentVrmCompatProfile(): VrmCompatProfile {
+  return resolveVrmCompatProfile(
+    currentVrm?.meta.metaVersion,
+    appStore.getState().poseMirrorInput,
+  );
+}
+
+function setCurrentVrmExpressionValue(name: string, value: number): boolean {
+  return setVrmExpressionValue(
+    currentVrm?.expressionManager,
+    getCurrentVrmCompatProfile(),
+    name,
+    value,
+  );
+}
+
+function getCurrentVrmExpressionValue(name: string): number | undefined {
+  return getVrmExpressionValue(
+    currentVrm?.expressionManager,
+    getCurrentVrmCompatProfile(),
+    name,
+  );
 }
 
 function updateRelayDebugOverlay(): void {
@@ -1682,9 +1709,11 @@ function updateRelayDebugOverlay(): void {
     relayDroppedStaleRuntimeFrames +
     relayDroppedStaleMotionFrames +
     relayDroppedStaleExpressionFrames;
+  const compatProfile = getCurrentVrmCompatProfile();
 
   relayDebugOverlay.textContent = [
     'OBS Relay Debug',
+    `vrm ${compatProfile.versionLabel} face/body/arm mirror ${formatRelayDebugBool(compatProfile.faceMirrorInput)} / ${formatRelayDebugBool(compatProfile.bodyMirrorInput)} / ${formatRelayDebugBool(compatProfile.armMirrorInput)} headPitchSign ${compatProfile.headPitchSign}`,
     `runtime #${lastAppliedRelayRuntimeSequence} age ${runtimeAge}ms`,
     `motion #${lastAppliedRelayMotionSequence} age ${motionAge}ms`,
     `expression #${lastAppliedRelayExpressionSequence} age ${expressionAge}ms`,
@@ -1700,6 +1729,10 @@ function updateRelayDebugOverlay(): void {
     `armIK ${formatRelayArmIkDebug(relayArmIkTarget)}`,
     `hands ${relayHandTarget.left ? 'L' : '-'}${relayHandTarget.right ? 'R' : '-'} buffered ${relayClient.bufferedAmount} bytes`,
   ].join('\n');
+}
+
+function formatRelayDebugBool(value: boolean): string {
+  return value ? 'on' : 'off';
 }
 
 function publishRelayDebugSample(frameTime: number): void {
@@ -2306,7 +2339,7 @@ function applyAvatarTransformValues(transform: RelayAvatarTransform): void {
 function updateVrmStatusUi(nextState: AppState): void {
   if (vrmStatusText && vrmFileText) {
     vrmStatusText.textContent = getVrmStatusText(nextState);
-    vrmFileText.textContent = nextState.vrmFileName ?? '未読み込み';
+    vrmFileText.textContent = getVrmFileText(nextState);
   }
 
   updateVrmaStatusUi(nextState);
@@ -2315,6 +2348,19 @@ function updateVrmStatusUi(nextState: AppState): void {
   updateAvatarTransformUi(nextState);
   updateManualControlUi(nextState);
   updateLookSettingsUi(nextState);
+}
+
+function getVrmFileText(nextState: AppState): string {
+  if (nextState.vrmStatus !== 'ready') {
+    return nextState.vrmFileName ?? '未読み込み';
+  }
+
+  const profile = getCurrentVrmCompatProfile();
+  const faceMirror = profile.faceMirrorInput ? '顔ミラーON' : '顔ミラーOFF';
+  const bodyMirror = profile.bodyMirrorInput ? '体ミラーON' : '体ミラーOFF';
+  const fileName = nextState.vrmFileName ?? '名称未取得';
+
+  return `${fileName} / ${profile.versionLabel} / ${faceMirror}・${bodyMirror}`;
 }
 
 function getVrmStatusText(nextState: AppState): string {
@@ -2700,11 +2746,11 @@ function applyMouthExpressions(
     ...faceExpressionWeights,
     ...expressions,
   };
-  currentVrm?.expressionManager?.setValue('aa', expressions.aa);
-  currentVrm?.expressionManager?.setValue('ih', expressions.ih);
-  currentVrm?.expressionManager?.setValue('ou', expressions.ou);
-  currentVrm?.expressionManager?.setValue('ee', expressions.ee);
-  currentVrm?.expressionManager?.setValue('oh', expressions.oh);
+  setCurrentVrmExpressionValue('aa', expressions.aa);
+  setCurrentVrmExpressionValue('ih', expressions.ih);
+  setCurrentVrmExpressionValue('ou', expressions.ou);
+  setCurrentVrmExpressionValue('ee', expressions.ee);
+  setCurrentVrmExpressionValue('oh', expressions.oh);
 }
 
 function createNeutralMouthExpressions(): Pick<
@@ -2721,25 +2767,25 @@ function createNeutralMouthExpressions(): Pick<
 }
 
 function applyAllFaceExpressions(weights: VrmFaceExpressionWeights): void {
-  currentVrm?.expressionManager?.setValue('neutral', emotionExpressionWeights.neutral);
-  currentVrm?.expressionManager?.setValue('blinkLeft', weights.blinkLeft);
-  currentVrm?.expressionManager?.setValue('blinkRight', weights.blinkRight);
-  currentVrm?.expressionManager?.setValue('aa', weights.aa);
-  currentVrm?.expressionManager?.setValue('ih', weights.ih);
-  currentVrm?.expressionManager?.setValue('ou', weights.ou);
-  currentVrm?.expressionManager?.setValue('ee', weights.ee);
-  currentVrm?.expressionManager?.setValue('oh', weights.oh);
-  currentVrm?.expressionManager?.setValue('happy', weights.happy);
-  currentVrm?.expressionManager?.setValue('surprised', weights.surprised);
-  currentVrm?.expressionManager?.setValue('relaxed', emotionExpressionWeights.relaxed);
-  currentVrm?.expressionManager?.setValue('angry', weights.angry);
-  currentVrm?.expressionManager?.setValue('sad', weights.sad);
+  setCurrentVrmExpressionValue('neutral', emotionExpressionWeights.neutral);
+  setCurrentVrmExpressionValue('blinkLeft', weights.blinkLeft);
+  setCurrentVrmExpressionValue('blinkRight', weights.blinkRight);
+  setCurrentVrmExpressionValue('aa', weights.aa);
+  setCurrentVrmExpressionValue('ih', weights.ih);
+  setCurrentVrmExpressionValue('ou', weights.ou);
+  setCurrentVrmExpressionValue('ee', weights.ee);
+  setCurrentVrmExpressionValue('oh', weights.oh);
+  setCurrentVrmExpressionValue('happy', weights.happy);
+  setCurrentVrmExpressionValue('surprised', weights.surprised);
+  setCurrentVrmExpressionValue('relaxed', emotionExpressionWeights.relaxed);
+  setCurrentVrmExpressionValue('angry', weights.angry);
+  setCurrentVrmExpressionValue('sad', weights.sad);
 }
 
 function applyMocapFaceExpressions(weights: VrmFaceExpressionWeights): void {
   if (blinkMode === 'mocap') {
-    currentVrm?.expressionManager?.setValue('blinkLeft', weights.blinkLeft);
-    currentVrm?.expressionManager?.setValue('blinkRight', weights.blinkRight);
+    setCurrentVrmExpressionValue('blinkLeft', weights.blinkLeft);
+    setCurrentVrmExpressionValue('blinkRight', weights.blinkRight);
   }
 
   if (lipSyncMode === 'mocap') {
@@ -2754,10 +2800,10 @@ function applyMocapFaceExpressions(weights: VrmFaceExpressionWeights): void {
     applyMouthExpressions(createNeutralMouthExpressions());
   }
 
-  currentVrm?.expressionManager?.setValue('happy', weights.happy);
-  currentVrm?.expressionManager?.setValue('surprised', weights.surprised);
-  currentVrm?.expressionManager?.setValue('angry', weights.angry);
-  currentVrm?.expressionManager?.setValue('sad', weights.sad);
+  setCurrentVrmExpressionValue('happy', weights.happy);
+  setCurrentVrmExpressionValue('surprised', weights.surprised);
+  setCurrentVrmExpressionValue('angry', weights.angry);
+  setCurrentVrmExpressionValue('sad', weights.sad);
 }
 
 function resetFaceExpressions(): void {
@@ -2790,8 +2836,8 @@ function sampleCameraLessExpressions(elapsedSeconds: number, deltaSeconds: numbe
     blinkLeft: result.weight,
     blinkRight: result.weight,
   };
-  currentVrm.expressionManager?.setValue('blinkLeft', result.weight);
-  currentVrm.expressionManager?.setValue('blinkRight', result.weight);
+  setCurrentVrmExpressionValue('blinkLeft', result.weight);
+  setCurrentVrmExpressionValue('blinkRight', result.weight);
 }
 
 function applyBlinkOpen(): void {
@@ -2800,8 +2846,8 @@ function applyBlinkOpen(): void {
     blinkLeft: 0,
     blinkRight: 0,
   };
-  currentVrm?.expressionManager?.setValue('blinkLeft', 0);
-  currentVrm?.expressionManager?.setValue('blinkRight', 0);
+  setCurrentVrmExpressionValue('blinkLeft', 0);
+  setCurrentVrmExpressionValue('blinkRight', 0);
 }
 
 function applyExpressionPreset(deltaSeconds = 1 / 60): void {
@@ -2814,7 +2860,7 @@ function applyExpressionPreset(deltaSeconds = 1 / 60): void {
   );
 
   for (const name of vrmEmotionExpressionNames) {
-    currentVrm?.expressionManager?.setValue(name, emotionExpressionWeights[name]);
+    setCurrentVrmExpressionValue(name, emotionExpressionWeights[name]);
   }
 
   faceExpressionWeights = {
@@ -3163,9 +3209,10 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
 
   const result = faceTracker.detect(videoFrame, frameTime);
   const categories = result.faceBlendshapes[0]?.categories ?? [];
+  const compatProfile = getCurrentVrmCompatProfile();
   const nextHeadPose = adaptHeadRetargetPoseForVrm(
     createHeadRetargetPose(result.facialTransformationMatrixes[0], {
-      mirrorInput: appStore.getState().poseMirrorInput,
+      mirrorInput: compatProfile.faceMirrorInput,
     }),
     currentVrm?.meta.metaVersion,
   );
@@ -3173,7 +3220,7 @@ function runFaceTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
 
   if (categories.length > 0) {
     const nextWeights = createVrmFaceExpressionWeights(categories, {
-      mirrorInput: appStore.getState().poseMirrorInput,
+      mirrorInput: compatProfile.faceMirrorInput,
     });
     faceExpressionWeights = smoothFaceExpressionWeights(faceExpressionWeights, nextWeights, 0.85);
   }
@@ -3214,8 +3261,9 @@ function runHandTrackingFrame(videoFrame: HTMLVideoElement, frameTime: number): 
 
   const result = handTracker.detect(videoFrame, frameTime);
   const summary = summarizeHandTracking(result.landmarks, result.handedness);
+  const compatProfile = getCurrentVrmCompatProfile();
   const nextHandPose = createHandRetargetPose(result.landmarks, result.handedness, {
-    mirrorInput: appStore.getState().poseMirrorInput,
+    mirrorInput: compatProfile.armMirrorInput,
   });
   handRetargetPose = smoothHandRetargetPose(handRetargetPose, nextHandPose);
   drawHandDebugLandmarks(result.landmarks);
@@ -3256,15 +3304,13 @@ function applyManualControlPose(): void {
     return;
   }
 
-  headRetargetPose = adaptHeadRetargetPoseForVrm(
-    {
-      enabled: true,
-      pitch: manualPose.headPitch,
-      yaw: manualPose.headYaw,
-      roll: manualPose.headRoll,
-    },
-    currentVrm?.meta.metaVersion,
-  );
+  const compatProfile = getCurrentVrmCompatProfile();
+  headRetargetPose = {
+    enabled: true,
+    pitch: manualPose.headPitch * compatProfile.manualHeadPitchSign,
+    yaw: manualPose.headYaw,
+    roll: manualPose.headRoll,
+  };
   upperBodyRetargetPose = {
     ...upperBodyRetargetPose,
     enabled: true,
@@ -3393,20 +3439,17 @@ function clearPoseCanvas(): void {
 }
 
 function updateUpperBodyRetarget(summary: UpperBodyPoseSummary): void {
-  const nextState = appStore.getState();
+  const compatProfile = getCurrentVrmCompatProfile();
   upperBodyRetargetPose = smoothUpperBodyRetargetPose(
     upperBodyRetargetPose,
     createUpperBodyRetargetPose(summary, {
       ...defaultUpperBodyRetargetOptions,
-      mirrorInput: getUpperBodyMirrorInputForVrm(
-        nextState.poseMirrorInput,
-        currentVrm?.meta.metaVersion,
-      ),
+      mirrorInput: compatProfile.bodyMirrorInput,
       trackArms: false,
     }),
   );
 
-  if (!nextState.handTrackingEnabled) {
+  if (!appStore.getState().handTrackingEnabled) {
     clearArmRetargetPose();
   }
 }
@@ -3422,7 +3465,7 @@ function updateArmIkRetarget(
   }
 
   const nextPose = createArmIkRetargetPose(landmarks, {
-    mirrorInput: nextState.poseMirrorInput,
+    mirrorInput: getCurrentVrmCompatProfile().armMirrorInput,
   });
 
   if (!hasArmIkTarget(nextPose)) {

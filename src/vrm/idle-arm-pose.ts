@@ -1,4 +1,10 @@
-export type VrmMetaVersion = '0' | '1' | string | undefined;
+import {
+  resolveVrmCompatProfile,
+  type IdleArmPoseProfile,
+  type VrmMetaVersion,
+} from './vrm-version-compat';
+
+export type { VrmMetaVersion } from './vrm-version-compat';
 
 export interface IdleArmPoseAdjustment {
   bone: 'leftUpperArm' | 'rightUpperArm' | 'leftHand' | 'rightHand';
@@ -19,12 +25,14 @@ const vrm1IdleArmPoseAdjustments: IdleArmPoseAdjustment[] = [
   { bone: 'rightHand', rotation: [0, -0.03, 0] },
 ];
 
+const idleArmPoseAdjustmentsByProfile: Record<IdleArmPoseProfile, IdleArmPoseAdjustment[]> = {
+  vrm0: vrm0IdleArmPoseAdjustments,
+  vrm1: vrm1IdleArmPoseAdjustments,
+};
+
 export function createIdleArmPoseAdjustments(
   metaVersion: VrmMetaVersion,
 ): IdleArmPoseAdjustment[] {
-  if (metaVersion === '1') {
-    return vrm1IdleArmPoseAdjustments;
-  }
-
-  return vrm0IdleArmPoseAdjustments;
+  const profile = resolveVrmCompatProfile(metaVersion);
+  return idleArmPoseAdjustmentsByProfile[profile.idleArmPoseProfile];
 }

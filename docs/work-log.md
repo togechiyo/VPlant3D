@@ -4132,3 +4132,46 @@
 - `src/vrm/vrm-version-compat.ts` のような互換moduleを作り、head/body/arm/expressionのバージョン分岐を集約する
 - UIの表情プリセット解決を、モデルに存在するExpression名を見てfallbackする形に整理する
 - VRM 1.0サンプル複数体で、腕下げ、顔pitch、体mirror、手動操作を確認する
+
+## 2026-06-03 Implement VRM Version Compatibility Profile
+
+### Goal
+
+- VRM 1.0の顔上下、体ミラー、腕下げ、表情名差分を、場当たり的な分岐から互換プロファイルへ集約する
+
+### Did
+
+- `src/vrm/vrm-version-compat.ts` を追加し、VRM 0.x / 1.0 / 不明metaの互換プロファイルを定義した
+- 互換プロファイルに `faceMirrorInput`、`bodyMirrorInput`、`armMirrorInput`、`headPitchSign`、`manualHeadPitchSign`、`idleArmPoseProfile`、`expressionAliases` を持たせた
+- 既存の `head-vrm-compat.ts` と `idle-arm-pose.ts` のVRM 1.0判断を、互換プロファイル経由へ寄せた
+- カメラ顔、体幹、手/腕のmirror入力を、UI mirror直参照ではなく互換プロファイルのチャンネル別mirrorへ分けた
+- 手動顔操作は、互換プロファイルの `manualHeadPitchSign` を使ってVRM 1.0の上下反転を補正する形にした
+- Expression適用を互換helperへ通し、VRM 1.0名が存在しない場合はVRM 0.x名へfallbackするようにした
+- ControllerのVRMカードに、読み込み済みモデルのVRMバージョンと顔/体mirror解釈を軽く表示するようにした
+- OBS `?debug=1` overlayに、VRMバージョンとface/body/arm mirror解釈を表示するようにした
+
+### Worked
+
+- VRM 1.0ではUI mirror ON時に、顔mirrorはON、体mirrorはOFF、head pitch signは反転として固定できた
+- VRM 0.xとmeta不明時は、従来どおりUI mirrorを顔/体/腕へそのまま使う
+- `happy -> joy`、`sad -> sorrow`、`relaxed -> fun`、`aa -> a`、`blinkLeft -> blink_l` などのfallbackを単体テストで固定した
+- 存在しない `surprised` などはsetせず安全に無視する
+
+### Verified
+
+- `npm run test -- test/vrm-version-compat.test.ts test/head-vrm-compat.test.ts test/idle-arm-pose.test.ts test/expression-presets.test.ts`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+
+### Notes
+
+- `npm run test:e2e` は通常サンドボックスではlocalhost listen権限で失敗したため、権限付きで再実行して成功した
+- 今回はVRMバージョン互換の整理が目的で、ハンドトラッキング品質改善やTauri化、照明UI変更は触っていない
+
+### Next
+
+- 実ブラウザ/OBSで、VRM 1.0モデルの腕下げ、顔上下、顔左右、体傾き、手動顔操作を確認する
+- VRM 0.xモデルで、従来のカメラモード・マイク&手動モード・表情プリセットが壊れていないか確認する
+- VRM 1.0サンプルを複数読み込み、idle arm poseの補正値が汎用的か確認する
