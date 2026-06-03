@@ -58,7 +58,7 @@ export function resolveVrmCompatProfile(
     versionLabel:
       version === '1' ? 'VRM 1.0' : version === '0' ? 'VRM 0.x' : 'VRM 不明',
     faceMirrorInput: uiMirrorInput,
-    bodyMirrorInput: isVrm1 ? !uiMirrorInput : uiMirrorInput,
+    bodyMirrorInput: uiMirrorInput,
     armMirrorInput: uiMirrorInput,
     headPitchSign: isVrm1 ? -1 : 1,
     manualHeadPitchSign: isVrm1 ? -1 : 1,

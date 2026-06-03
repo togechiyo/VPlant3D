@@ -17,9 +17,9 @@ describe('head VRM compatibility', () => {
     expect(getDefaultPoseMirrorInputForVrm(undefined)).toBe(true);
   });
 
-  it('inverts upper-body mirror interpretation for VRM 1.0', () => {
-    expect(getUpperBodyMirrorInputForVrm(true, '1')).toBe(false);
-    expect(getUpperBodyMirrorInputForVrm(false, '1')).toBe(true);
+  it('keeps upper-body mirror interpretation for VRM 1.0', () => {
+    expect(getUpperBodyMirrorInputForVrm(true, '1')).toBe(true);
+    expect(getUpperBodyMirrorInputForVrm(false, '1')).toBe(false);
   });
 
   it('keeps upper-body mirror interpretation for VRM 0.x or unknown metadata', () => {

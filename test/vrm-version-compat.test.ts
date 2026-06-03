@@ -24,13 +24,13 @@ function createExpressionManager(names: string[]): VrmExpressionManagerLike {
 }
 
 describe('resolveVrmCompatProfile', () => {
-  it('keeps the UI mirror for face and flips body mirror for VRM 1.0', () => {
+  it('keeps the UI mirror for face, body, and arms while flipping pitch for VRM 1.0', () => {
     const profile = resolveVrmCompatProfile('1', true);
 
     expect(profile.version).toBe('1');
     expect(profile.versionLabel).toBe('VRM 1.0');
     expect(profile.faceMirrorInput).toBe(true);
-    expect(profile.bodyMirrorInput).toBe(false);
+    expect(profile.bodyMirrorInput).toBe(true);
     expect(profile.armMirrorInput).toBe(true);
     expect(profile.headPitchSign).toBe(-1);
     expect(profile.manualHeadPitchSign).toBe(-1);

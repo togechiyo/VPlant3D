@@ -4175,3 +4175,26 @@
 - 実ブラウザ/OBSで、VRM 1.0モデルの腕下げ、顔上下、顔左右、体傾き、手動顔操作を確認する
 - VRM 0.xモデルで、従来のカメラモード・マイク&手動モード・表情プリセットが壊れていないか確認する
 - VRM 1.0サンプルを複数読み込み、idle arm poseの補正値が汎用的か確認する
+
+## 2026-06-03 Restore VRM 1.0 Camera Body Mirror Direction
+
+### Goal
+
+- VRM 1.0で、手動操作は自然だがカメラモーキャプ時の胴体連動が逆方向に見える問題を修正する
+
+### Did
+
+- `resolveVrmCompatProfile()` のVRM 1.0 `bodyMirrorInput` を、UI mirror反転ではなくUI mirrorと同じ値へ戻した
+- 顔/頭のVRM 1.0 pitch反転、手動pitch反転、idle arm pose、Expression alias対応は維持した
+- 互換プロファイルの単体テストと `head-vrm-compat` の期待値を更新した
+- [docs/vrm-version-differences.md](./vrm-version-differences.md) の最新判断を、VRM 1.0 body mirrorはUI mirrorと同じ方針へ更新した
+
+### Worked
+
+- VRM 1.0でも `faceMirrorInput` / `bodyMirrorInput` / `armMirrorInput` がUI mirrorと揃い、胴体だけ逆方向になる原因候補を外せた
+- VRM 1.0固有の補正は、現時点ではhead pitchとidle arm poseに限定できた
+
+### Next
+
+- 実ブラウザ/OBSで、VRM 1.0のカメラモーキャプ時に胴体の傾きと顔左右が同時に自然か確認する
+- もし胴体yawだけ逆、rollだけ逆のように分かれる場合は、body mirrorではなくchestYaw / chestRollの符号を別々に互換化する

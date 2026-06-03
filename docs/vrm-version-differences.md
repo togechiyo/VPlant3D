@@ -157,7 +157,7 @@ VPlant3Dでの判断:
 
 - `src/mocap/head-vrm-compat.ts`
   - `adaptHeadRetargetPoseForVrm()` でVRM 1.0のhead pitchを反転
-  - `getUpperBodyMirrorInputForVrm()` でVRM 1.0の体側mirror解釈を反転
+  - 2026-06-03時点では、VRM 1.0でも体側mirror解釈はUI mirrorと同じに戻した
 - 手動マウス操作でもVRM 1.0の顔上下が逆にならないよう、同じ互換処理を使う方針
 
 今後の注意:
@@ -315,7 +315,8 @@ type VrmVersion = '0' | '1' | 'unknown';
 
 体:
 
-- VRM 1.0ではUI mirrorと体mirrorの解釈がずれるため、体専用mirrorを使う
+- 顔とは別の `bodyMirrorInput` を持つ
+- 2026-06-03の実機確認では、VRM 1.0のカメラ胴体連動はUI mirrorと同じ向きの方が自然だったため、現状は `bodyMirrorInput = uiMirrorInput` とする
 
 腕:
 
@@ -378,7 +379,7 @@ const blinkFallbacks = {
 - `metaVersion` から互換設定を返す
 - VRM 0.x / 1.0のidle arm pose符号が違う
 - VRM 1.0のhead pitchだけ反転する
-- VRM 1.0のbody mirror解釈がface mirrorと分かれる
+- VRM 1.0のbody mirror解釈がUI mirrorと同じである
 - 表情プリセットfallbackでVRM 0.x名 / VRM 1.0名の両方を解決できる
 - 存在しない表情名は無視する
 
@@ -403,4 +404,3 @@ const blinkFallbacks = {
 3. UI mirrorから内部mirrorを派生する関数をテストする
 4. 表情preset fallbackをテスト付きで整理する
 5. VRM 1.0モデル読み込み時の腕下げ処理を複数サンプルで確認する
-
