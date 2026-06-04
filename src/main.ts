@@ -345,7 +345,7 @@ let emotionExpressionWeights: VrmEmotionExpressionWeights =
   createNeutralVrmEmotionExpressionWeights();
 type BlinkMode = 'mocap' | 'auto' | 'off';
 type LipSyncMode = 'mocap' | 'mic' | 'off';
-let blinkMode: BlinkMode = 'mocap';
+let blinkMode: BlinkMode = 'auto';
 let lipSyncMode: LipSyncMode = 'mic';
 let idleSwayEnabled = true;
 let faceTracker: MediaPipeFaceTracker | null = null;
@@ -484,8 +484,14 @@ if (isControlPage) {
     <div class="grid gap-3 rounded-md border border-white/10 bg-black/20 p-3">
       <span class="text-sm font-bold tracking-normal text-[#eef4f2]">操作モード</span>
       <div class="grid grid-cols-2 gap-2">
-        <button id="mic-manual-mode-button" class="rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/15 px-3 py-5 text-lg font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" aria-pressed="true">マイク&手動</button>
-        <button id="camera-mode-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-5 text-lg font-bold text-[#9fa9aa] transition hover:border-[#38d5ff]" type="button" aria-pressed="false">カメラ</button>
+        <button id="mic-manual-mode-button" class="grid gap-1 rounded-md border border-[#6dff9a]/80 bg-[#6dff9a]/15 px-3 py-5 text-lg font-bold text-[#dfffee] transition hover:border-[#38d5ff]" type="button" aria-pressed="true">
+          <span>マイク&手動</span>
+          <span class="text-xs font-bold text-[#9fa9aa]">カメラなし</span>
+        </button>
+        <button id="camera-mode-button" class="grid gap-1 rounded-md border border-white/15 bg-white/[0.04] px-3 py-5 text-lg font-bold text-[#9fa9aa] transition hover:border-[#38d5ff]" type="button" aria-pressed="false">
+          <span>カメラ</span>
+          <span class="text-xs font-bold text-[#9fa9aa]">モーキャプ</span>
+        </button>
       </div>
     </div>
     <div id="mic-manual-mode-panel" class="grid gap-3 rounded-md border border-[#6dff9a]/35 bg-black/20 p-3">
@@ -522,15 +528,13 @@ if (isControlPage) {
         <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
           <span>まばたき</span>
           <select id="blink-mode-select" class="rounded-md border border-[#6dff9a]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
-            <option value="mocap" selected>モーキャプ</option>
-            <option value="auto">自動</option>
+            <option value="auto" selected>自動</option>
             <option value="off">オフ</option>
           </select>
         </label>
         <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
           <span>口</span>
           <select id="lip-sync-mode-select" class="rounded-md border border-[#6dff9a]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
-            <option value="mocap">モーキャプ</option>
             <option value="mic" selected>マイク</option>
             <option value="off">オフ</option>
           </select>
@@ -565,6 +569,10 @@ if (isControlPage) {
           ミラー
         </label>
         <span id="face-tracking-text" class="rounded-md border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">顔: 待機</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <span class="rounded-md border border-[#38d5ff]/30 bg-[#38d5ff]/10 px-2 py-2 text-xs font-bold text-[#dff8ff]">まばたき / 口: カメラ</span>
+        <span class="rounded-md border border-[#38d5ff]/30 bg-[#38d5ff]/10 px-2 py-2 text-xs font-bold text-[#dff8ff]">頭 / 体: カメラ</span>
       </div>
       <div class="relative aspect-video overflow-hidden rounded-md border border-white/10 bg-[#0b0f10]">
         <video id="pose-video" class="h-full w-full scale-x-[-1] object-cover opacity-0" autoplay muted playsinline></video>
@@ -803,7 +811,15 @@ if (isControlPage) {
     cameraModeButton?.classList.toggle('bg-white/[0.04]', isMicManual);
     cameraModeButton?.classList.toggle('text-[#9fa9aa]', isMicManual);
 
-    if (!isMicManual) {
+    if (isMicManual) {
+      setBlinkMode('auto');
+      setLipSyncMode('mic');
+      stopPoseDebug();
+      resetHeadRetarget();
+      resetUpperBodyRetarget();
+    } else {
+      setBlinkMode('mocap');
+      setLipSyncMode('mocap');
       resetManualControlPose();
       if (shouldAutoStartCameraOnModeChange()) {
         void startPoseDebug();
@@ -914,21 +930,10 @@ if (isControlPage) {
     }
   });
   blinkModeSelect?.addEventListener('change', () => {
-    blinkMode = getBlinkModeFromSelect();
-    autoBlinkState = createAutoBlinkState(performance.now() / 1000);
-    syncFaceTrackingEnabledFromModes();
-    if (blinkMode === 'off') {
-      applyBlinkOpen();
-    }
-    void syncFaceTrackerForCurrentModes();
+    setBlinkMode(getBlinkModeFromSelect());
   });
   lipSyncModeSelect?.addEventListener('change', () => {
-    lipSyncMode = getLipSyncModeFromSelect();
-    syncFaceTrackingEnabledFromModes();
-    if (lipSyncMode !== 'mic') {
-      applyMouthExpressions(createNeutralMouthExpressions());
-    }
-    void syncFaceTrackerForCurrentModes();
+    setLipSyncMode(getLipSyncModeFromSelect());
   });
   idleSwayInput?.addEventListener('change', () => {
     idleSwayEnabled = idleSwayInput?.checked ?? true;
@@ -948,6 +953,7 @@ if (isControlPage) {
   });
   renderVrmaSlotList();
   updateExpressionPresetUi();
+  syncFaceTrackingEnabledFromModes();
   setupManualControlEvents();
 
   viewport.append(panel);
@@ -2932,16 +2938,45 @@ function isExpressionPresetId(value: unknown): value is VrmExpressionPresetId {
 
 function getBlinkModeFromSelect(): BlinkMode {
   const value = blinkModeSelect?.value;
-  return value === 'auto' || value === 'off' ? value : 'mocap';
+  return value === 'off' ? 'off' : 'auto';
 }
 
 function getLipSyncModeFromSelect(): LipSyncMode {
   const value = lipSyncModeSelect?.value;
-  return value === 'mocap' || value === 'off' ? value : 'mic';
+  return value === 'off' ? 'off' : 'mic';
+}
+
+function setBlinkMode(mode: BlinkMode): void {
+  blinkMode = mode;
+  if (blinkModeSelect && mode !== 'mocap') {
+    blinkModeSelect.value = mode;
+  }
+  autoBlinkState = createAutoBlinkState(performance.now() / 1000);
+  syncFaceTrackingEnabledFromModes();
+  if (blinkMode === 'off') {
+    applyBlinkOpen();
+  }
+  void syncFaceTrackerForCurrentModes();
+}
+
+function setLipSyncMode(mode: LipSyncMode): void {
+  lipSyncMode = mode;
+  if (lipSyncModeSelect && mode !== 'mocap') {
+    lipSyncModeSelect.value = mode;
+  }
+  syncFaceTrackingEnabledFromModes();
+  if (lipSyncMode !== 'mic') {
+    applyMouthExpressions(createNeutralMouthExpressions());
+  }
+  void syncFaceTrackerForCurrentModes();
 }
 
 function syncFaceTrackingEnabledFromModes(): void {
-  appStore.getState().setFaceTrackingEnabled(true);
+  appStore
+    .getState()
+    .setFaceTrackingEnabled(
+      selectedControlMode === 'camera' || blinkMode === 'mocap' || lipSyncMode === 'mocap',
+    );
 }
 
 async function syncFaceTrackerForCurrentModes(): Promise<void> {

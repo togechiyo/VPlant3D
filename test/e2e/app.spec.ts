@@ -61,9 +61,11 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('マイク停止中')).toBeVisible();
   await expect(page.locator('#mic-start-button')).toBeEnabled();
   await expect(page.locator('#mic-stop-button')).toBeDisabled();
-  await expect(page.getByText('まばたき')).toBeVisible();
-  await expect(page.locator('#blink-mode-select')).toHaveValue('mocap');
+  await expect(page.getByText('まばたき', { exact: true })).toBeVisible();
+  await expect(page.locator('#blink-mode-select')).toHaveValue('auto');
+  await expect(page.locator('#blink-mode-select option[value="mocap"]')).toHaveCount(0);
   await expect(page.locator('#lip-sync-mode-select')).toHaveValue('mic');
+  await expect(page.locator('#lip-sync-mode-select option[value="mocap"]')).toHaveCount(0);
   await expect(page.getByText('揺らぎ')).toBeVisible();
   await expect(page.locator('#idle-sway-input')).toBeChecked();
   await expect(page.getByText('表情')).toBeVisible();
@@ -79,6 +81,8 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#mic-manual-mode-button')).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('#camera-mode-button')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText('カメラモード')).toBeVisible();
+  await expect(page.getByText('まばたき / 口: カメラ')).toBeVisible();
+  await expect(page.getByText('頭 / 体: カメラ')).toBeVisible();
   await expect(page.getByText('骨格のみ表示')).toBeVisible();
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
   await expect(page.getByText('ミラー')).toBeVisible();
