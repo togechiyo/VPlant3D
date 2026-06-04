@@ -14,6 +14,7 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await page.goto('/');
 
   expect(page.viewportSize()).toEqual({ width: 1920, height: 1080 });
+  await expect(page.locator('.control-title')).toHaveText('VPlant3D for OBS');
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
   const canvasBox = await page.locator('canvas.scene-canvas').boundingBox();
   const panelBox = await page.locator('.control-panel').boundingBox();
