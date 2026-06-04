@@ -593,11 +593,11 @@ if (isControlPage) {
       </div>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
         <span class="flex justify-between"><span>X</span><span id="avatar-offset-x-text">0.00</span></span>
-        <input id="avatar-offset-x-input" class="accent-[#6dff9a]" type="range" min="-1" max="1" step="0.01" value="0" />
+        <input id="avatar-offset-x-input" class="accent-[#6dff9a]" type="range" min="-2" max="2" step="0.01" value="0" />
       </label>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
         <span class="flex justify-between"><span>Y</span><span id="avatar-offset-y-text">0.00</span></span>
-        <input id="avatar-offset-y-input" class="accent-[#6dff9a]" type="range" min="-0.8" max="0.8" step="0.01" value="0" />
+        <input id="avatar-offset-y-input" class="accent-[#6dff9a]" type="range" min="-1.6" max="1.6" step="0.01" value="0" />
       </label>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
         <span class="flex justify-between"><span>拡大</span><span id="avatar-scale-text">1.00x</span></span>

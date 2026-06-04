@@ -65,6 +65,19 @@ describe('manual control', () => {
     expect(transform.rotationY).toBe(0);
   });
 
+  it('allows wider avatar position adjustment for close framing', () => {
+    const transform = updateManualAvatarTransformFromDrag(baseTransform(), {
+      button: 'auxiliary',
+      deltaX: 4000,
+      deltaY: -4000,
+      viewportWidth: 400,
+      viewportHeight: 200,
+    });
+
+    expect(transform.offsetX).toBe(2);
+    expect(transform.offsetY).toBe(1.6);
+  });
+
   it('maps secondary drag to wrapped avatar rotation', () => {
     const transform = updateManualAvatarTransformFromDrag(
       {

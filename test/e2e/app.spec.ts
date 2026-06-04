@@ -57,6 +57,10 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#rim-light-strength-select')).toHaveCount(0);
   await expect(page.getByText('位置調整')).toBeVisible();
   await expect(page.locator('#avatar-offset-x-input')).toHaveValue('0');
+  await expect(page.locator('#avatar-offset-x-input')).toHaveAttribute('min', '-2');
+  await expect(page.locator('#avatar-offset-x-input')).toHaveAttribute('max', '2');
+  await expect(page.locator('#avatar-offset-y-input')).toHaveAttribute('min', '-1.6');
+  await expect(page.locator('#avatar-offset-y-input')).toHaveAttribute('max', '1.6');
   await expect(page.locator('#avatar-scale-input')).toHaveValue('1');
   await expect(page.getByText('マイク停止中')).toBeVisible();
   await expect(page.locator('#mic-start-button')).toBeEnabled();
