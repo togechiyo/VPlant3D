@@ -23,7 +23,6 @@ import {
 } from './input/manual-control';
 import {
   resolveLookLights,
-  type LookPresetId,
   type LookSettings,
   type ResolvedLookLights,
   type RimLightColor,
@@ -309,7 +308,6 @@ let handTrackingText: HTMLElement | null = null;
 let manualControlInput: HTMLInputElement | null = null;
 let manualMouseInput: HTMLInputElement | null = null;
 let manualControlStatusText: HTMLElement | null = null;
-let lookPresetSelect: HTMLSelectElement | null = null;
 let keyLightScaleInput: HTMLInputElement | null = null;
 let keyLightColorInput: HTMLInputElement | null = null;
 let keyLightPositionXInput: HTMLInputElement | null = null;
@@ -621,36 +619,26 @@ if (isControlPage) {
         <strong class="text-sm font-bold text-[#eef4f2]">キーライト</strong>
       </div>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-        <span>プリセット</span>
-        <select id="look-preset-select" class="rounded-md border border-[#6dff9a]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
-          <option value="standard" selected>標準</option>
-          <option value="bright">明るめ</option>
-          <option value="front-top">正面上</option>
-          <option value="neon">ネオン</option>
-          <option value="edge">輪郭強調</option>
-        </select>
-      </label>
-      <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
         <span class="flex justify-between"><span>明るさ</span><span id="key-light-scale-text">100%</span></span>
         <input id="key-light-scale-input" class="accent-[#6dff9a]" type="range" min="0" max="2" step="0.05" value="1" />
       </label>
       <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-        <span class="flex justify-between"><span>色</span><span id="key-light-color-text">#f4fbff</span></span>
-        <input id="key-light-color-input" class="h-9 w-full cursor-pointer rounded-md border border-[#6dff9a]/30 bg-[#101314] p-1" type="color" value="#f4fbff" />
+        <span class="flex justify-between"><span>色</span><span id="key-light-color-text">#ffffff</span></span>
+        <input id="key-light-color-input" class="h-9 w-full cursor-pointer rounded-md border border-[#6dff9a]/30 bg-[#101314] p-1" type="color" value="#ffffff" />
       </label>
       <div class="grid gap-2 rounded-md border border-[#6dff9a]/20 bg-white/[0.03] p-2">
         <span class="text-xs font-bold text-[#9fa9aa]">方向</span>
         <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-          <span class="flex justify-between"><span>X</span><span id="key-light-position-x-text">0.25</span></span>
-          <input id="key-light-position-x-input" class="accent-[#6dff9a]" type="range" min="-4" max="4" step="0.05" value="0.25" />
+          <span class="flex justify-between"><span>X</span><span id="key-light-position-x-text">0.15</span></span>
+          <input id="key-light-position-x-input" class="accent-[#6dff9a]" type="range" min="-4" max="4" step="0.05" value="0.15" />
         </label>
         <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-          <span class="flex justify-between"><span>Y</span><span id="key-light-position-y-text">3.90</span></span>
-          <input id="key-light-position-y-input" class="accent-[#6dff9a]" type="range" min="0.5" max="6" step="0.05" value="3.9" />
+          <span class="flex justify-between"><span>Y</span><span id="key-light-position-y-text">4.05</span></span>
+          <input id="key-light-position-y-input" class="accent-[#6dff9a]" type="range" min="0.5" max="6" step="0.05" value="4.05" />
         </label>
         <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
-          <span class="flex justify-between"><span>Z</span><span id="key-light-position-z-text">3.55</span></span>
-          <input id="key-light-position-z-input" class="accent-[#6dff9a]" type="range" min="-1" max="6" step="0.05" value="3.55" />
+          <span class="flex justify-between"><span>Z</span><span id="key-light-position-z-text">3.65</span></span>
+          <input id="key-light-position-z-input" class="accent-[#6dff9a]" type="range" min="-1" max="6" step="0.05" value="3.65" />
         </label>
       </div>
       <label class="inline-flex items-center justify-between gap-3 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-3 py-2 text-xs font-bold text-[#9fa9aa]">
@@ -761,7 +749,6 @@ if (isControlPage) {
   manualMouseInput = panel.querySelector<HTMLInputElement>('#manual-mouse-input');
   manualControlStatusText = panel.querySelector<HTMLElement>('#manual-control-status-text');
   const manualResetButton = panel.querySelector<HTMLButtonElement>('#manual-reset-button');
-  lookPresetSelect = panel.querySelector<HTMLSelectElement>('#look-preset-select');
   keyLightScaleInput = panel.querySelector<HTMLInputElement>('#key-light-scale-input');
   keyLightColorInput = panel.querySelector<HTMLInputElement>('#key-light-color-input');
   keyLightPositionXInput = panel.querySelector<HTMLInputElement>('#key-light-position-x-input');
@@ -865,16 +852,12 @@ if (isControlPage) {
     appStore.getState().setManualMouseEnabled(manualMouseInput?.checked ?? true);
   });
   manualResetButton?.addEventListener('click', resetManualControlPose);
-  lookPresetSelect?.addEventListener('change', () => {
-    appStore.getState().setLookPreset(getLookPresetFromSelect());
-    applyLookSettings(appStore.getState().lookSettings);
-  });
   keyLightScaleInput?.addEventListener('input', () => {
     appStore.getState().setKeyLightScale(Number(keyLightScaleInput?.value ?? 1));
     applyLookSettings(appStore.getState().lookSettings);
   });
   keyLightColorInput?.addEventListener('input', () => {
-    appStore.getState().setKeyLightColorHex(keyLightColorInput?.value ?? '#f4fbff');
+    appStore.getState().setKeyLightColorHex(keyLightColorInput?.value ?? '#ffffff');
     applyLookSettings(appStore.getState().lookSettings);
   });
   const updateKeyLightPosition = () => {
@@ -1219,22 +1202,11 @@ function getManualPointerButton(button: number): ManualPointerButton | null {
   }
 }
 
-function getLookPresetFromSelect(): LookPresetId {
-  const value = lookPresetSelect?.value;
-
-  return value === 'bright' ||
-    value === 'front-top' ||
-    value === 'neon' ||
-    value === 'edge'
-    ? value
-    : 'standard';
-}
-
 function getKeyLightPositionFromInputs(): [number, number, number] {
   return [
-    Number(keyLightPositionXInput?.value ?? 0.25),
-    Number(keyLightPositionYInput?.value ?? 3.9),
-    Number(keyLightPositionZInput?.value ?? 3.55),
+    Number(keyLightPositionXInput?.value ?? 0.15),
+    Number(keyLightPositionYInput?.value ?? 4.05),
+    Number(keyLightPositionZInput?.value ?? 3.65),
   ];
 }
 
@@ -2457,10 +2429,6 @@ function updateManualControlUi(nextState: AppState): void {
 
 function updateLookSettingsUi(nextState: AppState): void {
   const settings = nextState.lookSettings;
-
-  if (lookPresetSelect) {
-    lookPresetSelect.value = settings.preset;
-  }
 
   if (keyLightScaleInput) {
     keyLightScaleInput.value = settings.keyIntensityScale.toString();

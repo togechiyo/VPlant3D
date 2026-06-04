@@ -10,15 +10,15 @@ describe('look presets', () => {
   it('resolves the default key-light setup', () => {
     const lights = resolveLookLights(createDefaultLookSettings());
 
-    expect(lights.id).toBe('standard');
-    expect(lights.keyIntensity).toBeCloseTo(2.15);
-    expect(lights.keyColor).toBe(0xf4fbff);
+    expect(lights.id).toBe('bright');
+    expect(lights.keyIntensity).toBeCloseTo(2.4);
+    expect(lights.keyColor).toBe(0xffffff);
     expect(lights.keyPosition[1]).toBeGreaterThan(3.5);
     expect(lights.keyPosition[2]).toBeGreaterThan(0);
     expect(lights.keyShadowEnabled).toBe(false);
     expect(lights.fillIntensity).toBe(0);
     expect(lights.rimIntensity).toBe(0);
-    expect(lights.rimColor).toBe(0x38d5ff);
+    expect(lights.rimColor).toBe(0xf4fbff);
     expect(lights.rimPosition).toEqual([0, 5.65, -1.05]);
     expect(lights.rimTarget).toEqual([0, 1.52, 0]);
   });
@@ -30,7 +30,7 @@ describe('look presets', () => {
       fillIntensityScale: -1,
     });
 
-    expect(lights.keyIntensity).toBeCloseTo(4.3);
+    expect(lights.keyIntensity).toBeCloseTo(4.8);
     expect(lights.fillIntensity).toBe(0);
   });
 
@@ -86,14 +86,14 @@ describe('look presets', () => {
     );
 
     expect(settings).toEqual({
-      preset: 'standard',
+      preset: 'bright',
       keyIntensityScale: 1,
-      keyColorHex: '#f4fbff',
-      keyPosition: [0.25, 3.9, 3.55],
+      keyColorHex: '#ffffff',
+      keyPosition: [0.15, 4.05, 3.65],
       keyShadowEnabled: false,
       fillIntensityScale: 1.5,
       rimStrength: 'medium',
-      rimColor: 'blue',
+      rimColor: 'white',
       rimDirection: 'top-back',
     });
   });

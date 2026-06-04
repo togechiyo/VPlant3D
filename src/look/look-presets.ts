@@ -145,14 +145,14 @@ export const lookLightPresets: Record<LookPresetId, LookLightPreset> = {
 
 export function createDefaultLookSettings(): LookSettings {
   return {
-    preset: 'standard',
+    preset: 'bright',
     keyIntensityScale: 1,
-    keyColorHex: '#f4fbff',
-    keyPosition: [0.25, 3.9, 3.55],
+    keyColorHex: '#ffffff',
+    keyPosition: [0.15, 4.05, 3.65],
     keyShadowEnabled: false,
     fillIntensityScale: 1,
     rimStrength: 'medium',
-    rimColor: 'blue',
+    rimColor: 'white',
     rimDirection: 'top-back',
   };
 }
@@ -209,10 +209,10 @@ function normalizeKeyColorHex(value: unknown, legacyColor: unknown): string {
   }
 
   if (isKeyLightColor(legacyColor)) {
-    return numberToHex(getKeyColor(legacyColor, 0xf4fbff));
+    return numberToHex(getKeyColor(legacyColor, 0xffffff));
   }
 
-  return '#f4fbff';
+  return '#ffffff';
 }
 
 function normalizeKeyPosition(
