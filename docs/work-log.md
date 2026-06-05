@@ -45,6 +45,32 @@
 - 
 ```
 
+## 2026-06-05 Rust Relay Migration Planning
+
+### Goal
+
+- Tauri配布アプリとして成立させるため、ControllerからOBS Renderへのモーション伝達を含むLocal RelayをRust/Tauri内へ移植する段取りを立てる
+
+### Did
+
+- 既存Node relayの責務を再確認した
+- Tauri公式のState管理、sidecar、設定、およびRust HTTP/WebSocket候補としてAxum / tower-httpの一次情報を確認した
+- [Tauri Rust Relay Migration Plan](./tauri-rust-relay-migration-plan.md) を追加した
+- 配布前タスクリストから移植計画へリンクした
+- 次に使える `/goal` 案を移植計画内に書いた
+
+### Decisions
+
+- Node sidecarではなく、まずはTauri内蔵Rust relay最小移植を本線にする
+- runtimeStateなどのモーション伝達は、Rustで厳密schema化せずJSON文字列pass-throughを基本にして互換性を優先する
+- Web fallbackとNode relayは移植完了まで残す
+
+### Next
+
+- Rust relay moduleを `src-tauri/src/relay/` に追加する
+- `/relay/health`、WebSocket `/relay/ws`、asset upload/download、latest replayの順で実装する
+- Controller/OBS RenderのURLをRust relay portへつなぐ
+
 ## 2026-06-05 Tauri Relay Dev Attach / Startup Prototype
 
 ### Goal

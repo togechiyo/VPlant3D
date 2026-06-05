@@ -18,6 +18,10 @@ VPlant3DをTauriアプリとして配布できる形へ近づける前に、必�
 - Node relay sidecar化も未実装
 - 配布用のmacOS / Windows build、署名、公証、インストーラー確認は未着手
 
+Rust relay移植の詳細計画:
+
+- [Tauri Rust Relay Migration Plan](./tauri-rust-relay-migration-plan.md)
+
 ## 方針
 
 締切前の優先順位は、単体配布の美しさよりデモ安定性を優先する。
