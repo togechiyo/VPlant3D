@@ -4449,3 +4449,36 @@
 - 人間環境でRust toolchainを入れて `npm run tauri:dev` を確認する
 - Tauri windowでControllerが開いたら、次はRelay起動管理またはsidecar化を検討する
 - 締切前に不安定なら、提出デモはWeb Controller fallbackで進める
+
+## 2026-06-05 Install Rust and Verify Tauri Dev Startup
+
+### Goal
+
+- Rust / cargoを導入し、Tauri Controller shellの起動確認まで進める
+
+### Did
+
+- rustup installerでRust stable toolchainを導入した
+- 現在のshellでは `$HOME/.cargo/env` を読み込んで `rustc` / `cargo` を使える状態にした
+- `src-tauri/icons/icon.png` を追加した。Tauriがdev起動時に必須iconとして参照するため
+- `src-tauri/Cargo.lock` を生成した
+- `src-tauri/gen/` と `src-tauri/target/` を `.gitignore` に追加した
+- 既存relay起動中にTauriだけ接続できる `npm run tauri:dev:attached` を追加した
+
+### Worked
+
+- `rustc --version` -> `rustc 1.96.0 (ac68faa20 2026-05-25)`
+- `cargo --version` -> `cargo 1.96.0 (30a34c682 2026-05-25)`
+- `npm run tauri:dev` はRust toolchain導入後、cargo buildまでは進んだ
+- 既存の `npm run dev` が起動中の場合、通常の `npm run tauri:dev` は5173 / 24678のport二重起動で失敗する
+- `npm run tauri:dev:attached` は既存relayへ接続し、`target/debug/vplant3d` 起動まで成功した
+
+### Needs Human Check
+
+- Tauri window上でVRMファイル選択、マイク権限、カメラ権限が期待どおり動くか
+- OBS Browser Source側は引き続き `http://127.0.0.1:5173/?obs=1&transparent=1` を使う
+
+### Next
+
+- `npm run tauri:dev:attached` でTauri Controllerを人間が目視確認する
+- 問題なければ、次はRelay起動管理かTauri build確認へ進む

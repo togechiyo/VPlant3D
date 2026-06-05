@@ -28,22 +28,24 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
-### Todo: Rust toolchainを導入してTauri Controllerを起動確認
+### Done: Rust toolchainを導入してTauri Controllerを起動確認
 
-- Owner: Human
+- Owner: Codex
+- Completed: 2026-06-05
 - Needed by: Tauri版Controllerの実機確認前
-- Why: 現在のCodex環境では `rustc` / `cargo` が見つからず、`npm run tauri:dev` を最後まで実行できないため
-- What to check:
-  - Rust toolchainをインストールする
-  - `rustc --version` と `cargo --version` が通ることを確認する
-  - `npm run tauri:dev` を実行する
-  - Tauri windowで `VPlant3D for OBS` Controllerが開くことを確認する
-  - OBS Render URLは従来どおり `http://127.0.0.1:5173/?obs=1&transparent=1` をOBS Browser Sourceに貼る
+- Why: Tauri dev/buildにはRust toolchainが必要なため
+- What was checked:
+  - Rust stable toolchainをrustupで導入した
+  - `rustc --version` -> `rustc 1.96.0`
+  - `cargo --version` -> `cargo 1.96.0`
+  - 既存relay起動中は `npm run tauri:dev` がport二重起動で失敗することを確認した
+  - `npm run tauri:dev:attached` を追加し、既存relayへ接続するTauri起動で `target/debug/vplant3d` まで起動することを確認した
 
 Notes:
 
 - Tauri Phase 1はController shellのみ。OBS RenderはTauriへ移していない
 - 既存のWeb fallbackは `npm run dev` で維持する
+- 通常の `npm run tauri:dev` はrelayも起動する。すでに `npm run dev` が動いている時は `npm run tauri:dev:attached` を使う
 
 ### Todo: Tauri Controllerでマイク / カメラ / ファイル選択を確認
 

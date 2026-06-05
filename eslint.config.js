@@ -11,6 +11,8 @@ export default tseslint.config(
       'node_modules/',
       'local-assets/',
       'server/',
+      'src-tauri/gen/',
+      'src-tauri/target/',
     ],
   },
   js.configs.recommended,

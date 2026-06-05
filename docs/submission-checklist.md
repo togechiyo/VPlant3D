@@ -46,6 +46,7 @@
 - [ ] Image Panelで画像を3D空間に貼れる
 - [x] localStorageに最低限の設定を保存できる
 - [x] Tauri Controller shellのscaffoldがある
+- [x] Tauri Controllerを開発起動できる
 
 ### Could Have
 
@@ -118,7 +119,7 @@
 
 - [ ] Chromeで動作確認済み
 - [ ] OBSで動作確認済み
-- [ ] Tauri Controllerで起動確認済み
+- [x] Tauri Controllerで起動確認済み
 - [ ] 画面サイズを決めた
 - [ ] 背景透過または合成先を決めた
 - [ ] 見せる順番を決めた

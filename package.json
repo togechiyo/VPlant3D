@@ -8,6 +8,7 @@
     "dev": "node server/vplant-relay.mjs",
     "dev:vite": "vite --host 127.0.0.1",
     "tauri:dev": "tauri dev",
+    "tauri:dev:attached": "tauri dev --config src-tauri/tauri.attached.conf.json --no-dev-server-wait",
     "tauri:build": "tauri build",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
