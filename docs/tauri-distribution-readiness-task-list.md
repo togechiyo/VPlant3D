@@ -11,7 +11,7 @@ VPlant3DをTauriアプリとして配布できる形へ近づける前に、必�
 ## 現状
 
 - `src-tauri/` の最小scaffoldはある
-- `npm run tauri:dev` はTauriの `beforeDevCommand` で既存Node relay flowを起動する
+- `npm run tauri:dev` はTauriの `beforeDevCommand` で `npm run tauri:relay` を実行し、既存VPlant3D relayへattachするか、Node relayを起動する
 - `npm run tauri:dev:attached` は、すでに動いているrelayへTauri windowだけ接続する
 - OBS Renderは引き続きOBS Browser Sourceで `http://127.0.0.1:<port>/?obs=1&transparent=1` を開く
 - Tauri / Rust製Local Relay serverは未実装
@@ -112,6 +112,9 @@ VPlant3DをTauriアプリとして配布できる形へ近づける前に、必�
 
 ### Phase B: Tauriからrelayを起動・管理する
 
+- [x] dev起動時に既存VPlant3D relayへattachできる
+- [x] dev起動時に既存relayがなければNode relayを起動できる
+- [x] relay health endpointでVPlant3D relayか判定できる
 - [ ] Tauri起動時に空きportを決める
 - [ ] Rust relayをTauri stateとして起動する
 - [ ] app終了時にrelayを停止する

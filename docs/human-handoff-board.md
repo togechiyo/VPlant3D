@@ -28,6 +28,29 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 
 ## Human Tasks
 
+### Todo: Tauri配布ビルドと実機権限を確認
+
+- Owner: Human
+- Needed by: Tauri版を提出デモまたは配布物に含める前
+- Why: Codex側でdev起動は確認できても、配布build、macOS Gatekeeper、Windows WebView2、カメラ/マイク権限は実機確認が必要なため
+- What to check:
+  - `npm run tauri:build` でmacOS app bundleが生成される
+  - build済みappをFinderから起動できる
+  - app起動後、Controllerが開き、OBS Render URLが表示される
+  - app起動でrelayが使える、またはWeb fallback手順へ戻れる
+  - VRMファイル選択ができる
+  - マイク権限が出て口パクできる
+  - カメラ権限が出てカメラモードが動く
+  - OBS Browser Sourceで `http://127.0.0.1:5173/?obs=1&transparent=1` が表示できる
+  - Windowsで配布する場合は、WebView2、ファイル選択、マイク/カメラ、OBS連携を確認する
+
+Notes:
+
+- 2026-06-05時点ではTauri / Rust製relay serverは未実装
+- `npm run tauri:dev` は既存VPlant3D relayがあればattachし、なければNode relayを起動するhelperを使う
+- 配布完成にはRust relay移植またはNode relay sidecar化が追加で必要
+- 2026-06-05の `npm run tauri:build` はRust release buildと `.app` 生成まで到達したが、DMG bundle段階で `bundle_dmg.sh` 実行エラーになった。`src-tauri/target/release/bundle/macos/VPlant3D for OBS.app` のFinder起動可否と、DMG失敗原因の確認が必要
+
 ### Done: Rust toolchainを導入してTauri Controllerを起動確認
 
 - Owner: Codex

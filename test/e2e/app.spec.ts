@@ -8,6 +8,26 @@ const aliciaVrmPath = resolve(
 );
 const greetingVrmaPath = resolve('local-assets/vrma/VRMA_MotionPack/vrma/VRMA_02.vrma');
 
+test('local relay can be identified for Tauri attach/start', async ({ request }) => {
+  const response = await request.get('/relay/health');
+  const contentType = response.headers()['content-type'] ?? '';
+
+  expect(response.ok()).toBe(true);
+
+  if (contentType.includes('application/json')) {
+    const payload = await response.json();
+    expect(payload).toMatchObject({
+      ok: true,
+      app: 'vplant3d',
+      relay: 'node',
+      port: 5173,
+    });
+    return;
+  }
+
+  expect(await response.text()).toContain('VPlant3D');
+});
+
 test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page }) => {
   const errors = collectPageErrors(page);
 

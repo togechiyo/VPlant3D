@@ -97,7 +97,7 @@ npm run tauri:dev
 
 The first Tauri phase is a desktop shell for the existing Controller UI. It still uses the same local relay and the same OBS Render URL flow as the web version. OBS should continue to load the Browser Source URL, for example `http://127.0.0.1:5173/?obs=1&transparent=1`.
 
-The relay server is not implemented in Tauri / Rust yet. `npm run tauri:dev` starts the existing Node local relay through Tauri's `beforeDevCommand`, then opens the Controller window.
+The relay server is not implemented in Tauri / Rust yet. `npm run tauri:dev` runs a small dev helper that attaches to an existing VPlant3D relay when one is already available, or starts the existing Node local relay before opening the Controller window.
 
 If `npm run dev` is already running in another terminal, use the attached mode to avoid starting the relay twice:
 

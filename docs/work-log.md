@@ -45,6 +45,50 @@
 - 
 ```
 
+## 2026-06-05 Tauri Relay Dev Attach / Startup Prototype
+
+### Goal
+
+- 配布用Tauriアプリ化に向けて、手動ターミナルなしでrelayへ接続または起動できる最小安全案を実装する
+
+### Did
+
+- 既存Node relayの責務を確認した。Vite配信、WebSocket `/relay/ws`、アセット一時配信、最新状態replay、debug logなどがまとまっており、締切前にRustへ丸ごと移植するのはリスクが高いと判断した
+- `GET /relay/health` をNode relayへ追加し、Tauri側からVPlant3D relayか判定できるようにした
+- `scripts/tauri-relay-dev.mjs` を追加し、`npm run tauri:dev` の前に既存VPlant3D relayへattach、なければNode relayを起動するようにした
+- `src-tauri/tauri.conf.json` の `beforeDevCommand` を `npm run tauri:relay` へ変更した
+- Playwrightにrelay識別チェックを追加した。既存の古いrelayが動いていて `/relay/health` がHTMLへfallbackする場合も、VPlant3D画面であることを確認する
+- README、Tauri技術計画、配布前タスクリスト、人間向け確認板を更新した
+
+### Worked
+
+- `npm run test` 成功
+- `npm run lint` 成功
+- `npm run build` 成功。既存のlarge chunk warningのみ
+- `npm run test:e2e` 成功
+- `. "$HOME/.cargo/env" && cargo test` 成功
+- 一時的に `PORT=5174 node server/vplant-relay.mjs` を起動し、`/relay/health` が `{"ok":true,"app":"vplant3d","relay":"node",...}` を返すことを確認した
+- `. "$HOME/.cargo/env" && npm run tauri:dev` は既存relayへattachし、`target/debug/vplant3d` 起動まで成功した
+- `. "$HOME/.cargo/env" && npm run tauri:build` はRust release buildと `.app` 生成まで到達した
+
+### Failed / Blocked
+
+- `npm run tauri:build` はDMG bundle段階で `bundle_dmg.sh` 実行エラーになった
+- 生成物として `src-tauri/target/release/vplant3d` と `src-tauri/target/release/bundle/macos/VPlant3D for OBS.app` は存在するが、DMG完成とFinder起動確認は人間確認が必要
+- 現時点のTauri配布版はRust relay / Node sidecarを同梱していないため、配布完成にはrelay同梱方式を別途決める必要がある。開発時の `tauri:dev` はattach/startできるが、配布版のOBS URL運用はまだ完成ではない
+
+### Decisions
+
+- 今回はRust relay移植ではなく、Node relay attach/start helperを最小安全案として採用する
+- Web fallbackの `npm run dev` とOBS Render URLは維持する
+- 配布完成の次段階は、Rust relay最小移植かNode relay sidecar化のどちらかに絞って検討する
+
+### Next
+
+- macOSで `VPlant3D for OBS.app` をFinder起動し、Controller表示、ファイル選択、マイク/カメラ権限、OBS Render URLを確認する
+- DMG bundle失敗の原因を切り分ける
+- 配布版にrelayを同梱する方式を決める。締切前に重ければWeb fallbackを正式手順として残す
+
 ## 2026-06-04 Clarify Mic Manual vs Camera Modes
 
 ### Goal

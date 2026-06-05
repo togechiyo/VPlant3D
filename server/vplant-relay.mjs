@@ -61,6 +61,18 @@ const server = createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === 'GET' && url.pathname === '/relay/health') {
+    writeJson(response, 200, {
+      ok: true,
+      app: 'vplant3d',
+      relay: 'node',
+      port,
+      activeControlId: activeControlSocket ? clientIds.get(activeControlSocket) : null,
+      clientCount: webSocketServer.clients.size,
+    });
+    return;
+  }
+
   vite.middlewares(request, response);
 });
 
