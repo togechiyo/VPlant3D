@@ -4505,3 +4505,26 @@
 
 - ハッカソン前に必要なら、TauriからNode relayを安定起動するPhase 2へ進む
 - さらに余裕があれば、Node sidecar化またはRust relay移植を検討する
+
+## 2026-06-05 Tauri Distribution Readiness Task List
+
+### Goal
+
+- TauriからRust製relay serverを立てる実装も含め、配布用build前に必要な作業を洗い出す
+
+### Did
+
+- [Tauri配布ビルド前タスクリスト](./tauri-distribution-readiness-task-list.md) を追加した
+- Rust relay移植、Tauri起動管理、frontend配信、permissions、macOS / Windows build、実機確認をPhase分けした
+- `docs/hackathon-finish-task-list.md` から配布前タスクリストへリンクした
+
+### Decision
+
+- 配布用アプリの最低ラインは、アプリ起動でrelayが立ち、Controllerが開き、OBS Render URLが分かること
+- ただし締切前はWeb Controller fallbackを最後まで守る
+- Rust relay完全移植が重い場合は、Node relay sidecarまたはWeb fallbackへ戻せるようにする
+
+### Next
+
+- 次に実装するなら、既存Node relayの責務棚卸しとRust relay最小prototypeから始める
+- Tauri buildへ進む前に、macOSで `npm run tauri:build` を試す
