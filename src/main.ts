@@ -205,7 +205,7 @@ renderer.domElement.className = 'scene-canvas';
 if (isControlPage) {
   const controlTitle = document.createElement('h1');
   controlTitle.className = 'control-title';
-  controlTitle.innerHTML = 'VPlant3D <span class="control-title__accent">for OBS</span>';
+  controlTitle.textContent = 'VPlant3D for OBS';
   viewport.append(controlTitle);
 }
 viewport.append(renderer.domElement);
