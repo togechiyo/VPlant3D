@@ -41,6 +41,11 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#obs-localhost-url-text')).toContainText(
     'localhost:5173/?obs=1&transparent=1',
   );
+  await expect(page.locator('#obs-advanced-url-details')).not.toHaveAttribute('open', '');
+  await expect(page.locator('#obs-debug-url-text')).not.toBeVisible();
+  await expect(page.locator('#control-url-text')).not.toBeVisible();
+  await page.locator('#obs-advanced-url-details summary').click();
+  await expect(page.locator('#obs-advanced-url-details')).toHaveAttribute('open', '');
   await expect(page.locator('#obs-debug-url-text')).toContainText(
     '/?obs=1&transparent=1&debug=1',
   );

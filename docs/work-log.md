@@ -4482,3 +4482,26 @@
 
 - `npm run tauri:dev:attached` でTauri Controllerを人間が目視確認する
 - 問題なければ、次はRelay起動管理かTauri build確認へ進む
+
+## 2026-06-05 Clarify Tauri Relay Status And Hide Dev URLs
+
+### Goal
+
+- Tauri起動後のrelay serverの責務を明確にし、Controller UIのOBS URL欄を通常利用向けに簡単にする
+
+### Did
+
+- ControllerのOBS URLカードで、Debug URLとControl URLを `開発用URL（通常は不要）` の折りたたみ内へ移動した
+- READMEに、Tauri / Rust側のrelay serverはまだ未実装で、現在は既存Node local relayを使っていることを明記した
+- `docs/tauri-controller-technical-plan.md` に、`tauri:dev` と `tauri:dev:attached` のrelay扱いを追記した
+
+### Current Tauri Relay Behavior
+
+- `npm run tauri:dev` はTauriの `beforeDevCommand` で既存の `npm run dev` relay flowを起動してからController windowを開く
+- `npm run tauri:dev:attached` はすでに動いているrelayへ接続し、Tauri windowだけを起動する
+- Tauri / Rust内にLocal Relay serverを実装する作業はまだ未着手
+
+### Next
+
+- ハッカソン前に必要なら、TauriからNode relayを安定起動するPhase 2へ進む
+- さらに余裕があれば、Node sidecar化またはRust relay移植を検討する

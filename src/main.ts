@@ -754,16 +754,21 @@ if (isControlPage) {
         <code id="obs-localhost-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrls.localhostRenderUrl}</code>
         <button id="obs-localhost-url-copy-button" class="rounded-md border border-white/15 bg-transparent px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">localhost URLをコピー</button>
       </div>
-      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-        <span class="text-xs font-bold text-[#9fa9aa]">Debug</span>
-        <code id="obs-debug-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrls.debugRenderUrl}</code>
-        <button id="obs-debug-url-copy-button" class="rounded-md border border-white/15 bg-transparent px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">Debug URLをコピー</button>
-      </div>
-      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-        <span class="text-xs font-bold text-[#9fa9aa]">Control</span>
-        <code id="control-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrls.controlUrl}</code>
-        <button id="control-url-copy-button" class="rounded-md border border-white/15 bg-transparent px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">Control URLをコピー</button>
-      </div>
+      <details id="obs-advanced-url-details" class="rounded-md border border-white/10 bg-white/[0.03] p-2">
+        <summary class="cursor-pointer select-none text-xs font-bold text-[#9fa9aa] transition hover:text-[#dfffee]">開発用URL（通常は不要）</summary>
+        <div class="mt-2 grid gap-2">
+          <div class="grid gap-2 rounded-md border border-white/10 bg-black/20 p-2">
+            <span class="text-xs font-bold text-[#9fa9aa]">Debug</span>
+            <code id="obs-debug-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrls.debugRenderUrl}</code>
+            <button id="obs-debug-url-copy-button" class="rounded-md border border-white/15 bg-transparent px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">Debug URLをコピー</button>
+          </div>
+          <div class="grid gap-2 rounded-md border border-white/10 bg-black/20 p-2">
+            <span class="text-xs font-bold text-[#9fa9aa]">Control</span>
+            <code id="control-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrls.controlUrl}</code>
+            <button id="control-url-copy-button" class="rounded-md border border-white/15 bg-transparent px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">Control URLをコピー</button>
+          </div>
+        </div>
+      </details>
     </div>
     <ul class="m-0 grid list-none content-start gap-2 rounded-md border border-white/10 bg-black/20 p-2">
       <li class="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-[#9fa9aa]"><span>設定</span><strong class="font-bold text-[#6dff9a]">表示中</strong></li>

@@ -136,7 +136,7 @@ TauriはController用の軽いランチャーとして起動し、開発中は `
 
 ### Phase 1: Tauri scaffold + Web Controller表示
 
-Status: scaffold added on 2026-06-05. `src-tauri/` と `npm run tauri:dev` / `npm run tauri:build` を追加済み。現在のCodex環境ではRust toolchainが未導入のため、実際のTauri window起動は人間環境での確認待ち。
+Status: scaffold added on 2026-06-05. `src-tauri/` と `npm run tauri:dev` / `npm run tauri:build` を追加済み。Rust / cargo導入後、既存relayへ接続する `npm run tauri:dev:attached` で `target/debug/vplant3d` 起動まで確認済み。
 
 目的:
 
@@ -149,6 +149,8 @@ Status: scaffold added on 2026-06-05. `src-tauri/` と `npm run tauri:dev` / `np
 - `src-tauri/` を追加
 - Tauri v2を導入
 - dev時は既存Vite / Relayへ接続
+- `npm run tauri:dev` はTauriの `beforeDevCommand` で既存Node relayを起動してからController windowを開く
+- `npm run tauri:dev:attached` は、すでに `npm run dev` が動いている場合にTauri windowだけを起動して既存relayへ接続する
 - build時はVite build済みassetsをTauri windowで表示するか、まずはexternal URLで既存relayへ接続する
 
 停止条件:
@@ -159,7 +161,7 @@ Status: scaffold added on 2026-06-05. `src-tauri/` と `npm run tauri:dev` / `np
 
 ### Phase 2: Relay起動管理
 
-Status: not implemented. Phase 1では既存の `npm run dev` relay flowを維持し、Node sidecar化やRust relay移植は行わない。
+Status: not implemented as an in-app Rust relay. Phase 1では既存の `npm run dev` relay flowを維持し、Tauri自身はまだrelay serverを実装していない。Node sidecar化やRust relay移植は行わない。
 
 目的:
 

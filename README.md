@@ -97,6 +97,8 @@ npm run tauri:dev
 
 The first Tauri phase is a desktop shell for the existing Controller UI. It still uses the same local relay and the same OBS Render URL flow as the web version. OBS should continue to load the Browser Source URL, for example `http://127.0.0.1:5173/?obs=1&transparent=1`.
 
+The relay server is not implemented in Tauri / Rust yet. `npm run tauri:dev` starts the existing Node local relay through Tauri's `beforeDevCommand`, then opens the Controller window.
+
 If `npm run dev` is already running in another terminal, use the attached mode to avoid starting the relay twice:
 
 ```bash
@@ -118,7 +120,7 @@ Control Mode includes local `.vrm` and `.vrma` file inputs. Local model and moti
 
 OBS Browser Source is treated as the render-only output target. Camera, microphone, MediaPipe, and setup controls live on the Control / Capture page in Chrome, with the local relay sending avatar state and selected local assets to the OBS Render page.
 
-The Controller shows a recommended `127.0.0.1` OBS Render URL, a `localhost` fallback URL, a debug URL, copy buttons, and a small Relay / OBS Render connection status. Use the transparent Render URL for OBS overlay composition.
+The Controller shows a recommended `127.0.0.1` OBS Render URL, a `localhost` fallback URL, copy buttons, and a small Relay / OBS Render connection status. Debug and Control URLs are folded under the development URL section so the normal OBS setup path stays simple. Use the transparent Render URL for OBS overlay composition.
 
 Mic Reactive Mouth can request microphone access in Setup Mode and drive the loaded VRM's `aa` expression from microphone volume. It is simple RMS-based mouth movement, not phoneme lip sync.
 The Controller can select the microphone input device and remembers the selected device in browser localStorage. If a saved device is missing, VPlant3D falls back to the default input.
