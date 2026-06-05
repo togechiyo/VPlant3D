@@ -7,6 +7,8 @@ import {
 } from './messages';
 
 export type RelayMessageHandler = (message: RelayMessage) => void;
+export type RelayConnectionStatus = 'connecting' | 'open' | 'closed' | 'error';
+export type RelayStatusHandler = (status: RelayConnectionStatus) => void;
 
 export class VPlantRelayClient {
   private socket: WebSocket | null = null;
@@ -16,6 +18,7 @@ export class VPlantRelayClient {
     private readonly role: 'control' | 'render',
     private readonly onMessage: RelayMessageHandler,
     private readonly browserLocation: Location = window.location,
+    private readonly onStatusChange: RelayStatusHandler = () => undefined,
   ) {}
 
   connect(): void {
@@ -23,10 +26,12 @@ export class VPlantRelayClient {
       return;
     }
 
+    this.onStatusChange('connecting');
     const socket = new WebSocket(createRelayWebSocketUrl(this.browserLocation));
     this.socket = socket;
 
     socket.addEventListener('open', () => {
+      this.onStatusChange('open');
       this.send({ type: 'hello', role: this.role });
       while (this.queuedMessages.length > 0) {
         const message = this.queuedMessages.shift();
@@ -47,6 +52,11 @@ export class VPlantRelayClient {
       if (this.socket === socket) {
         this.socket = null;
       }
+      this.onStatusChange('closed');
+    });
+
+    socket.addEventListener('error', () => {
+      this.onStatusChange('error');
     });
   }
 

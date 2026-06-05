@@ -5,9 +5,25 @@ import { createVRMAnimationClip, VRMLookAtQuaternionProxy } from '@pixiv/three-v
 import type { VRMAnimation } from '@pixiv/three-vrm-animation';
 
 import { parseObsQuery } from './obs/query';
+import { createObsRenderUrls } from './obs/render-url';
 import type { AppState } from './state/app-store';
 import { createAppStore } from './state/app-store';
 import { MicReactiveMouth } from './audio/mic-reactive-mouth';
+import {
+  createVideoInputConstraints,
+  listMediaInputDevices,
+  resolveSelectedDeviceId,
+  type NormalizedMediaInputDevice,
+} from './media/media-devices';
+import {
+  createDefaultAppConfig,
+  normalizeAppConfig,
+  type AppConfigV1,
+} from './config/app-config';
+import {
+  readAppConfigFromStorage,
+  writeAppConfigToStorage,
+} from './config/local-storage';
 import {
   createAutoBlinkState,
   sampleAutoBlink,
@@ -98,6 +114,7 @@ import {
   type VrmExpressionPresetId,
 } from './vrm/expression-presets';
 import { VPlantRelayClient } from './relay/client';
+import type { RelayConnectionStatus } from './relay/client';
 import type {
   RelayAssetDescriptor,
   RelayAvatarTransform,
@@ -155,6 +172,9 @@ const appStore = createAppStore(options);
 const state = appStore.getState();
 const isRenderPage = state.obsMode;
 const isControlPage = !state.obsMode;
+const restoredAppConfig = isControlPage
+  ? readAppConfigFromStorage(window.localStorage)
+  : null;
 document.documentElement.classList.toggle('is-transparent-render', state.transparent);
 document.body.classList.toggle('is-transparent-render', state.transparent);
 
@@ -287,6 +307,9 @@ let micLevelBar: HTMLElement | null = null;
 let micMouthBar: HTMLElement | null = null;
 let micStartButton: HTMLButtonElement | null = null;
 let micStopButton: HTMLButtonElement | null = null;
+let audioDeviceSelect: HTMLSelectElement | null = null;
+let audioDeviceRefreshButton: HTMLButtonElement | null = null;
+let audioDeviceHintText: HTMLElement | null = null;
 let poseController: MediaPipePoseDebug | null = null;
 let poseStream: MediaStream | null = null;
 let poseVideoElement: HTMLVideoElement | null = null;
@@ -297,6 +320,9 @@ let poseSummaryText: HTMLElement | null = null;
 let poseVisibilityBar: HTMLElement | null = null;
 let poseStartButton: HTMLButtonElement | null = null;
 let poseStopButton: HTMLButtonElement | null = null;
+let videoDeviceSelect: HTMLSelectElement | null = null;
+let videoDeviceRefreshButton: HTMLButtonElement | null = null;
+let videoDeviceHintText: HTMLElement | null = null;
 let poseMirrorInput: HTMLInputElement | null = null;
 let handTrackingInput: HTMLInputElement | null = null;
 let blinkModeSelect: HTMLSelectElement | null = null;
@@ -325,6 +351,13 @@ let keyLightPositionYText: HTMLElement | null = null;
 let keyLightPositionZText: HTMLElement | null = null;
 let keyLightShadowText: HTMLElement | null = null;
 let fillLightScaleText: HTMLElement | null = null;
+let obsTransparentUrlInput: HTMLInputElement | null = null;
+let obsRenderUrlText: HTMLElement | null = null;
+let obsLocalhostUrlText: HTMLElement | null = null;
+let obsDebugUrlText: HTMLElement | null = null;
+let controlUrlText: HTMLElement | null = null;
+let relayStatusText: HTMLElement | null = null;
+let renderStatusText: HTMLElement | null = null;
 type ControlMode = 'mic-manual' | 'camera';
 let selectedControlMode: ControlMode = 'mic-manual';
 let manualPose: ManualPoseState = createNeutralManualPoseState(false);
@@ -352,6 +385,8 @@ type LipSyncMode = 'mocap' | 'mic' | 'off';
 let blinkMode: BlinkMode = 'auto';
 let lipSyncMode: LipSyncMode = 'mic';
 let idleSwayEnabled = true;
+let persistedConfigSignature = '';
+applyRestoredAppConfig(restoredAppConfig);
 let faceTracker: MediaPipeFaceTracker | null = null;
 let handTracker: MediaPipeHandTracker | null = null;
 let lastFaceTrackingSignalTime = 0;
@@ -396,11 +431,16 @@ let relayDroppedStaleExpressionFrames = 0;
 let relayPreviousMotionFrame: RelayMotionFrame | null = null;
 let relayCurrentMotionFrame: RelayMotionFrame | null = null;
 let relayDebugOverlay: HTMLElement | null = null;
+let relayConnectionStatus: RelayConnectionStatus = 'closed';
+let lastRenderPresenceAt = 0;
+let renderPresencePublishTime = 0;
 let loadingRelayVrmAssetId: string | null = null;
 let loadingRelayVrmaAssetSignature: string | null = null;
 const relayClient = new VPlantRelayClient(
   isRenderPage ? 'render' : 'control',
   handleRelayMessage,
+  window.location,
+  updateRelayConnectionStatus,
 );
 const restBoneQuaternions = new Map<string, THREE.Quaternion>();
 const restBoneWorldPositions = new Map<string, THREE.Vector3>();
@@ -453,9 +493,10 @@ relayClient.connect();
 if (isControlPage) {
   const panel = document.createElement('aside');
   panel.className = 'control-panel';
-  const localOrigin = `${window.location.protocol}//127.0.0.1${window.location.port ? `:${window.location.port}` : ''}`;
-  const controlUrl = `${localOrigin}/?control=1`;
-  const obsRenderUrl = `${localOrigin}/?obs=1&transparent=1`;
+  let obsRenderUrls = createObsRenderUrls({
+    location: window.location,
+    transparent: true,
+  });
   panel.innerHTML = `
     <div class="grid h-full content-start gap-3 overflow-y-auto pr-1">
     <div class="grid gap-3 rounded-md border border-[#6dff9a]/55 bg-black/25 p-3 shadow-[0_0_22px_rgba(109,255,154,0.08)]">
@@ -514,6 +555,16 @@ if (isControlPage) {
         <button id="mic-start-button" class="rounded-md border border-[#6dff9a]/75 bg-[#6dff9a]/10 px-3 py-3 text-base font-bold text-[#dfffee] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">マイク開始</button>
         <button id="mic-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-3 text-base font-bold text-[#eef4f2] transition enabled:hover:border-[#6dff9a] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
       </div>
+      <div class="grid grid-cols-[1fr_auto] gap-2">
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span>マイク</span>
+          <select id="audio-device-select" class="rounded-md border border-[#6dff9a]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+            <option value="">既定のマイク</option>
+          </select>
+        </label>
+        <button id="audio-device-refresh-button" class="self-end rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">更新</button>
+      </div>
+      <span id="audio-device-hint-text" class="min-h-4 text-xs font-bold text-[#9fa9aa]">デバイス確認中</span>
       <div class="grid grid-cols-3 gap-2">
         <label class="inline-flex items-center gap-2 rounded-md border border-[#6dff9a]/30 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="manual-control-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
@@ -567,6 +618,16 @@ if (isControlPage) {
         <button id="pose-start-button" class="rounded-md border border-[#6dff9a]/65 bg-[#6dff9a]/10 px-3 py-3 text-base font-bold text-[#dfffee] transition enabled:hover:border-[#6dff9a] enabled:hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40" type="button">カメラ開始</button>
         <button id="pose-stop-button" class="rounded-md border border-white/15 bg-white/[0.04] px-3 py-3 text-base font-bold text-[#eef4f2] transition enabled:hover:border-[#6dff9a] disabled:cursor-not-allowed disabled:opacity-40" type="button">停止</button>
       </div>
+      <div class="grid grid-cols-[1fr_auto] gap-2">
+        <label class="grid gap-1 text-xs font-bold text-[#9fa9aa]">
+          <span>カメラ</span>
+          <select id="video-device-select" class="rounded-md border border-[#6dff9a]/30 bg-[#101314] px-2 py-2 text-[#eef4f2]">
+            <option value="">既定のカメラ</option>
+          </select>
+        </label>
+        <button id="video-device-refresh-button" class="self-end rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">更新</button>
+      </div>
+      <span id="video-device-hint-text" class="min-h-4 text-xs font-bold text-[#9fa9aa]">デバイス確認中</span>
       <div class="grid grid-cols-2 gap-2">
         <label class="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
           <input id="pose-mirror-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
@@ -675,15 +736,33 @@ if (isControlPage) {
         <span class="text-xs font-bold uppercase tracking-normal text-[#9fa9aa]">OBS URL</span>
         <strong class="text-sm font-bold text-[#eef4f2]">OBSに貼る</strong>
       </div>
+      <div class="grid grid-cols-2 gap-2 text-xs font-bold text-[#9fa9aa]">
+        <span class="rounded-md border border-white/10 bg-white/[0.03] px-2 py-2">Relay: <strong id="relay-status-text" class="text-[#6dff9a]">接続中</strong></span>
+        <span class="rounded-md border border-white/10 bg-white/[0.03] px-2 py-2">OBS: <strong id="render-status-text" class="text-[#9fa9aa]">未検出</strong></span>
+      </div>
+      <label class="inline-flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.03] px-2 py-2 text-xs font-bold text-[#9fa9aa]">
+        <span>透過背景URL</span>
+        <input id="obs-transparent-url-input" class="h-4 w-4 accent-[#6dff9a]" type="checkbox" checked />
+      </label>
       <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
-        <span class="text-xs font-bold text-[#9fa9aa]">Render</span>
-        <code id="obs-render-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrl}</code>
+        <span class="text-xs font-bold text-[#9fa9aa]">Render 推奨</span>
+        <code id="obs-render-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrls.recommendedRenderUrl}</code>
         <button id="obs-render-url-copy-button" class="rounded-md border border-[#6dff9a]/60 bg-transparent px-3 py-2 text-xs font-bold text-[#dfffee] transition hover:border-[#6dff9a]" type="button">Render URLをコピー</button>
       </div>
       <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+        <span class="text-xs font-bold text-[#9fa9aa]">Render 代替</span>
+        <code id="obs-localhost-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrls.localhostRenderUrl}</code>
+        <button id="obs-localhost-url-copy-button" class="rounded-md border border-white/15 bg-transparent px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">localhost URLをコピー</button>
+      </div>
+      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
+        <span class="text-xs font-bold text-[#9fa9aa]">Debug</span>
+        <code id="obs-debug-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrls.debugRenderUrl}</code>
+        <button id="obs-debug-url-copy-button" class="rounded-md border border-white/15 bg-transparent px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">Debug URLをコピー</button>
+      </div>
+      <div class="grid gap-2 rounded-md border border-white/10 bg-white/[0.03] p-2">
         <span class="text-xs font-bold text-[#9fa9aa]">Control</span>
-        <code id="control-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${controlUrl}</code>
-        <button id="control-url-copy-button" class="rounded-md border border-[#6dff9a]/55 bg-transparent px-3 py-2 text-xs font-bold text-[#dfffee] transition hover:border-[#6dff9a]" type="button">Control URLをコピー</button>
+        <code id="control-url-text" class="break-all rounded bg-black/30 px-2 py-1 text-xs text-[#dfffee]">${obsRenderUrls.controlUrl}</code>
+        <button id="control-url-copy-button" class="rounded-md border border-white/15 bg-transparent px-3 py-2 text-xs font-bold text-[#eef4f2] transition hover:border-[#6dff9a]" type="button">Control URLをコピー</button>
       </div>
     </div>
     <ul class="m-0 grid list-none content-start gap-2 rounded-md border border-white/10 bg-black/20 p-2">
@@ -702,6 +781,10 @@ if (isControlPage) {
   const obsRenderUrlCopyButton = panel.querySelector<HTMLButtonElement>(
     '#obs-render-url-copy-button',
   );
+  const obsLocalhostUrlCopyButton = panel.querySelector<HTMLButtonElement>(
+    '#obs-localhost-url-copy-button',
+  );
+  const obsDebugUrlCopyButton = panel.querySelector<HTMLButtonElement>('#obs-debug-url-copy-button');
   const controlUrlCopyButton = panel.querySelector<HTMLButtonElement>('#control-url-copy-button');
   const micManualModeButton = panel.querySelector<HTMLButtonElement>('#mic-manual-mode-button');
   const cameraModeButton = panel.querySelector<HTMLButtonElement>('#camera-mode-button');
@@ -729,6 +812,9 @@ if (isControlPage) {
   micMouthBar = panel.querySelector<HTMLElement>('#mic-mouth-bar');
   micStartButton = panel.querySelector<HTMLButtonElement>('#mic-start-button');
   micStopButton = panel.querySelector<HTMLButtonElement>('#mic-stop-button');
+  audioDeviceSelect = panel.querySelector<HTMLSelectElement>('#audio-device-select');
+  audioDeviceRefreshButton = panel.querySelector<HTMLButtonElement>('#audio-device-refresh-button');
+  audioDeviceHintText = panel.querySelector<HTMLElement>('#audio-device-hint-text');
   poseVideoElement = panel.querySelector<HTMLVideoElement>('#pose-video');
   poseCanvasElement = panel.querySelector<HTMLCanvasElement>('#pose-canvas');
   poseStatusText = panel.querySelector<HTMLElement>('#pose-status-text');
@@ -737,6 +823,9 @@ if (isControlPage) {
   poseVisibilityBar = panel.querySelector<HTMLElement>('#pose-visibility-bar');
   poseStartButton = panel.querySelector<HTMLButtonElement>('#pose-start-button');
   poseStopButton = panel.querySelector<HTMLButtonElement>('#pose-stop-button');
+  videoDeviceSelect = panel.querySelector<HTMLSelectElement>('#video-device-select');
+  videoDeviceRefreshButton = panel.querySelector<HTMLButtonElement>('#video-device-refresh-button');
+  videoDeviceHintText = panel.querySelector<HTMLElement>('#video-device-hint-text');
   poseMirrorInput = panel.querySelector<HTMLInputElement>('#pose-mirror-input');
   handTrackingInput = panel.querySelector<HTMLInputElement>('#hand-tracking-input');
   blinkModeSelect = panel.querySelector<HTMLSelectElement>('#blink-mode-select');
@@ -766,6 +855,13 @@ if (isControlPage) {
   keyLightPositionZText = panel.querySelector<HTMLElement>('#key-light-position-z-text');
   keyLightShadowText = panel.querySelector<HTMLElement>('#key-light-shadow-text');
   fillLightScaleText = panel.querySelector<HTMLElement>('#fill-light-scale-text');
+  obsTransparentUrlInput = panel.querySelector<HTMLInputElement>('#obs-transparent-url-input');
+  obsRenderUrlText = panel.querySelector<HTMLElement>('#obs-render-url-text');
+  obsLocalhostUrlText = panel.querySelector<HTMLElement>('#obs-localhost-url-text');
+  obsDebugUrlText = panel.querySelector<HTMLElement>('#obs-debug-url-text');
+  controlUrlText = panel.querySelector<HTMLElement>('#control-url-text');
+  relayStatusText = panel.querySelector<HTMLElement>('#relay-status-text');
+  renderStatusText = panel.querySelector<HTMLElement>('#render-status-text');
 
   vrmFileInput?.addEventListener('change', () => {
     const file = vrmFileInput.files?.[0] ?? null;
@@ -777,12 +873,21 @@ if (isControlPage) {
     void handleVrmaFileSelection(files);
   });
   obsRenderUrlCopyButton?.addEventListener('click', () => {
-    void navigator.clipboard?.writeText(obsRenderUrl);
+    void navigator.clipboard?.writeText(obsRenderUrls.recommendedRenderUrl);
+  });
+  obsLocalhostUrlCopyButton?.addEventListener('click', () => {
+    void navigator.clipboard?.writeText(obsRenderUrls.localhostRenderUrl);
+  });
+  obsDebugUrlCopyButton?.addEventListener('click', () => {
+    void navigator.clipboard?.writeText(obsRenderUrls.debugRenderUrl);
   });
   controlUrlCopyButton?.addEventListener('click', () => {
-    void navigator.clipboard?.writeText(controlUrl);
+    void navigator.clipboard?.writeText(obsRenderUrls.controlUrl);
   });
-  const setControlMode = (mode: ControlMode) => {
+  obsTransparentUrlInput?.addEventListener('change', () => {
+    obsRenderUrls = updateObsRenderUrls();
+  });
+  const setControlMode = (mode: ControlMode, autoStart = true) => {
     const isMicManual = mode === 'mic-manual';
     selectedControlMode = mode;
     micManualModePanel?.classList.toggle('hidden', !isMicManual);
@@ -814,11 +919,13 @@ if (isControlPage) {
       setBlinkMode('mocap');
       setLipSyncMode('mocap');
       resetManualControlPose();
-      if (shouldAutoStartCameraOnModeChange()) {
+      if (autoStart && shouldAutoStartCameraOnModeChange()) {
         void startPoseDebug();
       }
     }
+    persistAppConfig();
   };
+  setControlMode(selectedControlMode, false);
   micManualModeButton?.addEventListener('click', () => setControlMode('mic-manual'));
   cameraModeButton?.addEventListener('click', () => setControlMode('camera'));
   avatarOffsetXInput?.addEventListener('input', () => {
@@ -899,10 +1006,24 @@ if (isControlPage) {
     void startMicReactiveMouth();
   });
   micStopButton?.addEventListener('click', stopMicReactiveMouth);
+  audioDeviceSelect?.addEventListener('change', () => {
+    appStore.getState().setSelectedAudioDeviceId(audioDeviceSelect?.value ?? '');
+    updateMediaDeviceHintText();
+  });
+  audioDeviceRefreshButton?.addEventListener('click', () => {
+    void refreshMediaDeviceOptions();
+  });
   poseStartButton?.addEventListener('click', () => {
     void startPoseDebug();
   });
   poseStopButton?.addEventListener('click', stopPoseDebug);
+  videoDeviceSelect?.addEventListener('change', () => {
+    appStore.getState().setSelectedVideoDeviceId(videoDeviceSelect?.value ?? '');
+    updateMediaDeviceHintText();
+  });
+  videoDeviceRefreshButton?.addEventListener('click', () => {
+    void refreshMediaDeviceOptions();
+  });
   poseMirrorInput?.addEventListener('change', () => {
     appStore.getState().setPoseMirrorInput(poseMirrorInput?.checked ?? true);
     resetArmIkRetarget();
@@ -929,6 +1050,7 @@ if (isControlPage) {
     if (!idleSwayEnabled) {
       restoreIdleSwayBones();
     }
+    persistAppConfig();
   });
   panel.querySelectorAll<HTMLButtonElement>('.expression-preset-button').forEach((button) => {
     button.addEventListener('click', () => {
@@ -941,9 +1063,16 @@ if (isControlPage) {
     });
   });
   renderVrmaSlotList();
+  syncControlsFromState();
+  obsRenderUrls = updateObsRenderUrls();
+  updateRelayConnectionStatus(relayConnectionStatus);
+  updateRenderPresenceStatus();
   updateExpressionPresetUi();
   syncFaceTrackingEnabledFromModes();
   setupManualControlEvents();
+  setupConfigPersistence();
+  void refreshMediaDeviceOptions();
+  window.setInterval(updateRenderPresenceStatus, 1500);
 
   viewport.append(panel);
 } else {
@@ -964,6 +1093,245 @@ syncFaceTrackingEnabledFromModes();
 appStore.subscribe(updateVrmStatusUi);
 updateVrmStatusUi(appStore.getState());
 resize();
+
+function applyRestoredAppConfig(config: AppConfigV1 | null): void {
+  if (!config) {
+    return;
+  }
+
+  const nextConfig = normalizeAppConfig(config);
+  selectedControlMode = nextConfig.selectedControlMode;
+  blinkMode = nextConfig.blinkMode;
+  lipSyncMode = nextConfig.lipSyncMode;
+  idleSwayEnabled = nextConfig.idleSwayEnabled;
+  const nextState = appStore.getState();
+  nextState.setSelectedAudioDeviceId(nextConfig.selectedAudioDeviceId);
+  nextState.setSelectedVideoDeviceId(nextConfig.selectedVideoDeviceId);
+  nextState.setManualControlEnabled(nextConfig.manualControlEnabled);
+  nextState.setManualMouseEnabled(nextConfig.manualMouseEnabled);
+  nextState.setPoseMirrorInput(nextConfig.poseMirrorInput);
+  nextState.setAvatarOffsetX(nextConfig.avatarTransform.offsetX);
+  nextState.setAvatarOffsetY(nextConfig.avatarTransform.offsetY);
+  nextState.setAvatarScale(nextConfig.avatarTransform.scale);
+  nextState.setAvatarRotationY(nextConfig.avatarTransform.rotationY);
+  nextState.setLookSettings(nextConfig.lookSettings);
+  nextState.setVrmaLoop(nextConfig.vrmaLoop);
+  persistedConfigSignature = serializeAppConfigSnapshot(createCurrentAppConfig());
+}
+
+function setupConfigPersistence(): void {
+  if (!isControlPage) {
+    return;
+  }
+
+  persistAppConfig();
+  appStore.subscribe(() => {
+    persistAppConfig();
+  });
+}
+
+function persistAppConfig(): void {
+  if (!isControlPage) {
+    return;
+  }
+
+  const config = createCurrentAppConfig();
+  const signature = serializeAppConfigSnapshot(config);
+  if (signature === persistedConfigSignature) {
+    return;
+  }
+
+  persistedConfigSignature = signature;
+  writeAppConfigToStorage(window.localStorage, config);
+}
+
+function createCurrentAppConfig(): AppConfigV1 {
+  const nextState = appStore.getState();
+
+  return normalizeAppConfig({
+    ...createDefaultAppConfig(),
+    selectedAudioDeviceId: nextState.selectedAudioDeviceId,
+    selectedVideoDeviceId: nextState.selectedVideoDeviceId,
+    selectedControlMode,
+    blinkMode,
+    lipSyncMode,
+    manualControlEnabled: nextState.manualControlEnabled,
+    manualMouseEnabled: nextState.manualMouseEnabled,
+    idleSwayEnabled,
+    poseMirrorInput: nextState.poseMirrorInput,
+    avatarTransform: {
+      offsetX: nextState.avatarOffsetX,
+      offsetY: nextState.avatarOffsetY,
+      scale: nextState.avatarScale,
+      rotationY: nextState.avatarRotationY,
+    },
+    lookSettings: nextState.lookSettings,
+    vrmaLoop: nextState.vrmaLoop,
+  });
+}
+
+function serializeAppConfigSnapshot(config: AppConfigV1): string {
+  return JSON.stringify(config);
+}
+
+function syncControlsFromState(): void {
+  const nextState = appStore.getState();
+  if (manualControlInput) {
+    manualControlInput.checked = nextState.manualControlEnabled;
+  }
+  if (manualMouseInput) {
+    manualMouseInput.checked = nextState.manualMouseEnabled;
+  }
+  if (idleSwayInput) {
+    idleSwayInput.checked = idleSwayEnabled;
+  }
+  if (blinkModeSelect && blinkMode !== 'mocap') {
+    blinkModeSelect.value = blinkMode;
+  }
+  if (lipSyncModeSelect && lipSyncMode !== 'mocap') {
+    lipSyncModeSelect.value = lipSyncMode;
+  }
+  if (vrmaLoopInput) {
+    vrmaLoopInput.checked = nextState.vrmaLoop;
+  }
+  updateMediaDeviceSelectValues(nextState);
+  updateVrmStatusUi(nextState);
+}
+
+async function refreshMediaDeviceOptions(): Promise<void> {
+  if (audioDeviceRefreshButton) {
+    audioDeviceRefreshButton.disabled = true;
+  }
+  if (videoDeviceRefreshButton) {
+    videoDeviceRefreshButton.disabled = true;
+  }
+
+  try {
+    const devices = await listMediaInputDevices();
+    const stateBeforeFallback = appStore.getState();
+    const nextAudioId = resolveSelectedDeviceId(
+      devices.audioInputs,
+      stateBeforeFallback.selectedAudioDeviceId,
+    );
+    const nextVideoId = resolveSelectedDeviceId(
+      devices.videoInputs,
+      stateBeforeFallback.selectedVideoDeviceId,
+    );
+    if (nextAudioId !== stateBeforeFallback.selectedAudioDeviceId) {
+      stateBeforeFallback.setSelectedAudioDeviceId(nextAudioId);
+    }
+    if (nextVideoId !== stateBeforeFallback.selectedVideoDeviceId) {
+      stateBeforeFallback.setSelectedVideoDeviceId(nextVideoId);
+    }
+    renderMediaDeviceSelect(audioDeviceSelect, '既定のマイク', devices.audioInputs);
+    renderMediaDeviceSelect(videoDeviceSelect, '既定のカメラ', devices.videoInputs);
+    updateMediaDeviceSelectValues(appStore.getState());
+    updateMediaDeviceHintText(devices.hasHiddenLabels);
+  } catch {
+    updateMediaDeviceHintText(true, 'デバイス一覧を取得できません');
+  } finally {
+    if (audioDeviceRefreshButton) {
+      audioDeviceRefreshButton.disabled = false;
+    }
+    if (videoDeviceRefreshButton) {
+      videoDeviceRefreshButton.disabled = false;
+    }
+  }
+}
+
+function renderMediaDeviceSelect(
+  select: HTMLSelectElement | null,
+  defaultLabel: string,
+  devices: readonly NormalizedMediaInputDevice[],
+): void {
+  if (!select) {
+    return;
+  }
+
+  select.innerHTML = '';
+  select.append(new Option(defaultLabel, ''));
+  for (const device of devices) {
+    select.append(new Option(device.displayName, device.deviceId));
+  }
+}
+
+function updateMediaDeviceSelectValues(nextState = appStore.getState()): void {
+  if (audioDeviceSelect) {
+    audioDeviceSelect.value = nextState.selectedAudioDeviceId;
+  }
+
+  if (videoDeviceSelect) {
+    videoDeviceSelect.value = nextState.selectedVideoDeviceId;
+  }
+}
+
+function updateMediaDeviceHintText(hiddenLabels = false, errorMessage = ''): void {
+  const micDeviceName =
+    audioDeviceSelect?.selectedOptions[0]?.textContent?.trim() || '既定のマイク';
+  const cameraDeviceName =
+    videoDeviceSelect?.selectedOptions[0]?.textContent?.trim() || '既定のカメラ';
+  const suffix = hiddenLabels ? ' / 権限許可後に名称表示' : '';
+
+  if (audioDeviceHintText) {
+    audioDeviceHintText.textContent = errorMessage || `${micDeviceName}${suffix}`;
+  }
+
+  if (videoDeviceHintText) {
+    videoDeviceHintText.textContent = errorMessage || `${cameraDeviceName}${suffix}`;
+  }
+}
+
+function updateObsRenderUrls(): ReturnType<typeof createObsRenderUrls> {
+  const urls = createObsRenderUrls({
+    location: window.location,
+    transparent: obsTransparentUrlInput?.checked ?? true,
+  });
+
+  if (obsRenderUrlText) {
+    obsRenderUrlText.textContent = urls.recommendedRenderUrl;
+  }
+  if (obsLocalhostUrlText) {
+    obsLocalhostUrlText.textContent = urls.localhostRenderUrl;
+  }
+  if (obsDebugUrlText) {
+    obsDebugUrlText.textContent = urls.debugRenderUrl;
+  }
+  if (controlUrlText) {
+    controlUrlText.textContent = urls.controlUrl;
+  }
+
+  return urls;
+}
+
+function updateRelayConnectionStatus(status: RelayConnectionStatus): void {
+  relayConnectionStatus = status;
+  if (!relayStatusText) {
+    return;
+  }
+
+  relayStatusText.textContent =
+    status === 'open'
+      ? '接続済み'
+      : status === 'connecting'
+        ? '接続中'
+        : status === 'error'
+          ? 'エラー'
+          : '未接続';
+  relayStatusText.classList.toggle('text-[#6dff9a]', status === 'open');
+  relayStatusText.classList.toggle('text-[#ff8a8a]', status === 'error');
+}
+
+function updateRenderPresenceStatus(): void {
+  if (!renderStatusText) {
+    return;
+  }
+
+  const ageMs = lastRenderPresenceAt > 0 ? Date.now() - lastRenderPresenceAt : Infinity;
+  const isOnline = ageMs < 3500;
+  renderStatusText.textContent = isOnline ? '検出' : '未検出';
+  renderStatusText.classList.toggle('text-[#6dff9a]', isOnline);
+  renderStatusText.classList.toggle('text-[#9fa9aa]', !isOnline);
+}
 
 function resize(): void {
   const { width, height } = getRenderSize();
@@ -1279,6 +1647,7 @@ function animate(frameTime = performance.now()): void {
   }
   updateRelayDebugOverlay();
   publishRelayDebugSample(frameTime);
+  publishRenderPresence(frameTime);
   renderer.render(scene, camera);
   window.requestAnimationFrame(animate);
 }
@@ -1286,6 +1655,12 @@ function animate(frameTime = performance.now()): void {
 animate();
 
 function handleRelayMessage(message: RelayMessage): void {
+  if (!isRenderPage && message.type === 'renderPresence') {
+    lastRenderPresenceAt = message.presence.sentAt;
+    updateRenderPresenceStatus();
+    return;
+  }
+
   if (!isRenderPage) {
     return;
   }
@@ -1318,6 +1693,7 @@ function handleRelayMessage(message: RelayMessage): void {
       applyRelayVrmaCommand(message.command, message.selectedIndex, message.loop);
       break;
     case 'hello':
+    case 'renderPresence':
       break;
   }
 }
@@ -1788,6 +2164,20 @@ function createRelayDebugSample(): RelayDebugSample {
     },
     bufferedAmount: relayClient.bufferedAmount,
   };
+}
+
+function publishRenderPresence(frameTime: number): void {
+  if (!isRenderPage || frameTime - renderPresencePublishTime < 2000) {
+    return;
+  }
+
+  renderPresencePublishTime = frameTime;
+  relayClient.send({
+    type: 'renderPresence',
+    presence: {
+      sentAt: Date.now(),
+    },
+  });
 }
 
 function formatRelayDebugValue(value: number | undefined): string {
@@ -2351,6 +2741,7 @@ function updateVrmStatusUi(nextState: AppState): void {
   updateAvatarTransformUi(nextState);
   updateManualControlUi(nextState);
   updateLookSettingsUi(nextState);
+  updateMediaDeviceSelectValues(nextState);
 }
 
 function getVrmFileText(nextState: AppState): string {
@@ -2698,7 +3089,17 @@ async function startMicReactiveMouth(): Promise<void> {
       attack: 0.55,
       release: 0.16,
     });
-    await micController.start();
+    const selectedAudioDeviceId = appStore.getState().selectedAudioDeviceId;
+    try {
+      await micController.start(selectedAudioDeviceId);
+    } catch (error) {
+      if (!selectedAudioDeviceId) {
+        throw error;
+      }
+      appStore.getState().setSelectedAudioDeviceId('');
+      await micController.start('');
+    }
+    void refreshMediaDeviceOptions();
     appStore.getState().setMicActive();
   } catch (error) {
     micController?.stop();
@@ -2931,6 +3332,7 @@ function setBlinkMode(mode: BlinkMode): void {
     applyBlinkOpen();
   }
   void syncFaceTrackerForCurrentModes();
+  persistAppConfig();
 }
 
 function setLipSyncMode(mode: LipSyncMode): void {
@@ -2943,6 +3345,7 @@ function setLipSyncMode(mode: LipSyncMode): void {
     applyMouthExpressions(createNeutralMouthExpressions());
   }
   void syncFaceTrackerForCurrentModes();
+  persistAppConfig();
 }
 
 function syncFaceTrackingEnabledFromModes(): void {
@@ -3042,14 +3445,19 @@ async function startPoseDebug(): Promise<void> {
   }
 
   try {
-    poseStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 640 },
-        height: { ideal: 360 },
-        facingMode: 'user',
-      },
-      audio: false,
-    });
+    const selectedVideoDeviceId = appStore.getState().selectedVideoDeviceId;
+    try {
+      poseStream = await navigator.mediaDevices.getUserMedia(
+        createVideoInputConstraints(selectedVideoDeviceId),
+      );
+    } catch (error) {
+      if (!selectedVideoDeviceId) {
+        throw error;
+      }
+      appStore.getState().setSelectedVideoDeviceId('');
+      poseStream = await navigator.mediaDevices.getUserMedia(createVideoInputConstraints(''));
+    }
+    void refreshMediaDeviceOptions();
     poseVideoElement.srcObject = poseStream;
     await poseVideoElement.play();
 

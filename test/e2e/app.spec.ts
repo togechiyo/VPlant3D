@@ -38,7 +38,20 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#vrma-play-button')).toBeDisabled();
   await expect(page.getByText('OBSに貼る')).toHaveCount(1);
   await expect(page.locator('#obs-render-url-text')).toContainText('/?obs=1&transparent=1');
+  await expect(page.locator('#obs-localhost-url-text')).toContainText(
+    'localhost:5173/?obs=1&transparent=1',
+  );
+  await expect(page.locator('#obs-debug-url-text')).toContainText(
+    '/?obs=1&transparent=1&debug=1',
+  );
   await expect(page.locator('#control-url-text')).toContainText('/?control=1');
+  await expect(page.locator('#obs-transparent-url-input')).toBeChecked();
+  await page.locator('#obs-transparent-url-input').uncheck();
+  await expect(page.locator('#obs-render-url-text')).toContainText('/?obs=1');
+  await expect(page.locator('#obs-render-url-text')).not.toContainText('transparent=1');
+  await page.locator('#obs-transparent-url-input').check();
+  await expect(page.locator('#relay-status-text')).toHaveText(/接続|未接続|エラー/);
+  await expect(page.locator('#render-status-text')).toHaveText(/未検出|検出/);
   await expect(page.getByText('マイク&手動モード')).toBeVisible();
   await expect(page.locator('#mic-manual-mode-button')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#camera-mode-button')).toHaveAttribute('aria-pressed', 'false');
@@ -66,6 +79,9 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('マイク停止中')).toBeVisible();
   await expect(page.locator('#mic-start-button')).toBeEnabled();
   await expect(page.locator('#mic-stop-button')).toBeDisabled();
+  await expect(page.locator('#audio-device-select')).toBeVisible();
+  await expect(page.locator('#audio-device-select option').first()).toHaveText('既定のマイク');
+  await expect(page.locator('#audio-device-refresh-button')).toBeVisible();
   await expect(page.getByText('まばたき', { exact: true })).toBeVisible();
   await expect(page.locator('#blink-mode-select')).toHaveValue('auto');
   await expect(page.locator('#blink-mode-select option[value="mocap"]')).toHaveCount(0);
@@ -92,11 +108,63 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
   await expect(page.getByText('ミラー')).toBeVisible();
   await expect(page.locator('#pose-mirror-input')).toBeChecked();
+  await expect(page.locator('#video-device-select')).toBeVisible();
+  await expect(page.locator('#video-device-select option').first()).toHaveText('既定のカメラ');
+  await expect(page.locator('#video-device-refresh-button')).toBeVisible();
   await expect(page.getByText('実験')).toHaveCount(0);
   await expect(page.locator('#hand-tracking-input')).toHaveCount(0);
   await expect(page.locator('#pose-start-button')).toBeEnabled();
   await expect(page.locator('#pose-stop-button')).toBeDisabled();
   expect(errors()).toEqual([]);
+});
+
+test('Control page restores saved local settings', async ({ page }) => {
+  await page.goto('/?control=1');
+  await page.evaluate(() => {
+    window.localStorage.setItem(
+      'vplant3d.config.v1',
+      JSON.stringify({
+        version: 1,
+        selectedControlMode: 'camera',
+        blinkMode: 'off',
+        lipSyncMode: 'off',
+        manualControlEnabled: false,
+        manualMouseEnabled: false,
+        idleSwayEnabled: false,
+        poseMirrorInput: false,
+        avatarTransform: {
+          offsetX: 0.5,
+          offsetY: -0.25,
+          scale: 1.3,
+          rotationY: 20,
+        },
+        lookSettings: {
+          keyIntensityScale: 1.25,
+          keyColorHex: '#aabbcc',
+          keyPosition: [1, 3, 4],
+          keyShadowEnabled: true,
+        },
+        vrmaLoop: false,
+      }),
+    );
+  });
+
+  await page.reload();
+
+  await expect(page.locator('#camera-mode-button')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText('カメラモード')).toBeVisible();
+  await expect(page.locator('#pose-mirror-input')).not.toBeChecked();
+  await expect(page.locator('#manual-control-input')).not.toBeChecked();
+  await expect(page.locator('#manual-mouse-input')).not.toBeChecked();
+  await expect(page.locator('#idle-sway-input')).not.toBeChecked();
+  await expect(page.locator('#avatar-offset-x-input')).toHaveValue('0.5');
+  await expect(page.locator('#avatar-offset-y-input')).toHaveValue('-0.25');
+  await expect(page.locator('#avatar-scale-input')).toHaveValue('1.3');
+  await expect(page.locator('#avatar-rotation-y-input')).toHaveValue('20');
+  await expect(page.locator('#key-light-scale-input')).toHaveValue('1.25');
+  await expect(page.locator('#key-light-color-input')).toHaveValue('#aabbcc');
+  await expect(page.locator('#key-light-shadow-input')).toBeChecked();
+  await expect(page.locator('#vrma-loop-input')).not.toBeChecked();
 });
 
 test('Control page keeps setup controls outside the OBS render URL', async ({ page }) => {

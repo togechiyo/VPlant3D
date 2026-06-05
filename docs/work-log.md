@@ -4363,3 +4363,41 @@
 ### Next
 
 - Phase Aとして、MediaDevices APIを使ったマイク/カメラデバイス選択から実装する
+
+## 2026-06-05 Complete Pre-Tauri Web Controller Readiness
+
+### Goal
+
+- Tauriで包む前に、Web Controller側で必要なデバイス選択、設定保存、OBS URL共有、接続状態表示を揃える
+
+### Did
+
+- `src/media/media-devices.ts` を追加し、MediaDevices APIの入力デバイス正規化、権限前ラベルfallback、選択IDの安全なfallback、マイク/カメラconstraints生成を切り出した
+- Controller UIにマイク / カメラのdevice selectと更新ボタンを追加した
+- 選択したマイクIDをマイク口パク開始時へ、選択したカメラIDをMediaPipeカメラ開始時へ渡すようにした
+- 保存済みデバイスが見つからない、または開始時に失敗した場合は既定デバイスへ戻すようにした
+- `src/config/app-config.ts` と `src/config/local-storage.ts` を追加し、localStorage key `vplant3d.config.v1` で設定保存を実装した
+- 保存対象は、マイク/カメラID、操作モード、まばたき/口モード、手動操作、揺らぎ、ミラー、位置/拡大/回転、キーライト設定、VRMA loop
+- `src/obs/render-url.ts` を追加し、推奨 `127.0.0.1` Render URL、`localhost` 代替URL、Debug URL、Control URLを生成するようにした
+- ControllerのOBS URLカードへコピー導線、透明背景URL切替、Relay接続状態、OBS Render検出状態を追加した
+- Render側から `renderPresence` heartbeatを送り、Controllerで簡易的にOBS Render接続状態を表示するようにした
+- README、hackathon finish task list、submission checklist、human handoff boardを更新した
+
+### Worked
+
+- `npm run test` 通過
+- `npm run build` 通過
+- `npm run lint` 通過
+- Playwright E2Eの復元テストを追加し、localStorageからControl設定が復元されることを確認した
+- `npm run test:e2e` は一度、初期化順序の不具合で復元テストのみ失敗した。原因は `persistedConfigSignature` の宣言位置で、修正後に全E2Eが通過した
+
+### Needs Human Check
+
+- 複数マイク / カメラ接続時に、選択したデバイスで実際に入力が取れるか
+- OBS Browser Sourceで推奨URL / localhost代替URL / 透明背景 / 接続表示が期待通りか
+- Tauri化後にlocalStorage相当の設定をTauri Storeへ移すかどうか
+
+### Next
+
+- コミット / pushする
+- 次の大きな作業はTauri scaffold。ただし締切前の安定性を優先し、Web Controller fallbackは維持する

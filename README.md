@@ -94,21 +94,25 @@ OBS-style URL examples:
 ```text
 http://127.0.0.1:5173/?obs=1
 http://127.0.0.1:5173/?obs=1&transparent=1
+http://127.0.0.1:5173/?obs=1&transparent=1&debug=1
 http://127.0.0.1:5173/?control=1
 ```
 
-Setup Mode includes local `.vrm` and `.vrma` file inputs. Local model and motion files are loaded from the user's machine and are not committed to this repository. Multiple `.vrma` files can be loaded into motion slots, then replayed with one button from the Setup Dock.
+Control Mode includes local `.vrm` and `.vrma` file inputs. Local model and motion files are loaded from the user's machine and are not committed to this repository. Multiple `.vrma` files can be loaded into motion slots, then replayed with one button from the Controller.
 
 OBS Browser Source is treated as the render-only output target. Camera, microphone, MediaPipe, and setup controls live on the Control / Capture page in Chrome, with the local relay sending avatar state and selected local assets to the OBS Render page.
 
+The Controller shows a recommended `127.0.0.1` OBS Render URL, a `localhost` fallback URL, a debug URL, copy buttons, and a small Relay / OBS Render connection status. Use the transparent Render URL for OBS overlay composition.
+
 Mic Reactive Mouth can request microphone access in Setup Mode and drive the loaded VRM's `aa` expression from microphone volume. It is simple RMS-based mouth movement, not phoneme lip sync.
-For users who do not want camera-based mocap, Setup Mode also provides camera-free Auto Blink, Idle Sway, and one-button VRM expression presets.
+The Controller can select the microphone input device and remembers the selected device in browser localStorage. If a saved device is missing, VPlant3D falls back to the default input.
+For users who do not want camera-based mocap, Control Mode also provides camera-free Auto Blink, Idle Sway, manual mouse control, and one-button VRM expression presets.
 
 MediaPipe Pose Debug can request camera access in Setup Mode and show upper-body pose landmarks as a skeleton-only overlay. The raw camera image is hidden to avoid face leaks. It is a verification spike for future neck/chest/shoulder tracking, not production VRM retargeting yet.
-Mocap input can be mirrored in Setup Mode so the avatar response can match the user's camera intuition.
+Mocap input can be mirrored in Control Mode so the avatar response can match the user's camera intuition. The Controller can select the camera input device and remembers the selected device in localStorage.
 Face tracking can drive VRM blink, mouth, and simple emotion expressions from MediaPipe face blendshapes. Hand tracking currently draws a skeleton overlay for verification.
 When a VRM is loaded, the default camera frames the avatar around the upper body for OBS-friendly VTuber use.
-Setup Mode also includes Avatar Framing sliders for X/Y position, scale, and Y-axis rotation.
+Control Mode also includes Avatar Framing sliders for X/Y position, scale, and Y-axis rotation. Device choices, control mode, blink / lip modes, manual toggles, mirror setting, avatar transform, look settings, and VRMA loop are saved in localStorage for the next launch.
 
 ## Documentation
 

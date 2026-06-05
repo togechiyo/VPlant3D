@@ -166,6 +166,10 @@ export interface RelayDebugSample {
   bufferedAmount: number;
 }
 
+export interface RelayRenderPresence {
+  sentAt: number;
+}
+
 export type RelayMessage =
   | {
       type: 'hello';
@@ -203,6 +207,10 @@ export type RelayMessage =
   | {
       type: 'debugSample';
       sample: RelayDebugSample;
+    }
+  | {
+      type: 'renderPresence';
+      presence: RelayRenderPresence;
     }
   | {
       type: 'vrmaCommand';

@@ -1,6 +1,6 @@
 # Submission Checklist
 
-最終更新日: 2026-05-20
+最終更新日: 2026-06-05
 
 ## 目的
 
@@ -21,37 +21,37 @@
   - ツール部門
   - エクスペリエンス部門
 - Target canvas size: 1920x1080
-- Visual direction: dark neutral gray with neon green and neon blue accents
+- Visual direction: dark neutral gray with light neon green accents
 
 ## MVP Feature Checklist
 
 ### Must Have
 
-- [ ] Vite + TypeScript appとして起動できる
-- [ ] OBS Browser SourceでURLを読み込める
-- [ ] `?obs=1` で配信用表示になる
-- [ ] `?transparent=1` で背景透過できる
-- [ ] VRMモデルを読み込んで表示できる
-- [ ] カメラ位置を最低限調整できる
-- [ ] マイク音量に応じて口が動く
-- [ ] READMEに起動方法とOBS設定方法がある
+- [x] Vite + TypeScript appとして起動できる
+- [x] OBS Browser SourceでURLを読み込める
+- [x] `?obs=1` で配信用表示になる
+- [x] `?transparent=1` で背景透過できる
+- [x] VRMモデルを読み込んで表示できる
+- [x] カメラ位置を最低限調整できる
+- [x] マイク音量に応じて口が動く
+- [x] READMEに起動方法とOBS設定方法がある
 - [ ] 1分程度のデモ動画を撮れる状態になっている
 
 ### Should Have
 
 - [ ] Look / Shaderプリセットが最低3種類ある
-- [ ] VRMAファイルを読み込んで再生できる
-- [ ] VRMAのloop / stopができる
+- [x] VRMAファイルを読み込んで再生できる
+- [x] VRMAのloop / stopができる
 - [ ] Style Wallで簡易背景を作れる
 - [ ] Image Panelで画像を3D空間に貼れる
-- [ ] localStorageに最低限の設定を保存できる
+- [x] localStorageに最低限の設定を保存できる
 
 ### Could Have
 
 - [ ] MediaPipeで首・胸・肩の簡易追従ができる
 - [ ] Text Panelがある
-- [ ] OBS Mode URLをUIから生成できる
-- [ ] WebGL fallbackがある
+- [x] OBS Mode URLをUIから生成できる
+- [x] WebGL fallbackがある
 - [ ] サンプル設定プリセットがある
 
 ### Explicitly Out Of Scope
@@ -66,28 +66,28 @@
 
 ## Quality Checklist
 
-- [ ] `npm run test` が通る
-- [ ] `npm run build` が通る
-- [ ] lint導入後は `npm run lint` が通る
+- [x] `npm run test` が通る
+- [x] `npm run build` が通る
+- [x] lint導入後は `npm run lint` が通る
 - [ ] Chromeで表示確認済み
 - [ ] Chromeでconsole errorがない、または既知の制限として記録済み
 - [ ] OBS Browser Sourceで表示確認済み
 - [ ] 透明背景をOBSで確認済み
-- [ ] マイク権限と口パク動作を確認済み
-- [ ] VRM読み込み失敗時のユーザー向け表示がある
+- [x] マイク権限と口パク動作を確認済み
+- [x] VRM読み込み失敗時のユーザー向け表示がある
 - [ ] 主要な制限事項がREADMEまたはdocsに書かれている
 
 ## Documentation Checklist
 
-- [ ] READMEに概要がある
-- [ ] READMEに起動方法がある
-- [ ] READMEにOBS Browser Source設定方法がある
-- [ ] READMEに対応機能と非対応機能がある
+- [x] READMEに概要がある
+- [x] READMEに起動方法がある
+- [x] READMEにOBS Browser Source設定方法がある
+- [x] READMEに対応機能と非対応機能がある
 - [ ] READMEにデモ動画またはスクリーンショットへの導線がある
 - [ ] READMEに使用ライブラリ概要がある
 - [ ] `docs/third-party-libraries.md` が更新されている
-- [ ] `docs/human-handoff-board.md` の未対応項目を確認した
-- [ ] `docs/work-log.md` が提出直前の状態に更新されている
+- [x] `docs/human-handoff-board.md` の未対応項目を確認した
+- [x] `docs/work-log.md` が提出直前の状態に更新されている
 
 ## Rights / Assets Checklist
 

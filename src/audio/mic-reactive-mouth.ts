@@ -3,6 +3,7 @@ import {
   normalizeMouthOpen,
   smoothMouthOpen,
 } from './mic-mouth';
+import { createAudioInputConstraints } from '../media/media-devices';
 
 export interface MicReactiveMouthOptions {
   fftSize: number;
@@ -27,19 +28,12 @@ export class MicReactiveMouth {
 
   public constructor(private readonly options: MicReactiveMouthOptions) {}
 
-  public async start(): Promise<void> {
+  public async start(deviceId = ''): Promise<void> {
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error('Microphone capture is not available in this browser.');
     }
 
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      },
-      video: false,
-    });
+    this.stream = await navigator.mediaDevices.getUserMedia(createAudioInputConstraints(deviceId));
 
     this.audioContext = new AudioContext();
     this.analyser = this.audioContext.createAnalyser();

@@ -35,10 +35,12 @@ export interface AppState {
   vrmaLoop: boolean;
   micStatus: MicStatus;
   micError: string | null;
+  selectedAudioDeviceId: string;
   micLevel: number;
   mouthOpen: number;
   poseStatus: PoseStatus;
   poseError: string | null;
+  selectedVideoDeviceId: string;
   poseLandmarkCount: number;
   poseUpperBodyVisibleCount: number;
   poseAverageVisibility: number;
@@ -73,6 +75,7 @@ export interface AppState {
   setMicError: (message: string) => void;
   setMicStopped: () => void;
   setMicFrame: (level: number, mouthOpen: number) => void;
+  setSelectedAudioDeviceId: (deviceId: string) => void;
   setPoseRequesting: () => void;
   setPoseLoading: () => void;
   setPoseActive: () => void;
@@ -84,6 +87,7 @@ export interface AppState {
     averageVisibility: number,
     summaryText: string,
   ) => void;
+  setSelectedVideoDeviceId: (deviceId: string) => void;
   setPoseMirrorInput: (mirrorInput: boolean) => void;
   setFaceTrackingEnabled: (enabled: boolean) => void;
   setFaceTrackingLoading: () => void;
@@ -139,10 +143,12 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
     vrmaLoop: initialVrmaPlayback.loop,
     micStatus: 'idle',
     micError: null,
+    selectedAudioDeviceId: '',
     micLevel: 0,
     mouthOpen: 0,
     poseStatus: 'idle',
     poseError: null,
+    selectedVideoDeviceId: '',
     poseLandmarkCount: 0,
     poseUpperBodyVisibleCount: 0,
     poseAverageVisibility: 0,
@@ -240,6 +246,10 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
         micLevel: level,
         mouthOpen,
       }),
+    setSelectedAudioDeviceId: (deviceId) =>
+      set({
+        selectedAudioDeviceId: deviceId,
+      }),
     setPoseRequesting: () =>
       set({
         poseStatus: 'requesting',
@@ -284,6 +294,10 @@ export function createAppStore(initialOptions: ObsQueryOptions) {
         poseUpperBodyVisibleCount: upperBodyVisibleCount,
         poseAverageVisibility: averageVisibility,
         poseSummaryText: summaryText,
+      }),
+    setSelectedVideoDeviceId: (deviceId) =>
+      set({
+        selectedVideoDeviceId: deviceId,
       }),
     setPoseMirrorInput: (mirrorInput) =>
       set({

@@ -403,3 +403,40 @@ Notes:
 
 - Codexは投稿文の下書きを作れる
 - 最終投稿は人間が確認して行う
+
+### Todo: 複数マイク / カメラ選択と保存復元の実機確認
+
+- Owner: Human
+- Needed by: Tauri化前のWeb Controller確認
+- Why: Codex環境では実デバイスの複数接続、OS側のデバイス名、権限許可後のラベル更新を完全には確認できないため
+- What to check:
+  - Chromeで `http://127.0.0.1:5173/?control=1` を開く
+  - マイクを複数接続し、`マイク&手動` モードのマイクselectに表示されるか確認する
+  - 任意のマイクを選択して `マイク開始` し、選択した入力で口パクするか確認する
+  - カメラを複数接続し、`カメラ` モードのカメラselectに表示されるか確認する
+  - 任意のカメラを選択して `カメラ開始` し、選択した入力で骨格が出るか確認する
+  - ページを再読み込みして、選択したマイク / カメラ、操作モード、位置調整、ライト設定、VRMAループが復元されるか確認する
+  - 保存済みデバイスを外した状態で再読み込みし、既定デバイスへ戻るか確認する
+
+Notes:
+
+- 権限許可前はブラウザ仕様でデバイス名が空になる場合がある。その場合は許可後に `更新` を押して確認する
+- Web版ではlocalStorageへ保存している。Tauri化後は同じschemaをTauri Storeへ移す想定
+
+### Todo: OBS Render URL共有と接続状態の実機確認
+
+- Owner: Human
+- Needed by: OBSデモ前
+- Why: OBS Browser Source内CEFで `127.0.0.1` / `localhost` の扱い、WebSocket接続、透明背景が環境依存になる可能性があるため
+- What to check:
+  - ControllerのOBS URLカードで、推奨Render URL、localhost代替URL、Debug URL、Control URLがコピーできる
+  - OBS Browser Sourceへ推奨Render URLを貼る
+  - うまく表示されない場合はlocalhost代替URLを試す
+  - OBS Renderを開くとController側の `OBS` 接続表示が `検出` になる
+  - OBS Browser Sourceを消す、または別URLへ変えると数秒後に `未検出` へ戻る
+  - `transparent=1` のURLで背景透過が維持される
+
+Notes:
+
+- `?debug=1` URLは通常デモでは使わず、同期トラブル確認用に使う
+- 接続表示はRender側からの軽いheartbeatをControlが受け取る簡易表示
