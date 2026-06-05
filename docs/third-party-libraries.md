@@ -31,6 +31,13 @@ Versions and licenses below were verified from installed package metadata in `no
 | --- | ---: | --- | --- |
 | `tauri` Rust crate | `2` | Apache-2.0 OR MIT | Minimal native app shell for the Controller window. The Rust toolchain is required to build or run it. |
 | `tauri-build` Rust crate | `2` | Apache-2.0 OR MIT | Tauri build script helper for generating app context from `tauri.conf.json`. |
+| `axum` Rust crate | `0.8.9` | MIT | Rust Local Relay HTTP / WebSocket server inside the Tauri app. |
+| `tokio` Rust crate | `1.52.3` | MIT | Async runtime used by the Rust Local Relay. |
+| `tower-http` Rust crate | `0.6.11` | MIT | Static `dist/` frontend serving for the Rust Local Relay. |
+| `serde` / `serde_json` Rust crates | `1.0.x` | MIT OR Apache-2.0 | Health/debug JSON payloads and raw relay message inspection. Runtime messages remain JSON pass-through for compatibility. |
+| `uuid` Rust crate | `1.23.2` | Apache-2.0 OR MIT | Temporary VRM / VRMA asset IDs in the Rust Local Relay. |
+| `futures-util` Rust crate | `0.3.32` | MIT OR Apache-2.0 | WebSocket stream/sink helpers. |
+| `mime_guess` Rust crate | `2.0.5` | MIT OR Apache-2.0 | Future content-type handling for served assets. |
 
 ## 3D Rendering
 

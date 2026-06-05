@@ -95,17 +95,23 @@ Tauri Controller development:
 npm run tauri:dev
 ```
 
-The first Tauri phase is a desktop shell for the existing Controller UI. It still uses the same local relay and the same OBS Render URL flow as the web version. OBS should continue to load the Browser Source URL, for example `http://127.0.0.1:5173/?obs=1&transparent=1`.
+The Tauri app starts an in-app Rust local relay, then opens the Controller UI at the relay URL. OBS should still load the Browser Source URL shown by the Controller, for example `http://127.0.0.1:5173/?obs=1&transparent=1`.
 
-The relay server is not implemented in Tauri / Rust yet. `npm run tauri:dev` runs a small dev helper that attaches to an existing VPlant3D relay when one is already available, or starts the existing Node local relay before opening the Controller window.
+The Rust relay implements the same minimum local endpoints used by the web version:
 
-If `npm run dev` is already running in another terminal, use the attached mode to avoid starting the relay twice:
+- `ws://127.0.0.1:<port>/relay/ws` for Control-to-Render state sync
+- `/relay/assets` for temporary local VRM / VRMA asset handoff
+- `/relay/health` and `/relay/debug-log` for local diagnostics
+
+If port `5173` is already in use, the Tauri app chooses a nearby free localhost port and prints the Controller / OBS URLs in the dev log. In development, `npm run tauri:dev` still runs a small Node relay helper as a bootstrap fallback, but the Tauri window navigates to the Rust relay once the app starts.
+
+If `npm run dev` is already running in another terminal and you only want to open the Tauri window against that existing web relay, use the attached mode:
 
 ```bash
 npm run tauri:dev:attached
 ```
 
-Tauri requires the Rust toolchain. If `rustc` or `cargo` is not installed, keep using `npm run dev` as the web fallback until Rust is installed.
+Tauri requires the Rust toolchain. If `rustc` or `cargo` is not installed, keep using `npm run dev` as the web fallback until Rust is installed. If Rust is installed but `cargo` is not on the current shell PATH, add `~/.cargo/bin` to PATH before running Tauri commands.
 
 OBS-style URL examples:
 

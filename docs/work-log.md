@@ -71,6 +71,68 @@
 - `/relay/health`、WebSocket `/relay/ws`、asset upload/download、latest replayの順で実装する
 - Controller/OBS RenderのURLをRust relay portへつなぐ
 
+## 2026-06-05 Implement First Tauri Rust Local Relay
+
+### Goal
+
+- Tauriアプリ起動時にRust製Local Relayを立て、手動でNode relayを起動しなくてもControllerからOBS Renderへモーション・表情・VRM/VRMA一時assetを伝達できる最小形を作る
+
+### Did
+
+- `server/vplant-relay.mjs` と `src/relay/*` を確認し、移植対象を棚卸しした
+- `src-tauri/src/relay/` にRust relay moduleを追加した
+  - `GET /relay/health`
+  - `GET /relay/debug-log`
+  - `DELETE /relay/debug-log`
+  - `POST /relay/assets?kind=vrm|vrma`
+  - `GET /relay/assets/{id}`
+  - `GET /relay/ws`
+  - build済み `dist/` frontend配信
+- WebSocket messageは厳密schema化せず、既存互換のJSON文字列pass-throughを基本にした
+- `runtimeState`、`staticState`、`asset`、`vrmaSlots`、`vrmaCommand` などをlatest replay対象にした
+- active control guardをRust側にも入れ、古いcontrol socketのrealtime stateが後勝ちしにくいようにした
+- Tauri startupでRust relayを起動し、Controller windowをRust relayの `/?control=1` へnavigateするようにした
+- `tauri.conf.json` に `../dist` resourceを追加し、build済みfrontendをTauri bundleへ含めるようにした
+- README、配布前タスクリスト、人間向け確認板を更新した
+
+### Worked
+
+- Rust relay unit testsで、message分類、latest replay順、active control guard、asset kind validation、filename encode/decodeを確認した
+- `npm run tauri:dev` はPATHへ `~/.cargo/bin` を足した状態で起動し、Rust relayが `127.0.0.1:5175` へfallbackしてController / OBS URLを出すところまで確認できた
+- 既存5173が埋まっていても、Rust relayは近い空きportへ逃げられる
+- Web fallbackのNode relayと既存E2Eは維持できた
+- `npm run tauri:build` はRust release buildと `.app` 生成まで到達した
+
+### Verified
+
+- `cargo fmt --check`
+- `cargo test`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`（通常実行はsandboxのlisten EPERMで失敗。権限付き再実行で13 passed）
+- `npm run tauri:dev`（`PATH=/Users/togechiyo/.cargo/bin:$PATH` 付きで起動確認）
+- `npm run tauri:build`（`.app` 生成まで成功、DMG bundleで失敗）
+
+### Blocked / Needs Human Check
+
+- `cargo` は導入済みだが、このCodex shellの標準PATHには `~/.cargo/bin` が入っていない。Tauri系コマンドではPATH追加が必要
+- `npm run tauri:build` は `src-tauri/target/release/bundle/macos/VPlant3D for OBS.app` 生成後、DMG bundle段階で `bundle_dmg.sh` 実行エラーになった
+- Tauri windowでVRM読み込み、マイク/カメラ権限、Controller表示URLをOBSへ貼った実機確認は人間確認が必要
+- app終了時にRust relayが確実に停止するかは、GUI実機操作で確認する必要がある
+
+### Decision
+
+- Rust relayはひとまずNode relayの完全な型移植ではなく、既存Web messageとの互換を優先したJSON pass-through実装にする
+- dev時の `beforeDevCommand` はまだNode helperを残す。Tauri起動後はRust relayへnavigateするため、配布buildではRust relay本線にできる
+- Node relayと `npm run dev` はfallbackとして残す
+
+### Next
+
+- `.app` をFinder起動し、Controllerに出たOBS URLでOBS Browser Sourceへ接続できるか確認する
+- DMG bundle失敗原因を調べる。締切前に重ければ `.app` 直接配布またはWeb fallback手順を優先する
+- Rust relayとNode relayの挙動比較テスト、または手動OBS確認手順を追加する
+
 ## 2026-06-05 Tauri Relay Dev Attach / Startup Prototype
 
 ### Goal

@@ -29,6 +29,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "category": "GraphicsAndDesign"
+    "category": "GraphicsAndDesign",
+    "resources": ["../dist"]
   }
 }

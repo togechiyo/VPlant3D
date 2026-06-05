@@ -6,17 +6,18 @@
 
 VPlant3DをTauriアプリとして配布できる形へ近づける前に、必要な作業を洗い出す。
 
-現状のTauri実装は「Controller UIを開くshell」であり、Local Relay serverはTauri / Rust内にはまだ実装されていない。配布物として自然に使えるアプリにするには、Controller、Relay、OBS Render URL、権限、ビルド、実機確認をまとめて整える必要がある。
+現状のTauri実装は「Controller UIを開き、Tauri内Rust Local Relayを起動するshell」になった。配布物として自然に使えるアプリにするには、Controller、Relay、OBS Render URL、権限、ビルド、実機確認をまとめて整える必要がある。
 
 ## 現状
 
 - `src-tauri/` の最小scaffoldはある
 - `npm run tauri:dev` はTauriの `beforeDevCommand` で `npm run tauri:relay` を実行し、既存VPlant3D relayへattachするか、Node relayを起動する
 - `npm run tauri:dev:attached` は、すでに動いているrelayへTauri windowだけ接続する
+- Tauri起動後はRust Local Relayを起動し、Controller windowをRust relayの `/?control=1` へnavigateする
+- Rust relayは `/relay/health`、`/relay/ws`、`/relay/assets`、`/relay/debug-log`、build済みfrontend配信を実装済み
 - OBS Renderは引き続きOBS Browser Sourceで `http://127.0.0.1:<port>/?obs=1&transparent=1` を開く
-- Tauri / Rust製Local Relay serverは未実装
 - Node relay sidecar化も未実装
-- 配布用のmacOS / Windows build、署名、公証、インストーラー確認は未着手
+- macOS `.app` 生成は到達済み。DMG作成、署名、公証、Windows build、実機OBS確認は未完了
 
 Rust relay移植の詳細計画:
 
@@ -96,22 +97,22 @@ Rust relay移植の詳細計画:
 
 ### Phase A: Rust relay実装の調査と最小移植
 
-- [ ] 既存Node relayの責務を棚卸しする
-  - [ ] HTTP frontend配信
-  - [ ] WebSocket `/relay/ws`
-  - [ ] asset upload `/relay/assets`
-  - [ ] latest state replay
-  - [ ] active control guard
-  - [ ] debug sample collection
-  - [ ] `/relay/debug-log`
-- [ ] Rust側のHTTP / WebSocketライブラリ候補を決める
-- [ ] relay message schemaは `src/relay/messages.ts` と互換にする
-- [ ] asset uploadの保存先と寿命を決める
-- [ ] latest VRM / VRMA asset replayを実装する
-- [ ] latest static / motion state replayを実装する
-- [ ] active control guardを実装する
-- [ ] debug-log endpointを実装する
-- [ ] Rust relay単体テストを書く
+- [x] 既存Node relayの責務を棚卸しする
+  - [x] HTTP frontend配信
+  - [x] WebSocket `/relay/ws`
+  - [x] asset upload `/relay/assets`
+  - [x] latest state replay
+  - [x] active control guard
+  - [x] debug sample collection
+  - [x] `/relay/debug-log`
+- [x] Rust側のHTTP / WebSocketライブラリ候補を決める
+- [x] relay message schemaは `src/relay/messages.ts` と互換にする
+- [x] asset uploadの保存先と寿命を決める
+- [x] latest VRM / VRMA asset replayを実装する
+- [x] latest static / motion state replayを実装する
+- [x] active control guardを実装する
+- [x] debug-log endpointを実装する
+- [x] Rust relay単体テストを書く
 - [ ] Node relayとRust relayの挙動比較テストを作る
 
 ### Phase B: Tauriからrelayを起動・管理する
@@ -119,22 +120,22 @@ Rust relay移植の詳細計画:
 - [x] dev起動時に既存VPlant3D relayへattachできる
 - [x] dev起動時に既存relayがなければNode relayを起動できる
 - [x] relay health endpointでVPlant3D relayか判定できる
-- [ ] Tauri起動時に空きportを決める
-- [ ] Rust relayをTauri stateとして起動する
+- [x] Tauri起動時に空きportを決める
+- [x] Rust relayをTauri stateとして起動する
 - [ ] app終了時にrelayを停止する
 - [ ] relay起動失敗時のエラーをController UIへ表示する
-- [ ] 起動したhost / portをControllerへ渡す
-- [ ] OBS Render URL生成に実portを反映する
-- [ ] `npm run tauri:dev` とWeb fallbackの両方が動くようにする
+- [x] 起動したhost / portをControllerへ渡す
+- [x] OBS Render URL生成に実portを反映する
+- [x] `npm run tauri:dev` とWeb fallbackの両方が動くようにする
 - [ ] `tauri:dev:attached` の役割を見直す
 
 ### Phase C: build済みfrontendの扱い
 
-- [ ] dev時はVite dev serverを使うか、Rust relayがViteへproxyするか決める
-- [ ] build時に `dist/` をTauri/Rust relayから配信する
-- [ ] `/?control=1`、`/?obs=1`、`/relay/*` のroutingを整理する
-- [ ] 直接ファイルURLではなくlocalhost配信に寄せる
-- [ ] Tauri localhost pluginを使うか、自前Rust relayがfrontendも配信するか決める
+- [x] dev時はVite dev serverを使うか、Rust relayがViteへproxyするか決める
+- [x] build時に `dist/` をTauri/Rust relayから配信する
+- [x] `/?control=1`、`/?obs=1`、`/relay/*` のroutingを整理する
+- [x] 直接ファイルURLではなくlocalhost配信に寄せる
+- [x] Tauri localhost pluginを使うか、自前Rust relayがfrontendも配信するか決める
 
 ### Phase D: Controller UI調整
 
@@ -156,7 +157,7 @@ Rust relay移植の詳細計画:
 ### Phase F: macOS build
 
 - [ ] `npm run tauri:build` をmacOSで通す
-- [ ] `.app` が生成されることを確認する
+- [x] `.app` が生成されることを確認する
 - [ ] 初回起動時のGatekeeper挙動を確認する
 - [ ] VRMファイル選択を確認する
 - [ ] マイク権限を確認する
@@ -178,8 +179,8 @@ Rust relay移植の詳細計画:
 ### Phase H: ドキュメントと提出物
 
 - [ ] READMEにTauri版の起動方法を書く
-- [ ] READMEにWeb fallback手順を書く
-- [ ] READMEにOBS Browser Source URLの貼り方を書く
+- [x] READMEにWeb fallback手順を書く
+- [x] READMEにOBS Browser Source URLの貼り方を書く
 - [ ] READMEに既知の制限を書く
 - [ ] `docs/human-handoff-board.md` にmacOS / Windows確認項目を整理する
 - [ ] `docs/submission-checklist.md` をTauri状況に合わせて更新する
@@ -196,12 +197,12 @@ Rust relay移植の詳細計画:
 
 ### Rust / Tauri側
 
-- [ ] `cargo test`
+- [x] `cargo test`
+- [x] `cargo fmt --check`
 - [ ] `cargo clippy` を入れるか判断する
-- [ ] `cargo fmt --check`
-- [ ] `npm run tauri:dev`
+- [x] `npm run tauri:dev`
 - [ ] `npm run tauri:dev:attached`
-- [ ] `npm run tauri:build`
+- [ ] `npm run tauri:build`（`.app` 生成まで成功。DMG作成で失敗）
 
 ### 人力確認
 
