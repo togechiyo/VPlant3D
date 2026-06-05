@@ -4346,3 +4346,20 @@
 ### Next
 
 - 実ブラウザ/OBSで、明るめ固定時のモデル白飛びが強すぎないか確認する
+
+## 2026-06-05 Plan Pre-Tauri App Readiness
+
+### Goal
+
+- Tauriで包む前にWeb版Controllerとして揃えるべき機能を、実装順とテスト単位まで落とし込む
+
+### Did
+
+- [docs/pre-tauri-app-readiness-plan.md](./pre-tauri-app-readiness-plan.md) を追加した
+- マイク/カメラのデバイス選択、localStorage設定保存、OBS URL共有、OBS Render接続状態、UI整理、README導線の実装計画をまとめた
+- Tauriへ進む条件と、締切前に切る機能を明記した
+- READMEのDocumentationへ計画メモのリンクを追加した
+
+### Next
+
+- Phase Aとして、MediaDevices APIを使ったマイク/カメラデバイス選択から実装する

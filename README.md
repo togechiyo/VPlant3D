@@ -116,6 +116,7 @@ Setup Mode also includes Avatar Framing sliders for X/Y position, scale, and Y-a
 - [VPlant3D for OBS concept](./docs/vplant3d-for-obs.md)
 - [OBS architecture redesign](./docs/obs-architecture-redesign.md)
 - [OBS Relay ピクつき調査まとめ](./docs/obs-relay-debugging-retrospective.md)
+- [Tauri化前アプリ機能仕上げ計画](./docs/pre-tauri-app-readiness-plan.md)
 - [Tauri Controller technical plan](./docs/tauri-controller-technical-plan.md)
 - [Future desktop app and MCP considerations](./docs/future-desktop-and-mcp-considerations.md)
 - [Third-party libraries](./docs/third-party-libraries.md)
