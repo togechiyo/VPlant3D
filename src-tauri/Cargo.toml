@@ -1,0 +1,18 @@
+[package]
+name = "vplant3d"
+version = "0.0.0"
+description = "VPlant3D for OBS Controller"
+authors = ["togechiyo"]
+license = "MIT"
+repository = "https://github.com/togechiyo/VPlant3D"
+edition = "2021"
+
+[lib]
+name = "vplant3d_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }

@@ -1,6 +1,6 @@
 # Human Handoff Board
 
-最終更新日: 2026-05-24
+最終更新日: 2026-06-05
 
 ## 目的
 
@@ -27,6 +27,47 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 | Dropped | 今回はやらない |
 
 ## Human Tasks
+
+### Todo: Rust toolchainを導入してTauri Controllerを起動確認
+
+- Owner: Human
+- Needed by: Tauri版Controllerの実機確認前
+- Why: 現在のCodex環境では `rustc` / `cargo` が見つからず、`npm run tauri:dev` を最後まで実行できないため
+- What to check:
+  - Rust toolchainをインストールする
+  - `rustc --version` と `cargo --version` が通ることを確認する
+  - `npm run tauri:dev` を実行する
+  - Tauri windowで `VPlant3D for OBS` Controllerが開くことを確認する
+  - OBS Render URLは従来どおり `http://127.0.0.1:5173/?obs=1&transparent=1` をOBS Browser Sourceに貼る
+
+Notes:
+
+- Tauri Phase 1はController shellのみ。OBS RenderはTauriへ移していない
+- 既存のWeb fallbackは `npm run dev` で維持する
+
+### Todo: Tauri Controllerでマイク / カメラ / ファイル選択を確認
+
+- Owner: Human
+- Needed by: Tauri版を提出デモに使うか決める前
+- Why: macOS WKWebViewの権限挙動はChromeやOBS Browser Sourceと完全には同じでないため
+- What to check:
+  - Tauri windowでVRMファイルを読み込める
+  - マイク権限が出て、選択したマイクで口パクできる
+  - カメラ権限が出て、選択したカメラでカメラモードが動く
+  - localStorage相当の設定がTauri window再起動後も期待どおり残る
+  - 不安定ならChrome Controller fallbackを使う判断に戻す
+
+### Todo: WindowsでTauri Controller起動とOBS連携を確認
+
+- Owner: Human
+- Needed by: Windows版配布可否判断前
+- Why: WindowsはMicrosoft Edge WebView2を使うため、macOSとは権限とWebView挙動が異なる可能性があるため
+- What to check:
+  - Windowsで `npm run tauri:dev` またはビルド済みTauri appを起動する
+  - Controller UIが開く
+  - OBS Browser Sourceへ推奨Render URLを貼ってVRMが表示される
+  - マイク / カメラのデバイス選択が動く
+  - Windows固有の権限やWebView2エラーがないか見る
 
 ### Todo: 人間のGoogle Chromeで腕IKハンドトラッキングを確認
 

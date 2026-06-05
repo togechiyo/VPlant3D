@@ -135,8 +135,8 @@ Tauri化は提出アプリとしての使い勝手を支える必須項目とし
 
 - [x] Tauri化の目的を「OBS RenderはBrowser Source、Controllerだけデスクトップアプリ」に絞る
 - [x] Tauri導入で得られる価値をREADME / docs向けに整理する
-- [ ] Tauriでローカルサーバー起動、または既存relay server接続のどちらにするか決める
-- [ ] Tauriアプリ起動時にController UIを開ける
+- [x] Tauriでローカルサーバー起動、または既存relay server接続のどちらにするか決める
+- [x] Tauriアプリ起動時にController UIを開けるscaffoldを追加する
 - [ ] TauriアプリからOBS Render URLをコピーできる
 - [ ] Tauriアプリが起動したlocal relayのhost / portを検出してURLへ反映する
 - [ ] Tauriアプリ上でOBS Renderの接続状態を表示する
@@ -144,7 +144,7 @@ Tauri化は提出アプリとしての使い勝手を支える必須項目とし
 - [ ] Tauri版でマイク・カメラ権限がどう扱われるか確認する
 - [ ] Tauri版で選択したマイク / カメラが使えるか確認する
 - [ ] Tauri版が不安定な場合も、Web Controller fallbackは残す
-- [ ] Tauri版の起動方法をREADMEに書く
+- [x] Tauri版の起動方法をREADMEに書く
 - [ ] Tauri版の既知の制限をREADMEに書く
 
 ## Priority 7: macOS / Windowsビルドと実機テスト

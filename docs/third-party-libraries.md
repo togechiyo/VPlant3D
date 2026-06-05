@@ -2,7 +2,7 @@
 
 This document lists the third-party libraries and platform APIs for VPlant3D for OBS.
 
-Last updated: 2026-05-21
+Last updated: 2026-06-05
 
 Versions and licenses below were verified from installed package metadata in `node_modules`.
 
@@ -23,6 +23,14 @@ Versions and licenses below were verified from installed package metadata in `no
 | `tailwindcss` | `4.3.0` | MIT | Utility-first CSS framework for Setup Mode UI. |
 | `@tailwindcss/vite` | `4.3.0` | MIT | Tailwind CSS v4 Vite plugin. |
 | `zustand` | `5.0.13` | MIT | Lightweight state store. Used through `zustand/vanilla` so the app can stay framework-free. |
+| `@tauri-apps/cli` | `2.11.2` | Apache-2.0 OR MIT | Tauri v2 CLI for the desktop Controller shell. Added for scaffold/dev/build commands; OBS Render remains Browser Source based. |
+
+## Desktop Shell
+
+| Package / Tool | Version | License | Role |
+| --- | ---: | --- | --- |
+| `tauri` Rust crate | `2` | Apache-2.0 OR MIT | Minimal native app shell for the Controller window. The Rust toolchain is required to build or run it. |
+| `tauri-build` Rust crate | `2` | Apache-2.0 OR MIT | Tauri build script helper for generating app context from `tauri.conf.json`. |
 
 ## 3D Rendering
 

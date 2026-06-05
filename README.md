@@ -89,6 +89,16 @@ npm run build
 npm run lint
 ```
 
+Tauri Controller development:
+
+```bash
+npm run tauri:dev
+```
+
+The first Tauri phase is a desktop shell for the existing Controller UI. It still uses the same local relay and the same OBS Render URL flow as the web version. OBS should continue to load the Browser Source URL, for example `http://127.0.0.1:5173/?obs=1&transparent=1`.
+
+Tauri requires the Rust toolchain. If `rustc` or `cargo` is not installed, keep using `npm run dev` as the web fallback until Rust is installed.
+
 OBS-style URL examples:
 
 ```text

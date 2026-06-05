@@ -4401,3 +4401,51 @@
 
 - コミット / pushする
 - 次の大きな作業はTauri scaffold。ただし締切前の安定性を優先し、Web Controller fallbackは維持する
+
+## 2026-06-05 Add First Tauri Controller Scaffold
+
+### Goal
+
+- OBS RenderをTauriへ移さず、既存Web Controllerを開く最小Tauri v2 shellを追加する
+
+### Did
+
+- `@tauri-apps/cli` をdevDependencyへ追加した
+- `npm run tauri:dev` と `npm run tauri:build` を追加した
+- `src-tauri/` にTauri v2最小scaffoldを追加した
+  - `tauri.conf.json`
+  - `Cargo.toml`
+  - `build.rs`
+  - `src/main.rs`
+  - `src/lib.rs`
+  - `capabilities/default.json`
+- Tauri windowは `/?control=1` を開く設定にした
+- 開発時は `beforeDevCommand` で既存の `npm run dev` relay flowを使う設定にした
+- README、third-party libraries、Tauri技術計画、hackathon finish task list、submission checklist、human handoff boardを更新した
+
+### Worked
+
+- `npm install --save-dev @tauri-apps/cli@^2` は権限付きで成功した
+- Web fallbackは維持され、既存のWeb検証は通過した
+- OBS Render URL設計は変更していない。引き続き `http://127.0.0.1:5173/?obs=1&transparent=1` をOBS Browser Sourceで使う
+
+### Blocked / Needs Human Check
+
+- `npm run tauri:dev` は `cargo` が見つからず、`cargo metadata` で停止した
+- このCodex環境では `rustc --version` / `cargo --version` が `command not found`
+- Rust toolchain導入後に、macOSでTauri window、VRMファイル選択、マイク/カメラ権限、OBS Render連携を確認する必要がある
+- Windows WebView2環境での起動とOBS連携は別途人間確認が必要
+
+### Verified
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+- `npm run tauri:dev` はRust未導入ブロッカーを確認
+
+### Next
+
+- 人間環境でRust toolchainを入れて `npm run tauri:dev` を確認する
+- Tauri windowでControllerが開いたら、次はRelay起動管理またはsidecar化を検討する
+- 締切前に不安定なら、提出デモはWeb Controller fallbackで進める

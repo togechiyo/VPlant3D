@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "node server/vplant-relay.mjs",
     "dev:vite": "vite --host 127.0.0.1",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
@@ -42,6 +44,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.3.0",
+    "@tauri-apps/cli": "^2.11.2",
     "@types/node": "^25.9.1",
     "@types/three": "^0.184.1",
     "@types/ws": "^8.18.1",

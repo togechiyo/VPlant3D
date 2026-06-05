@@ -45,6 +45,7 @@
 - [ ] Style Wallで簡易背景を作れる
 - [ ] Image Panelで画像を3D空間に貼れる
 - [x] localStorageに最低限の設定を保存できる
+- [x] Tauri Controller shellのscaffoldがある
 
 ### Could Have
 
@@ -88,6 +89,7 @@
 - [ ] `docs/third-party-libraries.md` が更新されている
 - [x] `docs/human-handoff-board.md` の未対応項目を確認した
 - [x] `docs/work-log.md` が提出直前の状態に更新されている
+- [x] Tauri版の開発起動手順をREADMEに追記した
 
 ## Rights / Assets Checklist
 
@@ -116,6 +118,7 @@
 
 - [ ] Chromeで動作確認済み
 - [ ] OBSで動作確認済み
+- [ ] Tauri Controllerで起動確認済み
 - [ ] 画面サイズを決めた
 - [ ] 背景透過または合成先を決めた
 - [ ] 見せる順番を決めた

@@ -136,6 +136,8 @@ TauriはController用の軽いランチャーとして起動し、開発中は `
 
 ### Phase 1: Tauri scaffold + Web Controller表示
 
+Status: scaffold added on 2026-06-05. `src-tauri/` と `npm run tauri:dev` / `npm run tauri:build` を追加済み。現在のCodex環境ではRust toolchainが未導入のため、実際のTauri window起動は人間環境での確認待ち。
+
 目的:
 
 - Tauriアプリとして起動する
@@ -156,6 +158,8 @@ TauriはController用の軽いランチャーとして起動し、開発中は `
 - Web Controller fallbackが残る
 
 ### Phase 2: Relay起動管理
+
+Status: not implemented. Phase 1では既存の `npm run dev` relay flowを維持し、Node sidecar化やRust relay移植は行わない。
 
 目的:
 
