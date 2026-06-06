@@ -1,163 +1,138 @@
-# VPlant3D
+# VPlant3D for OBS
 
-VPlant3D for OBS is a lightweight VRM / VRMA 3D avatar layer for OBS Browser Source.
+VPlant3D for OBS は、OBS Browser Source に読み込んで使う軽量な VRM / VRMA アバターレイヤーです。
 
 > VRM in OBS. Render only. OBS does the broadcast.
 
-## Overview
+OBSが配信、録画、音声ミキシング、コメント表示、シーン切り替えを担当し、VPlant3Dは「OBSに映す3Dアバター」と「その操作」に集中します。
 
-VPlant3D is not an all-in-one VTuber streaming app. It is a focused 3D rendering layer that can be added to an existing OBS setup.
+## 概要
 
-OBS handles streaming, recording, audio mixing, captions, comments, scene switching, and layout composition. VPlant3D focuses on showing a VRM avatar in 3D, playing simple motions, reacting to microphone volume, and creating a lightweight streaming-room look that can be placed directly inside OBS.
+VPlant3Dは、VRMアバターをOBSの画面に重ねるための小さなデスクトップ/ブラウザアプリです。
 
-The project is designed for the VRM Awards / `#MadeWithVRM` online hackathon. It aims to fit both the Tool category, as an OBS-friendly VRM presentation tool, and the Experience category, as a small interactive avatar space for livestreams.
+主な機能:
 
-## Core Idea
+- ローカルの `.vrm` ファイルを読み込んで表示
+- OBS向けの透明背景Render URLを生成
+- マイク音量に連動した簡易口パク
+- 自動まばたき、ゆらぎ、手動マウス操作
+- VRM表情プリセットのワンタップ反映
+- `.vrma` モーションの読み込みと再生
+- カメラ入力による簡易モーキャプ
+- マイク / カメラの入力デバイス選択
+- Tauri版ControllerとRust製Local Relayの試作
 
-- Load a VRM avatar in a browser-based 3D scene
-- Use the app directly as an OBS Browser Source
-- Support transparent background mode for overlay use
-- React to microphone volume with simple mouth movement
-- Load and play VRMA motion files
-- Add camera-free idle life with auto blink, subtle sway, and one-button VRM expression presets
-- Offer look / shader presets for quick visual direction
-- Add Style Wall and Image Panel features for a simple streaming-room scene
+このプロジェクトは、VRMアワード / `#MadeWithVRM` オンラインハッカソン向けの試作です。
 
-## Scope
+## 使い方
 
-VPlant3D intentionally leaves broadcast features to OBS.
+詳しい手順は [How to Use](./docs/how-to-use.md) を見てください。
 
-In scope:
+最短の流れ:
 
-- VRM avatar display
-- VRMA motion playback
-- transparent OBS overlay mode
-- microphone-volume-based mouth movement
-- camera-free auto blink / idle sway / expression preset controls
-- simple camera and visual presets
-- lightweight 3D room styling
+1. VPlant3D Controllerを起動する
+2. ControllerでVRMを読み込む
+3. Controllerに表示されたOBS Render URLをコピーする
+4. OBSのBrowser Sourceへ貼る
+5. Controllerから表情、口パク、モーション、見た目を操作する
 
-Out of scope for the MVP:
+OBSへ貼るURLの例:
 
-- video export
-- audio mixing
-- comment fetching
-- subtitle generation
-- OBS scene control
-- full-body tracking
-- VRM editing or export
-- complex timeline editing
+```text
+http://127.0.0.1:5173/?obs=1&transparent=1
+```
 
-## Planned Stack
+## 起動方法
 
-- TypeScript
-- Vite
-- Tailwind CSS
-- Zustand
-- Three.js
-- Three.js WebGPU Renderer
-- `@pixiv/three-vrm`
-- `@pixiv/three-vrm-animation`
-- MediaPipe Tasks Vision
-- Web Audio API
-- OBS Browser Source
-
-## Development
+### Web版
 
 ```bash
 npm install
 npm run dev
 ```
 
-Local development server:
+起動後、ブラウザで開きます。
 
 ```text
-http://127.0.0.1:5173/
+http://127.0.0.1:5173/?control=1
 ```
 
-`npm run dev` starts the VPlant3D local relay server. It wraps Vite and adds:
+`npm run dev` はViteだけでなく、ControllerとOBS RenderをつなぐLocal Relayも起動します。
 
-- `ws://127.0.0.1:5173/relay/ws` for Control-to-Render state sync
-- `/relay/assets` for temporary local VRM / VRMA asset handoff
-
-Useful checks:
-
-```bash
-npm run test
-npm run test:e2e
-npm run build
-npm run lint
-```
-
-Tauri Controller development:
+### Tauri版
 
 ```bash
 npm run tauri:dev
 ```
 
-The Tauri app starts an in-app Rust local relay, then opens the Controller UI at the relay URL. OBS should still load the Browser Source URL shown by the Controller, for example `http://127.0.0.1:5173/?obs=1&transparent=1`.
+Tauri版はアプリ内でRust製Local Relayを起動し、Controller UIを開きます。OBSにはControllerに表示されたRender URLを貼ってください。
 
-The Rust relay implements the same minimum local endpoints used by the web version:
-
-- `ws://127.0.0.1:<port>/relay/ws` for Control-to-Render state sync
-- `/relay/assets` for temporary local VRM / VRMA asset handoff
-- `/relay/health` and `/relay/debug-log` for local diagnostics
-
-If port `5173` is already in use, the Tauri app chooses a nearby free localhost port and prints the Controller / OBS URLs in the dev log. In development, `npm run tauri:dev` still runs a small Node relay helper as a bootstrap fallback, but the Tauri window navigates to the Rust relay once the app starts.
-
-If `npm run dev` is already running in another terminal and you only want to open the Tauri window against that existing web relay, use the attached mode:
+Rust / Cargo がPATHにない場合は、次のようにしてから実行してください。
 
 ```bash
-npm run tauri:dev:attached
+export PATH="$HOME/.cargo/bin:$PATH"
+npm run tauri:dev
 ```
 
-Tauri requires the Rust toolchain. If `rustc` or `cargo` is not installed, keep using `npm run dev` as the web fallback until Rust is installed. If Rust is installed but `cargo` is not on the current shell PATH, add `~/.cargo/bin` to PATH before running Tauri commands.
+配布ビルド:
 
-OBS-style URL examples:
+```bash
+npm run tauri:build
+```
+
+現状ではmacOS `.app` 生成までは確認済みです。DMG作成とWindows版は追加確認が必要です。
+
+## OBSでの使い方
+
+OBSでBrowser Sourceを追加し、Controllerに表示された推奨URLを貼ります。
+
+推奨:
 
 ```text
-http://127.0.0.1:5173/?obs=1
-http://127.0.0.1:5173/?obs=1&transparent=1
-http://127.0.0.1:5173/?obs=1&transparent=1&debug=1
-http://127.0.0.1:5173/?control=1
+http://127.0.0.1:<port>/?obs=1&transparent=1
 ```
 
-Control Mode includes local `.vrm` and `.vrma` file inputs. Local model and motion files are loaded from the user's machine and are not committed to this repository. Multiple `.vrma` files can be loaded into motion slots, then replayed with one button from the Controller.
+OBS側はRender専用です。操作パネル、マイク、カメラ、ファイル選択はController側で行います。
 
-OBS Browser Source is treated as the render-only output target. Camera, microphone, MediaPipe, and setup controls live on the Control / Capture page in Chrome, with the local relay sending avatar state and selected local assets to the OBS Render page.
+## 開発用コマンド
 
-The Controller shows a recommended `127.0.0.1` OBS Render URL, a `localhost` fallback URL, copy buttons, and a small Relay / OBS Render connection status. Debug and Control URLs are folded under the development URL section so the normal OBS setup path stays simple. Use the transparent Render URL for OBS overlay composition.
+```bash
+npm run test
+npm run lint
+npm run build
+npm run test:e2e
+```
 
-Mic Reactive Mouth can request microphone access in Setup Mode and drive the loaded VRM's `aa` expression from microphone volume. It is simple RMS-based mouth movement, not phoneme lip sync.
-The Controller can select the microphone input device and remembers the selected device in browser localStorage. If a saved device is missing, VPlant3D falls back to the default input.
-For users who do not want camera-based mocap, Control Mode also provides camera-free Auto Blink, Idle Sway, manual mouse control, and one-button VRM expression presets.
+Rust / Tauri側:
 
-MediaPipe Pose Debug can request camera access in Setup Mode and show upper-body pose landmarks as a skeleton-only overlay. The raw camera image is hidden to avoid face leaks. It is a verification spike for future neck/chest/shoulder tracking, not production VRM retargeting yet.
-Mocap input can be mirrored in Control Mode so the avatar response can match the user's camera intuition. The Controller can select the camera input device and remembers the selected device in localStorage.
-Face tracking can drive VRM blink, mouth, and simple emotion expressions from MediaPipe face blendshapes. Hand tracking currently draws a skeleton overlay for verification.
-When a VRM is loaded, the default camera frames the avatar around the upper body for OBS-friendly VTuber use.
-Control Mode also includes Avatar Framing sliders for X/Y position, scale, and Y-axis rotation. Device choices, control mode, blink / lip modes, manual toggles, mirror setting, avatar transform, look settings, and VRMA loop are saved in localStorage for the next launch.
+```bash
+cd src-tauri
+cargo fmt --check
+cargo test
+```
 
-## Documentation
+## 現在の状態
 
-- [VRM Awards / #MadeWithVRM notes](./docs/vrm-award.md)
+- Web版Controller / OBS Renderは継続利用可能
+- Node版Local RelayはWeb fallbackとして維持
+- Tauri版ControllerはRust製Local Relayを起動する試作段階
+- macOS `.app` 生成は確認済み
+- DMG作成、Windows build、OBS実機での最終確認は未完了
+
+## ドキュメント
+
+- [How to Use](./docs/how-to-use.md)
 - [VPlant3D for OBS concept](./docs/vplant3d-for-obs.md)
 - [OBS architecture redesign](./docs/obs-architecture-redesign.md)
-- [OBS Relay ピクつき調査まとめ](./docs/obs-relay-debugging-retrospective.md)
-- [Tauri化前アプリ機能仕上げ計画](./docs/pre-tauri-app-readiness-plan.md)
 - [Tauri Controller technical plan](./docs/tauri-controller-technical-plan.md)
-- [Future desktop app and MCP considerations](./docs/future-desktop-and-mcp-considerations.md)
+- [Tauri Rust Relay Migration Plan](./docs/tauri-rust-relay-migration-plan.md)
+- [Tauri配布ビルド前タスクリスト](./docs/tauri-distribution-readiness-task-list.md)
+- [Release Preparation Task List](./docs/release-preparation-task-list.md)
 - [Third-party libraries](./docs/third-party-libraries.md)
-- [VRMA implementation notes](./docs/vrma-implementation-notes.md)
-- [Mic Reactive Mouth notes](./docs/mic-reactive-mouth-notes.md)
-- [MediaPipe Pose Debug notes](./docs/mediapipe-pose-debug-notes.md)
-- [Face and Hand Tracking notes](./docs/face-hand-tracking-notes.md)
-- [Hand Retargeting Research](./docs/hand-retargeting-research.md)
-- [MMD_modoki reference notes](./docs/mmd-modoki-reference.md)
-- [Codex usage notes](./docs/codex-usage-2026-05-20.md)
-- [Human handoff board](./docs/human-handoff-board.md)
-- [TDD for Codex](./docs/tdd-for-codex.md)
-- [Work log](./docs/work-log.md)
 - [Submission checklist](./docs/submission-checklist.md)
-- [Hackathon finish task list](./docs/hackathon-finish-task-list.md)
-- [Local assets](./docs/local-assets.md)
+- [Human handoff board](./docs/human-handoff-board.md)
+- [Work log](./docs/work-log.md)
+
+## ライセンス
+
+MIT

@@ -133,6 +133,61 @@
 - DMG bundle失敗原因を調べる。締切前に重ければ `.app` 直接配布またはWeb fallback手順を優先する
 - Rust relayとNode relayの挙動比較テスト、または手動OBS確認手順を追加する
 
+## 2026-06-06 README / How To Use 整備
+
+### Goal
+
+- ハッカソン提出前に、READMEと使い方ドキュメントを日本語で読みやすくする
+
+### Did
+
+- READMEを日本語中心に差し替えた
+- アプリ概要、起動方法、OBS URL、現在のTauri状況、主要docsリンクを整理した
+- [How to Use](./how-to-use.md) を追加した
+  - Web版 / Tauri版の起動
+  - VRM読み込み
+  - OBS Browser Source設定
+  - マイク&手動モード
+  - カメラモード
+  - 表情プリセット
+  - VRMA再生
+  - トラブルシュート
+  - 提出・デモ時のおすすめ構成
+
+### Notes
+
+- ドキュメントのみの変更のため、テスト・ビルドは未実行
+- DMG作成未完了、Windows未確認、OBS実機最終確認は引き続き人間確認が必要
+
+### Next
+
+- READMEとHowToUseの内容を、実際のTauri `.app` 確認結果に合わせて必要なら更新する
+- 提出用スクリーンショットや説明文を `docs/submission-checklist.md` に沿って整える
+
+## 2026-06-06 Release Preparation Task List
+
+### Goal
+
+- ハッカソン提出とGitHub releaseへ向けて、main更新、GitHub Actions、tag、release、成果物のタスクを洗い出す
+
+### Did
+
+- [Release Preparation Task List](./release-preparation-task-list.md) を追加した
+- 現状、リリース方針、main反映、CI、Tauri build workflow、tag、GitHub Release、提出前チェックをPhase分けした
+- READMEのドキュメント一覧へrelease準備タスクリストを追加した
+
+### Decision
+
+- 締切前は、署名済み配布物よりも「壊れないmain」「再現できるWeb版」「説明可能なTauri prototype」を優先する
+- GitHub Actionsはまず最小CIから始める
+- tag / GitHub Release公開は、明示指示があるまで実行しない
+
+### Next
+
+- README / HowToUse / release準備docsをコミットする
+- 次にやるなら `.github/workflows/ci.yml` の最小追加から始める
+- main反映は、PRまたはローカルmergeの方針を決めてから行う
+
 ## 2026-06-05 Tauri Relay Dev Attach / Startup Prototype
 
 ### Goal
