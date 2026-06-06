@@ -70,6 +70,9 @@
 - `npm run test:e2e` は通常実行でsandboxのlisten EPERMになった後、権限付き再実行で成功
 - `PATH="$HOME/.cargo/bin:$PATH" npm run tauri:build` はrelease binaryと `.app` 生成まで成功し、DMG bundlingで既知の `bundle_dmg.sh` エラー
 - 生成済み `.app` 内に `Contents/Resources/_up_/dist/index.html` が存在することを確認した
+- GitHub Actions Tauri Build run `27060336446` はmacOS / Windowsとも成功した
+- `vplant3d-windows` artifactには `VPlant3D for OBS_0.0.0_x64-setup.exe` と `VPlant3D for OBS_0.0.0_x64_en-US.msi` が含まれることを確認した
+- `vplant3d-macos` artifactには `.app` と `.dmg` が含まれ、`.app` 内に `_up_/dist/index.html` が含まれることを確認した
 
 ### Failed / Blocked
 
@@ -78,7 +81,6 @@
 
 ### Next
 
-- 修正をcommit / pushし、Tauri Build workflowを再実行する
 - 新artifactでWindowsの「ページが見つかりません」が解消したか確認する
 - macOSはquarantine解除で開発確認し、正式Release前に署名 / notarization方針を決める
 
