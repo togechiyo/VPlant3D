@@ -1,5 +1,6 @@
 mod relay;
 
+use std::path::PathBuf;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -34,13 +35,62 @@ pub fn run() {
         .expect("error while running VPlant3D");
 }
 
-fn resolve_frontend_dir(app: &tauri::App) -> std::path::PathBuf {
+fn resolve_frontend_dir(app: &tauri::App) -> PathBuf {
+    let mut candidates = Vec::new();
     if let Ok(resource_dir) = app.path().resource_dir() {
-        let bundled_dist = resource_dir.join("dist");
-        if bundled_dist.join("index.html").exists() {
-            return bundled_dist;
-        }
+        candidates.push(resource_dir.join("dist"));
+        candidates.push(resource_dir.join("_up_").join("dist"));
     }
 
-    relay::default_frontend_dir()
+    candidates.push(relay::default_frontend_dir());
+    select_existing_frontend_dir(candidates).unwrap_or_else(relay::default_frontend_dir)
+}
+
+fn select_existing_frontend_dir(candidates: impl IntoIterator<Item = PathBuf>) -> Option<PathBuf> {
+    candidates
+        .into_iter()
+        .find(|candidate| candidate.join("index.html").is_file())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{
+        fs,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    #[test]
+    fn selects_tauri_resource_up_dist_when_present() {
+        let root = unique_test_dir("tauri-up-dist");
+        let plain_dist = root.join("dist");
+        let up_dist = root.join("_up_").join("dist");
+        fs::create_dir_all(&up_dist).expect("create test dist");
+        fs::write(up_dist.join("index.html"), "<!doctype html>").expect("write index");
+
+        let selected = select_existing_frontend_dir([plain_dist, up_dist.clone()]);
+
+        assert_eq!(selected, Some(up_dist));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn ignores_frontend_candidates_without_index_html() {
+        let root = unique_test_dir("tauri-missing-index");
+        let dist = root.join("dist");
+        fs::create_dir_all(&dist).expect("create empty dist");
+
+        let selected = select_existing_frontend_dir([dist]);
+
+        assert_eq!(selected, None);
+        let _ = fs::remove_dir_all(root);
+    }
+
+    fn unique_test_dir(name: &str) -> PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock should be after epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!("vplant3d-{name}-{nanos}"))
+    }
 }

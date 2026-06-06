@@ -63,6 +63,9 @@ Notes:
 - Rust relayは `/relay/health`、`/relay/ws`、`/relay/assets`、`/relay/debug-log`、build済みfrontend配信を担当する
 - `npm run tauri:dev` はdev bootstrapとして既存Node helperをまだ使うが、Tauri起動後はRust relayへnavigateする。今回の確認では既存5173が埋まっていたためRust relayが `127.0.0.1:5175` で起動した
 - 2026-06-05の `npm run tauri:build` はRust release buildと `.app` 生成まで到達したが、DMG bundle段階で `bundle_dmg.sh` 実行エラーになった。`src-tauri/target/release/bundle/macos/VPlant3D for OBS.app` のFinder起動可否と、DMG失敗原因の確認が必要
+- 2026-06-06のGitHub Actions Tauri BuildではmacOS / Windows artifact生成に成功した
+- macOS artifactは署名 / notarization未対応のため、GitHubからダウンロードしたアプリで「壊れているため開けません」と出る場合がある。開発中の確認では `xattr -dr com.apple.quarantine "/path/to/VPlant3D for OBS.app"` 後に起動確認する
+- Windows artifactで「ページが見つかりません」になった原因候補として、bundle内の `dist` が `_up_/dist` に配置されるのにRust relay側が `dist` だけ見ていた問題を修正した。修正後artifactで再確認が必要
 
 ### Done: Rust toolchainを導入してTauri Controllerを起動確認
 

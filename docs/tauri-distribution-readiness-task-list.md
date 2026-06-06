@@ -159,7 +159,7 @@ Rust relay移植の詳細計画:
 
 - [ ] `npm run tauri:build` をmacOSで通す
 - [x] `.app` が生成されることを確認する
-- [ ] 初回起動時のGatekeeper挙動を確認する
+- [x] 初回起動時のGatekeeper挙動を確認する
 - [ ] VRMファイル選択を確認する
 - [ ] マイク権限を確認する
 - [ ] カメラ権限を確認する
@@ -167,16 +167,20 @@ Rust relay移植の詳細計画:
 - [ ] 背景透過をOBSで確認する
 - [ ] 必要なら署名 / notarizationを検討する
 
+Note: 2026-06-06時点のGitHub Actions artifactは署名 / notarization未対応のため、macOSで「壊れているため開けません」と表示される。開発確認は `xattr -dr com.apple.quarantine "/path/to/VPlant3D for OBS.app"` でquarantine解除後に行う。正式配布ではDeveloper ID署名とnotarizationが必要。
+
 ### Phase G: Windows build
 
 - [x] Windows実機またはCIでbuild方針を決める
 - [ ] WebView2前提をREADMEへ書く
-- [ ] GitHub Actions上でWindows Tauri build artifactを確認する
-- [ ] WindowsでTauriアプリが起動することを確認する
+- [x] GitHub Actions上でWindows Tauri build artifactを確認する
+- [x] WindowsでTauriアプリが起動することを確認する
 - [ ] WindowsでVRMファイル選択を確認する
 - [ ] Windowsでマイク / カメラ権限を確認する
 - [ ] Windows OBS Browser SourceでRender URLを確認する
 - [ ] 配布する場合は署名の有無と警告表示を確認する
+
+Note: 初回Windows artifactはアプリ起動後に「ページが見つかりません」になった。Tauri bundle resources内の `../dist` が `_up_/dist` として配置されるため、Rust relayのfrontend探索候補へ `_up_/dist` を追加した。修正後artifactで再確認する。
 
 ### Phase H: ドキュメントと提出物
 

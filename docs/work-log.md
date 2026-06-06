@@ -45,6 +45,43 @@
 - 
 ```
 
+## 2026-06-06 Tauri Artifact Launch Fixes
+
+### Goal
+
+- GitHub Actionsで生成したTauri artifactのmacOS Gatekeeper問題とWindows起動後404を切り分け、配布版として最低限起動できる状態へ近づける
+
+### Did
+
+- ローカル生成済み `.app` のbundle内resource配置を確認した
+- Tauri bundleでは `../dist` resourceが `Contents/Resources/_up_/dist` に配置されることを確認した
+- Rust relayのfrontend探索候補に `resource_dir/_up_/dist` を追加した
+- Tauri初期window URLを `/?control=1` から `index.html?control=1` に変更し、relay遷移前の初期404を避けるようにした
+- `resolve_frontend_dir` の純ロジックテストを追加した
+- README / Human Handoff Board / Tauri配布前タスクリストへ、macOS未署名配布とWindows 404修正のメモを追加した
+
+### Verified
+
+- `cargo fmt --check` 成功
+- `cargo test` 成功
+- `npm run test` 成功
+- `npm run lint` 成功
+- `npm run build` 成功
+- `npm run test:e2e` は通常実行でsandboxのlisten EPERMになった後、権限付き再実行で成功
+- `PATH="$HOME/.cargo/bin:$PATH" npm run tauri:build` はrelease binaryと `.app` 生成まで成功し、DMG bundlingで既知の `bundle_dmg.sh` エラー
+- 生成済み `.app` 内に `Contents/Resources/_up_/dist/index.html` が存在することを確認した
+
+### Failed / Blocked
+
+- macOS artifactは署名 / notarization未対応のため、GitHubからダウンロードするとGatekeeperで「壊れているため開けません」と表示され得る。正式配布にはDeveloper ID署名とnotarizationが必要
+- Windows artifactの修正後実機確認はGitHub Actions再実行後に人間確認が必要
+
+### Next
+
+- 修正をcommit / pushし、Tauri Build workflowを再実行する
+- 新artifactでWindowsの「ページが見つかりません」が解消したか確認する
+- macOSはquarantine解除で開発確認し、正式Release前に署名 / notarization方針を決める
+
 ## 2026-06-06 Release Prep / Main Merge / GitHub Actions
 
 ### Goal

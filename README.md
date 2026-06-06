@@ -80,7 +80,14 @@ npm run tauri:dev
 npm run tauri:build
 ```
 
-現状ではmacOS `.app` 生成までは確認済みです。DMG作成とWindows版は追加確認が必要です。
+現状ではGitHub ActionsでmacOS / WindowsのTauri bundle生成まで確認しています。
+macOS版は署名 / notarization未対応のため、GitHubからダウンロードしたアプリはGatekeeperで「壊れているため開けません」と表示される場合があります。開発中の確認では次のようにquarantine属性を外してから起動します。
+
+```bash
+xattr -dr com.apple.quarantine "/path/to/VPlant3D for OBS.app"
+```
+
+正式配布ではApple Developer IDによる署名とnotarizationを別途行う必要があります。
 
 ## OBSでの使い方
 
@@ -116,8 +123,8 @@ cargo test
 - Web版Controller / OBS Renderは継続利用可能
 - Node版Local RelayはWeb fallbackとして維持
 - Tauri版ControllerはRust製Local Relayを起動する試作段階
-- macOS `.app` 生成は確認済み
-- DMG作成、Windows build、OBS実機での最終確認は未完了
+- macOS / Windows bundleはGitHub Actionsで生成可能
+- macOS署名 / notarization、Windows code signing、OBS実機での最終確認は未完了
 
 ## ドキュメント
 
