@@ -6,6 +6,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     name: Build ${{ matrix.platform }}
@@ -16,7 +19,7 @@ jobs:
         include:
           - platform: macos-latest
             artifact-name: vplant3d-macos
-          - platform: windows-latest
+          - platform: windows-2025
             artifact-name: vplant3d-windows
 
     steps:
