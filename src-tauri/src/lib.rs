@@ -41,6 +41,12 @@ fn resolve_frontend_dir(app: &tauri::App) -> PathBuf {
         candidates.push(resource_dir.join("dist"));
         candidates.push(resource_dir.join("_up_").join("dist"));
     }
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            candidates.push(exe_dir.join("dist"));
+            candidates.push(exe_dir.join("_up_").join("dist"));
+        }
+    }
 
     candidates.push(relay::default_frontend_dir());
     select_existing_frontend_dir(candidates).unwrap_or_else(relay::default_frontend_dir)
@@ -71,6 +77,19 @@ mod tests {
         let selected = select_existing_frontend_dir([plain_dist, up_dist.clone()]);
 
         assert_eq!(selected, Some(up_dist));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn selects_portable_exe_sidecar_dist_when_present() {
+        let root = unique_test_dir("tauri-portable-dist");
+        let portable_dist = root.join("_up_").join("dist");
+        fs::create_dir_all(&portable_dist).expect("create portable dist");
+        fs::write(portable_dist.join("index.html"), "<!doctype html>").expect("write index");
+
+        let selected = select_existing_frontend_dir([root.join("dist"), portable_dist.clone()]);
+
+        assert_eq!(selected, Some(portable_dist));
         let _ = fs::remove_dir_all(root);
     }
 

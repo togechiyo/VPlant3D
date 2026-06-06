@@ -172,15 +172,19 @@ Note: 2026-06-06時点のGitHub Actions artifactは署名 / notarization未対�
 ### Phase G: Windows build
 
 - [x] Windows実機またはCIでbuild方針を決める
-- [ ] WebView2前提をREADMEへ書く
+- [x] WebView2前提をREADMEへ書く
 - [x] GitHub Actions上でWindows Tauri build artifactを確認する
 - [x] WindowsでTauriアプリが起動することを確認する
+- [ ] Windows portable zipで `VPlant3D for OBS.exe` が起動することを確認する
+- [ ] Windows portable zipで起動時コンソールが表示されないことを確認する
 - [ ] WindowsでVRMファイル選択を確認する
 - [ ] Windowsでマイク / カメラ権限を確認する
 - [ ] Windows OBS Browser SourceでRender URLを確認する
 - [ ] 配布する場合は署名の有無と警告表示を確認する
 
 Note: 初回Windows artifactはアプリ起動後に「ページが見つかりません」になった。Tauri bundle resources内の `../dist` が `_up_/dist` として配置されるため、Rust relayのfrontend探索候補へ `_up_/dist` を追加した。修正後artifactで再確認する。
+
+Note: 2026-06-06時点では、Windows提出用の正をinstallerではなく `vplant3d-windows-portable` artifactにする。中身は `VPlant3D for OBS.exe`、`_up_/dist`、`README.md`、`HOW_TO_USE.md`、`LICENSE.txt`。exe単体ではなくフォルダ構成ごと配布・利用する。
 
 ### Phase H: ドキュメントと提出物
 

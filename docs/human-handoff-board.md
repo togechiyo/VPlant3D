@@ -38,6 +38,7 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
   - `Tauri Build` workflowを手動実行できる
   - macOS artifactに `.app` またはbundle成果物が含まれる
   - Windows artifactにinstallerまたはbundle成果物が含まれる
+  - `vplant3d-windows-portable` artifactに `VPlant3D for OBS.exe`、`_up_/dist`、`README.md`、`HOW_TO_USE.md`、`LICENSE.txt` が含まれる
   - macOS DMG作成が失敗する場合は、`.app` zip配布またはWeb fallbackで提出する判断をする
   - 署名 / notarization / Windows code signingは未対応であることをRelease Notesへ書く
 
@@ -66,6 +67,7 @@ Notes:
 - 2026-06-06のGitHub Actions Tauri BuildではmacOS / Windows artifact生成に成功した
 - macOS artifactは署名 / notarization未対応のため、GitHubからダウンロードしたアプリで「壊れているため開けません」と出る場合がある。開発中の確認では `xattr -dr com.apple.quarantine "/path/to/VPlant3D for OBS.app"` 後に起動確認する
 - Windows artifactで「ページが見つかりません」になった原因候補として、bundle内の `dist` が `_up_/dist` に配置されるのにRust relay側が `dist` だけ見ていた問題を修正した。修正後artifactで再確認が必要
+- Windows提出用はinstallerではなくportable zipを基本にする。zip展開後の `VPlant3D for OBS.exe` がコンソールなしで起動し、Controllerが表示されるか確認が必要
 
 ### Done: Rust toolchainを導入してTauri Controllerを起動確認
 

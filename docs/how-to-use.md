@@ -23,6 +23,19 @@ OBS Render側には操作UIを出さず、アバターだけを映す前提で�
 - カメラモードを使う場合はカメラ
 - Tauri版を使う場合はRust / Cargo
 
+## Windows portable版で起動する
+
+GitHub Actionsの `vplant3d-windows-portable` artifactを使う場合:
+
+1. zipを展開する
+2. `VPlant3D for OBS.exe` を起動する
+3. ControllerでVRMを読み込む
+4. Controllerに表示されたOBS Render URLをOBS Browser Sourceへ貼る
+
+portable zipには、起動に必要なWebリソース、`README.md`、`HOW_TO_USE.md`、`LICENSE.txt` が同梱されます。`_up_/dist` フォルダはアプリが使うため、exeだけを別の場所へ移動せず、zip展開後のフォルダ構成を保ってください。
+
+Windows環境にはMicrosoft Edge WebView2 Runtimeが必要です。Windows 10 / 11では多くの場合すでに入っていますが、起動できない場合はWebView2 Runtimeの有無を確認してください。
+
 ## Web版で起動する
 
 リポジトリのルートで実行します。

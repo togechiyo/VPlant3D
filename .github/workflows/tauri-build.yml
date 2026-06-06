@@ -46,6 +46,28 @@ jobs:
         env:
           RUST_BACKTRACE: 1
 
+      - name: Create Windows portable zip
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $portableRoot = "src-tauri/target/release/portable/VPlant3D for OBS"
+          New-Item -ItemType Directory -Force -Path $portableRoot | Out-Null
+          New-Item -ItemType Directory -Force -Path "$portableRoot/_up_/dist" | Out-Null
+          Copy-Item "src-tauri/target/release/vplant3d.exe" "$portableRoot/VPlant3D for OBS.exe" -Force
+          Copy-Item "dist/*" "$portableRoot/_up_/dist" -Recurse -Force
+          Copy-Item "README.md" "$portableRoot/README.md" -Force
+          Copy-Item "docs/how-to-use.md" "$portableRoot/HOW_TO_USE.md" -Force
+          Copy-Item "LICENSE" "$portableRoot/LICENSE.txt" -Force
+          Compress-Archive -Path "$portableRoot/*" -DestinationPath "src-tauri/target/release/portable/vplant3d-windows-portable.zip" -Force
+
+      - name: Upload Windows portable artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: vplant3d-windows-portable
+          path: src-tauri/target/release/portable/vplant3d-windows-portable.zip
+          if-no-files-found: error
+
       - name: Upload bundle artifacts
         if: always()
         uses: actions/upload-artifact@v4

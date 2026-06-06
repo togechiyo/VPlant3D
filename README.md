@@ -81,6 +81,7 @@ npm run tauri:build
 ```
 
 現状ではGitHub ActionsでmacOS / WindowsのTauri bundle生成まで確認しています。
+Windows版は、提出・手軽な確認用として `vplant3d-windows-portable` artifactを推奨します。zipを展開し、同梱された `VPlant3D for OBS.exe` を起動してください。portable zipにはアプリ本体、必要なWebリソース、`README.md`、`HOW_TO_USE.md`、`LICENSE.txt` が含まれます。Windows環境にはMicrosoft Edge WebView2 Runtimeが必要です。
 macOS版は署名 / notarization未対応のため、GitHubからダウンロードしたアプリはGatekeeperで「壊れているため開けません」と表示される場合があります。開発中の確認では次のようにquarantine属性を外してから起動します。
 
 ```bash
@@ -124,6 +125,7 @@ cargo test
 - Node版Local RelayはWeb fallbackとして維持
 - Tauri版ControllerはRust製Local Relayを起動する試作段階
 - macOS / Windows bundleはGitHub Actionsで生成可能
+- Windows portable zipを提出用の基本配布形式にする
 - macOS署名 / notarization、Windows code signing、OBS実機での最終確認は未完了
 
 ## ドキュメント

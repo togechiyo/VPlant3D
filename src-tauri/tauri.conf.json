@@ -30,7 +30,7 @@
     "active": true,
     "targets": "all",
     "category": "GraphicsAndDesign",
-    "icon": ["icons/icon.png", "icons/icon.ico"],
+    "icon": ["icons/icon.png", "icons/icon.ico", "icons/icon.icns"],
     "resources": ["../dist"]
   }
 }

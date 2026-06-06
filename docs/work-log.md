@@ -45,6 +45,47 @@
 - 
 ```
 
+## 2026-06-06 Portable Windows Artifact Prep
+
+### Goal
+
+- 提出確認用に、Windows版をinstallerではなくportable zip中心の配布形式へ寄せる
+
+### Did
+
+- `local-assets/images/icon_VPlant3D.png` をTauri CLIでアプリアイコンへ変換し、`src-tauri/icons/` を更新した
+- Tauri bundle icon設定に `icon.icns` を追加した
+- Windows release起動時のコンソールを抑えるため、`windows_subsystem = "windows"` をrelease buildへ適用した
+- portable exe横の `_up_/dist` をRust relayのfrontend探索候補へ追加した
+- GitHub Actions Tauri Buildに `vplant3d-windows-portable` artifact作成を追加した
+  - `VPlant3D for OBS.exe`
+  - `_up_/dist`
+  - `README.md`
+  - `HOW_TO_USE.md`
+  - `LICENSE.txt`
+- README / HowToUse / Human Handoff Board / Tauri配布前タスクリストへportable zip方針を追記した
+
+### Decisions
+
+- Windows提出用の正はinstallerではなくportable zipにする
+- exe単体配布ではなく、`_up_/dist` を同梱したフォルダ構成ごとのzip配布にする
+- installer artifactは当面残すが、提出・確認導線ではportable zipを優先する
+
+### Next
+
+- commit / push後、Tauri Build workflowを再実行し、`vplant3d-windows-portable` artifactを確認する
+- Windows実機でportable zipの起動、Controller表示、コンソール非表示、OBS接続を確認する
+
+### Verified
+
+- `cargo fmt --check` 成功
+- `cargo test` 成功
+- `npm run build` 成功
+- `npm run test` 成功
+- `npm run lint` 成功
+- `npm run test:e2e` は通常実行でsandboxのlisten EPERMになった後、権限付き再実行で成功
+- `PATH="$HOME/.cargo/bin:$PATH" npm run tauri:build` はrelease binaryと `.app` 生成まで成功し、DMG bundlingで既知の `bundle_dmg.sh` エラー
+
 ## 2026-06-06 Tauri Artifact Launch Fixes
 
 ### Goal
