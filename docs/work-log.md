@@ -73,7 +73,6 @@
 
 ### Next
 
-- commit / push後、Tauri Build workflowを再実行し、`vplant3d-windows-portable` artifactを確認する
 - Windows実機でportable zipの起動、Controller表示、コンソール非表示、OBS接続を確認する
 
 ### Verified
@@ -85,6 +84,12 @@
 - `npm run lint` 成功
 - `npm run test:e2e` は通常実行でsandboxのlisten EPERMになった後、権限付き再実行で成功
 - `PATH="$HOME/.cargo/bin:$PATH" npm run tauri:build` はrelease binaryと `.app` 生成まで成功し、DMG bundlingで既知の `bundle_dmg.sh` エラー
+- commit `574ba0a` を `main` へpushした
+- GitHub Actions Tauri Build run `27061264773` はmacOS / Windowsとも成功した
+- `vplant3d-windows-portable` artifactが生成されたことを確認した
+  - artifact size: 約3.5MB
+  - zip内容: `VPlant3D for OBS.exe`, `_up_/dist`, `README.md`, `HOW_TO_USE.md`, `LICENSE.txt`
+- 併せて `vplant3d-windows` と `vplant3d-macos` artifactも生成された
 
 ## 2026-06-06 Tauri Artifact Launch Fixes
 
