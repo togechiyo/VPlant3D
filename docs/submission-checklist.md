@@ -1,6 +1,6 @@
 # Submission Checklist
 
-最終更新日: 2026-06-05
+最終更新日: 2026-06-06
 
 ## 目的
 
@@ -47,6 +47,7 @@
 - [x] localStorageに最低限の設定を保存できる
 - [x] Tauri Controller shellのscaffoldがある
 - [x] Tauri Controllerを開発起動できる
+- [x] Tauri Rust relay prototypeがある
 
 ### Could Have
 
@@ -71,6 +72,8 @@
 - [x] `npm run test` が通る
 - [x] `npm run build` が通る
 - [x] lint導入後は `npm run lint` が通る
+- [x] `npm run test:e2e` が通る
+- [x] `cargo test` が通る
 - [ ] Chromeで表示確認済み
 - [ ] Chromeでconsole errorがない、または既知の制限として記録済み
 - [ ] OBS Browser Sourceで表示確認済み
@@ -91,6 +94,7 @@
 - [x] `docs/human-handoff-board.md` の未対応項目を確認した
 - [x] `docs/work-log.md` が提出直前の状態に更新されている
 - [x] Tauri版の開発起動手順をREADMEに追記した
+- [x] GitHub Actions CI / Tauri build workflowを追加した
 
 ## Rights / Assets Checklist
 
@@ -132,6 +136,8 @@
 - [ ] GitHub URLを用意した
 - [ ] デモ動画URLを用意した
 - [ ] スクリーンショットを用意した
+- [ ] GitHub ActionsのCI成功を確認した
+- [ ] GitHub ActionsのmacOS / Windows Tauri build artifactを確認した
 - [ ] 投稿文を用意した
 - [ ] 使用素材のクレジットを用意した
 - [ ] ハッシュタグ `#MadeWithVRM` を入れた

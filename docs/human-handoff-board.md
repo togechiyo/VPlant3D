@@ -1,6 +1,6 @@
 # Human Handoff Board
 
-最終更新日: 2026-06-05
+最終更新日: 2026-06-06
 
 ## 目的
 
@@ -27,6 +27,19 @@ VPlant3D for OBSは短期ハッカソン向けプロジェクトなので、Code
 | Dropped | 今回はやらない |
 
 ## Human Tasks
+
+### Todo: GitHub ActionsのCI / Tauri build結果を確認
+
+- Owner: Human
+- Needed by: GitHub Releaseや提出URLを確定する前
+- Why: Codexはworkflowファイルを追加できるが、GitHub-hosted runner上でのmacOS / Windows成果物、Actions権限、artifact保存結果はGitHub上で確認する必要があるため
+- What to check:
+  - `main` push後に `CI` workflowが成功する
+  - `Tauri Build` workflowを手動実行できる
+  - macOS artifactに `.app` またはbundle成果物が含まれる
+  - Windows artifactにinstallerまたはbundle成果物が含まれる
+  - macOS DMG作成が失敗する場合は、`.app` zip配布またはWeb fallbackで提出する判断をする
+  - 署名 / notarization / Windows code signingは未対応であることをRelease Notesへ書く
 
 ### Todo: Tauri配布ビルドと実機権限を確認
 

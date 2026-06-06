@@ -1,6 +1,6 @@
 # Tauri配布ビルド前タスクリスト
 
-確認日: 2026-06-05
+確認日: 2026-06-06
 
 ## 目的
 
@@ -18,6 +18,7 @@ VPlant3DをTauriアプリとして配布できる形へ近づける前に、必�
 - OBS Renderは引き続きOBS Browser Sourceで `http://127.0.0.1:<port>/?obs=1&transparent=1` を開く
 - Node relay sidecar化も未実装
 - macOS `.app` 生成は到達済み。DMG作成、署名、公証、Windows build、実機OBS確認は未完了
+- GitHub ActionsのTauri build workflowは追加済み。macOS / Windows runner上での成果物確認は未実施
 
 Rust relay移植の詳細計画:
 
@@ -168,8 +169,9 @@ Rust relay移植の詳細計画:
 
 ### Phase G: Windows build
 
-- [ ] Windows実機またはCIでbuild方針を決める
+- [x] Windows実機またはCIでbuild方針を決める
 - [ ] WebView2前提をREADMEへ書く
+- [ ] GitHub Actions上でWindows Tauri build artifactを確認する
 - [ ] WindowsでTauriアプリが起動することを確認する
 - [ ] WindowsでVRMファイル選択を確認する
 - [ ] Windowsでマイク / カメラ権限を確認する
@@ -178,12 +180,12 @@ Rust relay移植の詳細計画:
 
 ### Phase H: ドキュメントと提出物
 
-- [ ] READMEにTauri版の起動方法を書く
+- [x] READMEにTauri版の起動方法を書く
 - [x] READMEにWeb fallback手順を書く
 - [x] READMEにOBS Browser Source URLの貼り方を書く
-- [ ] READMEに既知の制限を書く
-- [ ] `docs/human-handoff-board.md` にmacOS / Windows確認項目を整理する
-- [ ] `docs/submission-checklist.md` をTauri状況に合わせて更新する
+- [x] READMEに既知の制限を書く
+- [x] `docs/human-handoff-board.md` にmacOS / Windows確認項目を整理する
+- [x] `docs/submission-checklist.md` をTauri状況に合わせて更新する
 - [ ] スクリーンショットにTauri Controllerを含めるか決める
 
 ## テストタスク
@@ -194,6 +196,7 @@ Rust relay移植の詳細計画:
 - [ ] `npm run lint`
 - [ ] `npm run build`
 - [ ] `npm run test:e2e`
+- [x] GitHub Actions CI workflowを追加する
 
 ### Rust / Tauri側
 
@@ -202,7 +205,8 @@ Rust relay移植の詳細計画:
 - [ ] `cargo clippy` を入れるか判断する
 - [x] `npm run tauri:dev`
 - [ ] `npm run tauri:dev:attached`
-- [ ] `npm run tauri:build`（`.app` 生成まで成功。DMG作成で失敗）
+- [x] `npm run tauri:build`（`.app` 生成まで成功。DMG作成で失敗）
+- [x] GitHub Actions Tauri build workflowを追加する
 
 ### 人力確認
 

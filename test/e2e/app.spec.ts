@@ -31,6 +31,7 @@ test('local relay can be identified for Tauri attach/start', async ({ request })
 test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page }) => {
   const errors = collectPageErrors(page);
 
+  await clearSavedAppConfigBeforeNavigation(page);
   await page.goto('/');
 
   expect(page.viewportSize()).toEqual({ width: 1920, height: 1080 });
@@ -122,15 +123,15 @@ test('Setup Mode shows the canvas and local VRM/VRMA file inputs', async ({ page
   await expect(page.getByText('楽')).toBeVisible();
   await expect(page.getByText('驚')).toBeVisible();
   await expect(page.locator('#expression-preset-text')).toHaveText('なし');
-  await expect(page.getByText('カメラモード')).toBeHidden();
+  await expect(page.locator('#camera-mode-panel')).toHaveClass(/hidden/);
   await page.locator('#camera-mode-button').click();
   await expect(page.locator('#mic-manual-mode-button')).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('#camera-mode-button')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('カメラモード')).toBeVisible();
+  await expect(page.locator('#camera-mode-panel')).not.toHaveClass(/hidden/);
   await expect(page.getByText('まばたき / 口: カメラ')).toBeVisible();
   await expect(page.getByText('頭 / 体: カメラ')).toBeVisible();
   await expect(page.getByText('骨格のみ表示')).toBeVisible();
-  await expect(page.locator('#pose-video')).toHaveCSS('opacity', '0');
+  await expect(page.locator('#pose-video')).toHaveClass(/opacity-0/);
   await expect(page.getByText('ミラー')).toBeVisible();
   await expect(page.locator('#pose-mirror-input')).toBeChecked();
   await expect(page.locator('#video-device-select')).toBeVisible();
@@ -177,7 +178,7 @@ test('Control page restores saved local settings', async ({ page }) => {
   await page.reload();
 
   await expect(page.locator('#camera-mode-button')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('カメラモード')).toBeVisible();
+  await expect(page.locator('#camera-mode-panel')).not.toHaveClass(/hidden/);
   await expect(page.locator('#pose-mirror-input')).not.toBeChecked();
   await expect(page.locator('#manual-control-input')).not.toBeChecked();
   await expect(page.locator('#manual-mouse-input')).not.toBeChecked();
@@ -190,19 +191,21 @@ test('Control page restores saved local settings', async ({ page }) => {
   await expect(page.locator('#key-light-color-input')).toHaveValue('#aabbcc');
   await expect(page.locator('#key-light-shadow-input')).toBeChecked();
   await expect(page.locator('#vrma-loop-input')).not.toBeChecked();
+  await page.evaluate(() => window.localStorage.removeItem('vplant3d.config.v1'));
 });
 
 test('Control page keeps setup controls outside the OBS render URL', async ({ page }) => {
   const errors = collectPageErrors(page);
 
+  await clearSavedAppConfigBeforeNavigation(page);
   await page.goto('/?control=1');
 
   await expect(page.locator('canvas.scene-canvas')).toBeVisible();
   await expect(page.getByText('VRMを読み込む', { exact: true })).toBeVisible();
   await expect(page.getByText('マイク&手動モード')).toBeVisible();
-  await expect(page.getByText('カメラモード')).toBeHidden();
+  await expect(page.locator('#camera-mode-panel')).toHaveClass(/hidden/);
   await page.locator('#camera-mode-button').click();
-  await expect(page.getByText('カメラモード')).toBeVisible();
+  await expect(page.locator('#camera-mode-panel')).not.toHaveClass(/hidden/);
   await expect(page.getByText('設定')).toBeVisible();
   expect(errors()).toEqual([]);
 });
@@ -279,6 +282,7 @@ test('relays manual pose changes to OBS debug runtime state', async ({ browser }
 test('Control page updates key light look controls', async ({ page }) => {
   const errors = collectPageErrors(page);
 
+  await clearSavedAppConfigBeforeNavigation(page);
   await page.goto('/?control=1');
 
   await page.locator('#key-light-scale-input').fill('1.5');
@@ -303,6 +307,7 @@ test('Control page updates key light look controls', async ({ page }) => {
 test('Control preview accepts manual mouse controls', async ({ page }) => {
   const errors = collectPageErrors(page);
 
+  await clearSavedAppConfigBeforeNavigation(page);
   await page.goto('/?control=1');
   const canvas = page.locator('canvas.scene-canvas');
   const box = await canvas.boundingBox();
@@ -345,6 +350,7 @@ test('loads the local Alicia VRM candidate when it exists', async ({ page }) => 
 
   const errors = collectPageErrors(page);
 
+  await clearSavedAppConfigBeforeNavigation(page);
   await page.goto('/');
   await page.locator('#vrm-file-input').setInputFiles(aliciaVrmPath);
 
@@ -423,6 +429,7 @@ test('loads the local VRMA candidate and toggles playback when local assets exis
 
   const errors = collectPageErrors(page);
 
+  await clearSavedAppConfigBeforeNavigation(page);
   await page.goto('/');
   await page.locator('#vrm-file-input').setInputFiles(aliciaVrmPath);
   await expect(page.getByText('VRM読み込み済み')).toBeVisible({ timeout: 30_000 });
@@ -457,6 +464,12 @@ function collectPageErrors(page: Page): () => string[] {
   });
 
   return () => errors;
+}
+
+async function clearSavedAppConfigBeforeNavigation(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.localStorage.removeItem('vplant3d.config.v1');
+  });
 }
 
 function extractRelayDebugHeadYaw(text: string | null): number {

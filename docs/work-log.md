@@ -45,6 +45,61 @@
 - 
 ```
 
+## 2026-06-06 Release Prep / Main Merge / GitHub Actions
+
+### Goal
+
+- ハッカソン提出前に、docsを整理し、`codex/vite-foundation` の作業を `main` へ反映し、GitHub ActionsでCIとmacOS / Windows Tauri buildを準備する
+
+### Did
+
+- README / HowToUse / release準備docsの状態を確認した
+- `codex/vite-foundation` 上のドキュメント整理をcommit / pushした
+- `main` が `codex/vite-foundation` の祖先であることを確認し、`main` をfast-forward mergeした
+- `.github/workflows/ci.yml` を追加した
+  - Node 24
+  - `npm ci`
+  - `npm run test`
+  - `npm run lint`
+  - `npm run build`
+  - Playwright Chromium install
+  - `npm run test:e2e`
+- `.github/workflows/tauri-build.yml` を追加した
+  - `workflow_dispatch`
+  - `v*` tag push
+  - `macos-latest` / `windows-latest`
+  - Node / Rust setup
+  - `npm run build`
+  - `npm run tauri:build`
+  - bundle artifact upload
+- Viteの `.vite/` cacheをgit / ESLint対象外にした
+- Playwright E2EでlocalStorageに残る保存設定が別テストへ漏れないよう、初期状態を期待するテストを安定化した
+- release準備docs、submission checklist、Tauri配布前タスクリスト、人間向け確認板を更新した
+
+### Verified
+
+- `npm run test` 成功
+- `npm run lint` 成功
+- `npm run build` 成功
+- `npm run test:e2e` 成功
+- `cargo fmt --check` 成功
+- `cargo test` 成功
+- `npm run tauri:build` はrelease binaryと `.app` 生成まで成功し、DMG bundlingで失敗
+
+### Failed / Blocked
+
+- 初回の `npm run lint` は、`npm run build` 後の `.vite/` cacheをlintしてしまい失敗した。`.vite/` をignoreして解決した
+- 初回のmain上 `npm run test:e2e` は、保存設定復元テストのlocalStorage状態が後続テストへ漏れて失敗した。初期状態を期待するテストで保存設定を読み込み前に消すようにして解決した
+- `npm run tauri:build` は `src-tauri/target/release/bundle/macos/VPlant3D for OBS.app` 生成後、`src-tauri/target/release/bundle/dmg/bundle_dmg.sh` 実行で失敗した
+- macOS DMG作成、Windows成果物、GitHub Actions runner上の実ビルドは人間確認が必要
+
+### Next
+
+- `main` をpushする
+- GitHub Actionsの `CI` 成功を確認する
+- `Tauri Build` workflowを手動実行し、macOS / Windows artifactを確認する
+- tag / GitHub Release公開は、提出直前の人間判断後に行う
+
 ## 2026-06-05 Rust Relay Migration Planning
 
 ### Goal

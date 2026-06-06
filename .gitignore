@@ -3,6 +3,7 @@ node_modules/
 
 # Build outputs
 dist/
+.vite/
 coverage/
 playwright-report/
 test-results/

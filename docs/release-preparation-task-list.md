@@ -10,15 +10,15 @@ VPlant3D for OBSをハッカソン提出・GitHub公開・配布ビルドへ進�
 
 ## 現状
 
-- 作業ブランチ: `codex/vite-foundation`
-- `main` はまだ最新状態ではない可能性が高い
+- 作業ブランチ: `main`
+- `codex/vite-foundation` の作業は `main` へfast-forward merge済み
 - Web版は `npm run dev` でNode relayつき起動できる
 - Tauri版はRust relay prototypeを持つ
 - macOS `.app` 生成までは確認済み
 - DMG作成は `bundle_dmg.sh` で失敗中
 - Windows buildは未確認
-- `.github/workflows/` はまだ存在しない
-- README / HowToUseは整備中
+- `.github/workflows/ci.yml` と `.github/workflows/tauri-build.yml` を追加済み
+- README / HowToUseは初回リリース向けに整備済み
 
 ## リリース方針
 
@@ -47,19 +47,19 @@ VPlant3D for OBSをハッカソン提出・GitHub公開・配布ビルドへ進�
 
 ## Phase 1: main更新前の整理
 
-- [ ] 作業ツリーを確認する
-- [ ] README / HowToUse / work-logの未コミット差分を確認する
-- [ ] `local-assets/` がstageされていないことを確認する
-- [ ] `npm run test`
-- [ ] `npm run lint`
-- [ ] `npm run build`
-- [ ] `npm run test:e2e`
-- [ ] `cargo fmt --check`
-- [ ] `cargo test`
+- [x] 作業ツリーを確認する
+- [x] README / HowToUse / work-logの未コミット差分を確認する
+- [x] `local-assets/` がstageされていないことを確認する
+- [x] `npm run test`
+- [x] `npm run lint`
+- [x] `npm run build`
+- [x] `npm run test:e2e`
+- [x] `cargo fmt --check`
+- [x] `cargo test`
 - [ ] 必要なら `npm run tauri:dev` を起動確認する
-- [ ] 可能なら `npm run tauri:build` を再確認する
-- [ ] DMG失敗が続く場合は既知の制限としてREADME / HowToUse / human handoffに残す
-- [ ] ここまで通ったら作業ブランチをcommit / pushする
+- [x] 可能なら `npm run tauri:build` を再確認する
+- [x] DMG失敗が続く場合は既知の制限としてREADME / HowToUse / human handoffに残す
+- [x] ここまで通ったら作業ブランチをcommit / pushする
 
 ## Phase 2: mainへ反映する
 
@@ -75,17 +75,21 @@ VPlant3D for OBSをハッカソン提出・GitHub公開・配布ビルドへ進�
 
 タスク:
 
-- [ ] `git fetch`
-- [ ] `main` の最新状態を確認する
-- [ ] `codex/vite-foundation` の差分を確認する
-- [ ] PRを作る、またはローカルmerge方針を決める
-- [ ] mainへmergeする
-- [ ] mainで `npm run test`
-- [ ] mainで `npm run lint`
-- [ ] mainで `npm run build`
-- [ ] mainで `npm run test:e2e`
-- [ ] mainで `cargo test`
+- [x] `git fetch`
+- [x] `main` の最新状態を確認する
+- [x] `codex/vite-foundation` の差分を確認する
+- [x] PRを作る、またはローカルmerge方針を決める
+- [x] mainへmergeする
+- [x] mainで `npm run test`
+- [x] mainで `npm run lint`
+- [x] mainで `npm run build`
+- [x] mainで `npm run test:e2e`
+- [x] mainで `cargo test`
 - [ ] mainをpushする
+
+Notes:
+
+- `npm run tauri:build` はrelease binaryと `src-tauri/target/release/bundle/macos/VPlant3D for OBS.app` 生成まで成功し、DMG bundlingの `bundle_dmg.sh` で失敗した
 
 ## Phase 3: GitHub Actionsを追加する
 
@@ -99,14 +103,14 @@ VPlant3D for OBSをハッカソン提出・GitHub公開・配布ビルドへ進�
 
 内容:
 
-- checkout
-- setup-node
-- npm ci
-- npm run test
-- npm run lint
-- npm run build
-- Playwright install
-- npm run test:e2e
+- [x] checkout
+- [x] setup-node
+- [x] npm ci
+- [x] npm run test
+- [x] npm run lint
+- [x] npm run build
+- [x] Playwright install
+- [x] npm run test:e2e
 
 注意:
 
@@ -121,11 +125,11 @@ VPlant3D for OBSをハッカソン提出・GitHub公開・配布ビルドへ進�
 
 内容:
 
-- workflow_dispatch
-- tag push時に起動
-- macOS runnerでTauri build
-- Windows runnerは余裕があれば
-- build artifactとして `.app` / `.dmg` / `.msi` / `.exe` を保存
+- [x] workflow_dispatch
+- [x] tag push時に起動
+- [x] macOS runnerでTauri build
+- [x] Windows runnerでTauri build
+- [x] build artifactとしてTauri bundle directoryを保存
 
 注意:
 
@@ -213,6 +217,8 @@ VPlant3D for OBSをハッカソン提出・GitHub公開・配布ビルドへ進�
 7. GitHub Releaseへartifact添付
 
 締切前に止めるなら、1と2だけでも価値がある。
+
+2026-06-06時点では1から6まで実装済み。7のGitHub Release添付は、明示指示があるまで実行しない。
 
 ## Release Notes案
 
