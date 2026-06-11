@@ -45,6 +45,30 @@
 - 
 ```
 
+## 2026-06-11 Booth Initial Growth Planning
+
+### Goal
+
+- ハッカソン後の次目標として、VPlant3DをBoothで初月5万円売り上げられるアプリへ育てるための計画を立てる
+
+### Did
+
+- 作業ブランチを `codex/vite-foundation` に戻した
+- `main` の提出後変更を `codex/vite-foundation` へfast-forwardで取り込んだ
+- [Booth初月5万円 売上計画](./booth-50k-growth-plan.md) を追加した
+- 無料版 + 同内容の500円開発支援版を前提に、売上目標、商品設計、Boothページ構成、初月KPI、機能優先度、宣伝導線を整理した
+
+### Notes
+
+- BOOTH公式ヘルプはCodex実行環境からCloudflare challengeで本文取得できなかった
+- 手数料、BOOST、ファイル容量、禁止事項、販売条件は、Booth販売ページ作成前に人間がブラウザで公式ヘルプを再確認する
+
+### Next
+
+- Booth商品ページ用のスクリーンショット構成を作る
+- Booth説明文を短く実ページ向けに整える
+- 初回起動ガイドUI、OBS URLコピー導線、位置プリセット、ライトプリセットを商品性改善として検討する
+
 ## 2026-06-06 Portable Windows Artifact Prep
 
 ### Goal
