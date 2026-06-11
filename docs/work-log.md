@@ -4802,6 +4802,30 @@
 - Tauri windowでControllerが開いたら、次はRelay起動管理またはsidecar化を検討する
 - 締切前に不安定なら、提出デモはWeb Controller fallbackで進める
 
+## 2026-06-11 AITuber MCP Integration Plan
+
+### Goal
+
+- AITuber向けにVPlant3DをMCP対応する場合の案を、実装前の設計メモとして残す
+
+### Did
+
+- [AITuber向けMCP連携案](./aituber-mcp-integration-plan.md) を追加した
+- MCPを通常UIの置き換えではなく、Local Relay / Control API / Observation APIの上に置く方針として整理した
+- 表情、VRMA、画角、レンダリング済み画像capture、状態診断をMCP tool候補としてまとめた
+- カメラ、マイク、ローカルファイル選択は初期MCP toolにしない安全方針を明記した
+
+### Decision
+
+- AITuber向けMCPは有望だが、先にLocal Control API / Observation APIを整理する
+- マルチモーダルAI向けには、レンダリング済み画像を返す `capture_render` 系の機能が重要
+- 初期実装は読み取り専用MCPから始めるのが安全
+
+### Next
+
+- 通信方式見直しを行うなら、Local Relay / Control API / Observation API / WebRTC候補を別ドキュメントで整理する
+- Booth向けv0.2では、MCPより先に通常ユーザーの導入体験を安定させる
+
 ## 2026-06-05 Install Rust and Verify Tauri Dev Startup
 
 ### Goal
