@@ -56,6 +56,7 @@
 - 作業ブランチを `codex/vite-foundation` に戻した
 - `main` の提出後変更を `codex/vite-foundation` へfast-forwardで取り込んだ
 - [Booth初月5万円 売上計画](./booth-50k-growth-plan.md) を追加した
+- [VPlant3D 現在の課題100](./vplant3d-100-issues.md) を追加した
 - 無料版 + 同内容の500円開発支援版を前提に、売上目標、商品設計、Boothページ構成、初月KPI、機能優先度、宣伝導線を整理した
 
 ### Notes
